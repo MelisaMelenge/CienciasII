@@ -31,12 +31,12 @@ class CuadradoExternaController:
 
     # ==================== INSERCIÓN ====================
     def insertar_clave(self, clave):
-        # 🔹 Validar que la clave sea numérica (solo dígitos)
+        # 🔹 Validar que la clave sea numérica
         if not str(clave).isdigit():
             return False, "La clave debe ser numérica."
 
-        clave_s = str(clave)  # se mantiene con ceros a la izquierda
-        k = int(clave_s)      # solo para hash
+        clave_s = str(clave)
+        k = int(clave_s)
 
         # 🔹 Verificar límite total
         total_insertadas = sum(
@@ -50,38 +50,47 @@ class CuadradoExternaController:
         if self.buscar_clave(clave_s) is not None or clave_s in self.zona_colisiones.zona:
             return False, "La clave ya existe en la estructura."
 
-        num_bloques = len(self.bloques)
-        bloque_idx = k % num_bloques
-        pos_idx = k % self.tamanio_bloque
+        # ==============================================
+        # MÉTODO DEL CUADRADO → dígitos centrales + 1
+        # ==============================================
+        # ==============================================
+        # MÉTODO DEL CUADRADO → posición global directa
+        # ==============================================
+        cuadrado = str(k ** 2)
+        n = len(cuadrado)
+        centro = cuadrado[n // 2 - 1: n // 2 + 1]  # 2 dígitos centrales
+        hash_valor = int(centro) + 1
 
-        # 🔹 Intento de inserción normal
-        for step_b in range(num_bloques):
-            b_idx = (bloque_idx + step_b) % num_bloques
-            bloque = self.bloques[b_idx]
-            for step_p in range(self.tamanio_bloque):
-                p_idx = (pos_idx + step_p) % self.tamanio_bloque
-                if bloque[p_idx] is None:
-                    if step_b == 0 and step_p == 0:
-                        self._guardar_historial()
-                        bloque[p_idx] = clave_s  # guarda "0000" intacto
-                        return True, f"Insertada en bloque {b_idx + 1}, posición {p_idx + 1}."
-                    else:
-                        return (None, "collision", {
-                            "clave": clave_s,
-                            "hash_bloque": bloque_idx,
-                            "bloque_objetivo": b_idx,
-                            "hash_pos": pos_idx,
-                            "pos_objetivo": p_idx
-                        })
+        # 🔹 Posición absoluta dentro de toda la estructura
+        total_posiciones = self.num_claves
+        pos_global = (hash_valor % total_posiciones)
 
-        # 🔹 Si no hay hueco → zona de colisiones
-        return (None, "collision", {
-            "clave": clave_s,
-            "hash_bloque": bloque_idx,
-            "bloque_objetivo": None,
-            "hash_pos": pos_idx,
-            "pos_objetivo": None
-        })
+        # ⚙️ Ajuste porque trabajamos desde 1 (no desde 0)
+        # Si el módulo da 0, significa que debería ir en la última posición
+        if pos_global == 0:
+            pos_global = total_posiciones
+        # Ahora pos_global va de 1 a total_posiciones
+        # ==============================================
+
+        # 🔹 Convertir a bloque y posición interna (también desde 1)
+        bloque_idx = (pos_global - 1) // self.tamanio_bloque  # índice del bloque (0–n)
+        pos_idx = (pos_global - 1) % self.tamanio_bloque  # índice dentro del bloque (0–n)
+
+        # Insertar directamente sin desplazamiento
+        bloque = self.bloques[bloque_idx]
+        if bloque[pos_idx] is None:
+            self._guardar_historial()
+            bloque[pos_idx] = clave_s
+            return True, f"Insertada en bloque {bloque_idx + 1}, posición {pos_idx + 1} (hash={hash_valor})."
+        else:
+            # Si ya está ocupada → zona de colisión
+            return (None, "collision", {
+                "clave": clave_s,
+                "hash_bloque": bloque_idx,
+                "bloque_objetivo": bloque_idx + 1,
+                "hash_pos": pos_idx,
+                "pos_objetivo": pos_idx + 1
+            })
 
     def insertar_en_zona_colisiones(self, clave):
         """Maneja la inserción en la zona de colisiones (controlador dedicado)."""
@@ -181,3 +190,4 @@ class CuadradoExternaController:
         self.tamanio_bloque = 0
         self.historial.clear()
         return True, "Estructura eliminada correctamente."
+

@@ -1,23 +1,12 @@
 from PySide6.QtWidgets import (
     QMainWindow, QWidget, QVBoxLayout, QLabel, QFrame,
-    QComboBox, QSpinBox, QPushButton, QGridLayout, QScrollArea,
-    QMessageBox, QHBoxLayout, QDialog, QFileDialog
-)
-from PySide6.QtCore import Qt
-from datetime import datetime
-import os
-
-# Si luego agregas un controlador, lo importas aquí:
-# from Controlador.Externas.truncamiento_externa_controller import TruncamientoController
-# from Modelo.manejador_archivos import ManejadorArchivos
-from PySide6.QtWidgets import (
-    QMainWindow, QWidget, QVBoxLayout, QLabel, QFrame,
     QSpinBox, QPushButton, QGridLayout, QScrollArea,
     QHBoxLayout, QFileDialog, QMessageBox
 )
 from PySide6.QtCore import Qt
 from .dialogo_clave import DialogoClave
 from Controlador.Externas.TruncamientoController import TruncamientoController
+from .dialogo_posiciones import DialogoPosiciones
 
 class TruncamientoExterna(QMainWindow):
     def __init__(self, cambiar_ventana):
@@ -27,6 +16,7 @@ class TruncamientoExterna(QMainWindow):
         self.bloques = []
         self.num_claves = 0
         self.tamanio_bloque = 0
+        self.posiciones_fijas = None
 
         self.setWindowTitle("Ciencias de la Computación II - Método Módulo (Externa)")
 
@@ -165,6 +155,7 @@ class TruncamientoExterna(QMainWindow):
             self.bloques = datos['bloques']
             self.num_claves = datos['num_claves']
             self.tamanio_bloque = datos['tamanio_bloque']
+            self.posiciones_fijas = None
 
             self.actualizar_visualizacion()
             QMessageBox.information(
@@ -179,13 +170,37 @@ class TruncamientoExterna(QMainWindow):
             QMessageBox.critical(self, "Error", f"Error al crear estructura: {str(e)}")
 
     def insertar_clave(self):
+        # 1️⃣ Pedir la clave completa
         dlg = DialogoClave(self.digitos.value(), "Insertar clave", "insertar", self)
         if not dlg.exec():
             return
-        clave = dlg.get_clave()
+        clave = dlg.get_clave()  # Ejemplo: "2835"
 
-        res = self.controller.insertar_clave(clave)
-        # Caso: conflicto/colisión detectada (res == (None, "collision", info))
+        # 2️⃣ Usar las posiciones fijas si ya existen, si no, pedirlas una vez
+        if self.posiciones_fijas is None:
+            dlg_pos = DialogoPosiciones(len(clave), 2, self)
+            if not dlg_pos.exec():
+                return
+            self.posiciones_fijas = dlg_pos.get_posiciones(2)
+            QMessageBox.information(
+                self,
+                "Posiciones fijas establecidas",
+                f"Posiciones seleccionadas: {self.posiciones_fijas}\n\n"
+                "Estas posiciones se usarán para todas las claves "
+                "hasta que se cree una nueva estructura."
+            )
+
+        posiciones = self.posiciones_fijas
+
+        # 3️⃣ Crear versión truncada (solo para mostrar)
+        clave_s = str(clave).zfill(self.digitos.value())
+        truncada = "".join(clave_s[i - 1] for i in posiciones)
+        truncada_int = int(truncada)
+
+        # 4️⃣ Insertar pasando la clave original y las posiciones fijas
+        res = self.controller.insertar_clave(clave, posiciones)
+
+        # 5️⃣ Manejo de colisiones y mensajes
         if isinstance(res, tuple) and len(res) == 3 and res[1] == "collision":
             info = res[2]
             detalle = (
@@ -196,24 +211,21 @@ class TruncamientoExterna(QMainWindow):
             )
             reply = QMessageBox.question(self, "Colisión detectada", detalle, QMessageBox.Yes | QMessageBox.No)
             if reply == QMessageBox.Yes:
-                ok, msg = self.controller.insertar_en_zona_colisiones(info['clave'])
+                ok, msg = self.controller.insertar_en_zona_colisiones(info["clave"])
                 if ok:
                     QMessageBox.information(self, "Zona de colisiones", msg)
                 else:
                     QMessageBox.warning(self, "Zona de colisiones", msg)
-
         else:
-            # Insert normal o error
             ok, msg = res
             if ok:
                 QMessageBox.information(self, "Insertar clave", msg)
             else:
                 QMessageBox.warning(self, "Insertar clave", msg)
 
-        # refrescar vista con posibles cambios (principal o zona)
+        # 6️⃣ Actualizar visualización
         self.bloques = self.controller.bloques
         self.actualizar_visualizacion()
-        # opcional: podrías mostrar/actualizar la zona de colisiones en la vista si la tienes
 
     def buscar_clave(self):
         dlg = DialogoClave(self.digitos.value(), "Buscar clave", "buscar", self)
@@ -339,10 +351,18 @@ class TruncamientoExterna(QMainWindow):
         bloques_layout.setAlignment(Qt.AlignLeft | Qt.AlignTop)
         bloques_layout.setContentsMargins(20, 10, 20, 10)
 
-        # Dibujar cada bloque uno al lado del otro
+        # Dibujar solo los bloques que ya tienen al menos una clave insertada
+        bloques_dibujados = 0
         for i, bloque in enumerate(self.bloques):
-            bloque_widget = self.crear_bloque_visual(i, bloque)
-            bloques_layout.addWidget(bloque_widget)
+            if any(c is not None for c in bloque):  # solo dibujar si tiene al menos una clave
+                bloque_widget = self.crear_bloque_visual(i, bloque)
+                bloques_layout.addWidget(bloque_widget)
+                bloques_dibujados += 1
+
+        # Si aún no hay bloques usados, mostrar solo un bloque de ejemplo
+        if bloques_dibujados == 0:
+            ejemplo = self.crear_bloque_visual(0, [None] * self.tamanio_bloque)
+            bloques_layout.addWidget(ejemplo)
 
         bloques_layout.addStretch()
         self.contenedor_layout.addWidget(bloques_container)
@@ -382,7 +402,7 @@ class TruncamientoExterna(QMainWindow):
             self.contenedor_layout.addWidget(zona_widget)
 
     def crear_bloque_visual(self, indice, bloque):
-        """Crea la representación visual de un bloque horizontal con celdas"""
+        """Crea la representación visual de un bloque con sus posiciones numeradas"""
         container = QWidget()
         container_layout = QVBoxLayout(container)
         container_layout.setSpacing(6)
@@ -402,18 +422,17 @@ class TruncamientoExterna(QMainWindow):
             celda_layout.setContentsMargins(0, 0, 0, 0)
             celda_layout.setSpacing(0)
 
-            # Verificar si hay una clave en esta posición
             if i < len(bloque) and bloque[i] is not None:
                 # Celda ocupada
                 celda.setStyleSheet("""
-                       QFrame {
-                           background-color: #E9D5FF;
-                           border: 2px solid #A78BFA;
-                           min-width: 50px; max-width: 50px;
-                           min-height: 50px; max-height: 50px;
-                           border-radius: 6px;
-                       }
-                   """)
+                    QFrame {
+                        background-color: #E9D5FF;
+                        border: 2px solid #A78BFA;
+                        min-width: 50px; max-width: 50px;
+                        min-height: 50px; max-height: 50px;
+                        border-radius: 6px;
+                    }
+                """)
                 label_clave = QLabel(str(bloque[i]))
                 label_clave.setStyleSheet("font-size: 12px; font-weight: bold; color: #5B21B6;")
                 label_clave.setAlignment(Qt.AlignCenter)
@@ -421,18 +440,32 @@ class TruncamientoExterna(QMainWindow):
             else:
                 # Celda vacía
                 celda.setStyleSheet("""
-                       QFrame {
-                           background-color: #F3E8FF;
-                           border: 2px solid #A78BFA;
-                           min-width: 50px; max-width: 50px;
-                           min-height: 50px; max-height: 50px;
-                           border-radius: 6px;
-                       }
-                   """)
+                    QFrame {
+                        background-color: #F3E8FF;
+                        border: 2px solid #A78BFA;
+                        min-width: 50px; max-width: 50px;
+                        min-height: 50px; max-height: 50px;
+                        border-radius: 6px;
+                    }
+                """)
 
             layout.addWidget(celda)
 
         container_layout.addWidget(frame)
+
+        # 🔢 Fila de números debajo de las celdas
+        numeros_frame = QFrame()
+        numeros_layout = QHBoxLayout(numeros_frame)
+        numeros_layout.setSpacing(4)
+        numeros_layout.setContentsMargins(0, 0, 0, 0)
+
+        for i in range(self.tamanio_bloque):
+            lbl_num = QLabel(str(i + 1))
+            lbl_num.setAlignment(Qt.AlignCenter)
+            lbl_num.setStyleSheet("font-size: 11px; color: #6B7280; font-weight: bold; min-width: 50px;")
+            numeros_layout.addWidget(lbl_num)
+
+        container_layout.addWidget(numeros_frame)
 
         # Número del bloque debajo (centrado)
         num_bloque = QLabel(f"Bloque {indice + 1}")

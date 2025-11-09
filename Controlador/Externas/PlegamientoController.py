@@ -31,57 +31,48 @@ class PlegamientoController:
 
     # ==================== INSERCIÓN ====================
     def insertar_clave(self, clave):
-        # 🔹 Validar que la clave sea numérica (solo dígitos)
-        if not str(clave).isdigit():
-            return False, "La clave debe ser numérica."
+        """Inserta una clave aplicando el método de plegamiento con búsqueda lineal."""
+        clave_s = str(clave)
+        if not clave_s.isdigit():
+            return False, "❌ La clave debe ser numérica."
 
-        clave_s = str(clave)  # se mantiene con ceros a la izquierda
-        k = int(clave_s)      # solo para hash
+        if self.num_claves == 0 or self.tamanio_bloque == 0:
+            return False, "❌ No hay estructura creada. Crea una antes de insertar."
 
-        # 🔹 Verificar límite total
-        total_insertadas = sum(
-            1 for bloque in self.bloques for c in bloque if c is not None
-        ) + len(self.zona_colisiones.zona)
+        # --- Calcular S (hash por plegamiento absoluto) ---
+        L = len(clave_s)
+        mid = (L + 1) // 2
+        primera = int(clave_s[:mid]) if clave_s[:mid] else 0
+        segunda = int(clave_s[mid:]) if clave_s[mid:] else 0
+        S = (primera + segunda) % self.num_claves  # se mantiene dentro del rango
+        if S < 0:
+            S = abs(S)
+        if S >= self.num_claves:
+            S = S % self.num_claves
 
-        if total_insertadas >= self.num_claves:
-            return False, f"No se pueden insertar más claves. Límite de {self.num_claves} alcanzado."
+        # --- Intentar insertar usando búsqueda lineal circular ---
+        for intento in range(self.num_claves):
+            pos_lineal = (S + intento) % self.num_claves
+            bloque = pos_lineal // self.tamanio_bloque
+            pos = pos_lineal % self.tamanio_bloque
 
-        # 🔹 Evitar duplicados
-        if self.buscar_clave(clave_s) is not None or clave_s in self.zona_colisiones.zona:
-            return False, "La clave ya existe en la estructura."
+            # Si el hueco está libre
+            if self.bloques[bloque][pos] is None:
+                self._guardar_historial()
+                self.bloques[bloque][pos] = clave_s
+                return True, f"✅ Clave {clave_s} insertada en bloque {bloque + 1}, posición {pos + 1}."
 
-        num_bloques = len(self.bloques)
-        bloque_idx = k % num_bloques
-        pos_idx = k % self.tamanio_bloque
+            # Si ya existe la misma clave
+            if self.bloques[bloque][pos] == clave_s:
+                return False, f"⚠️ La clave {clave_s} ya existe en bloque {bloque + 1}, posición {pos + 1}."
 
-        # 🔹 Intento de inserción normal
-        for step_b in range(num_bloques):
-            b_idx = (bloque_idx + step_b) % num_bloques
-            bloque = self.bloques[b_idx]
-            for step_p in range(self.tamanio_bloque):
-                p_idx = (pos_idx + step_p) % self.tamanio_bloque
-                if bloque[p_idx] is None:
-                    if step_b == 0 and step_p == 0:
-                        self._guardar_historial()
-                        bloque[p_idx] = clave_s  # guarda "0000" intacto
-                        return True, f"Insertada en bloque {b_idx + 1}, posición {p_idx + 1}."
-                    else:
-                        return (None, "collision", {
-                            "clave": clave_s,
-                            "hash_bloque": bloque_idx,
-                            "bloque_objetivo": b_idx,
-                            "hash_pos": pos_idx,
-                            "pos_objetivo": p_idx
-                        })
-
-        # 🔹 Si no hay hueco → zona de colisiones
-        return (None, "collision", {
+        # --- Si está llena o no se pudo insertar ---
+        return None, "collision_zone", {
             "clave": clave_s,
-            "hash_bloque": bloque_idx,
-            "bloque_objetivo": None,
-            "hash_pos": pos_idx,
-            "pos_objetivo": None
-        })
+            "hash": S,
+            "mensaje": "⚠️ No hay espacio libre en la estructura. Insertar en zona de colisiones."
+        }
+
 
     def insertar_en_zona_colisiones(self, clave):
         """Maneja la inserción en la zona de colisiones (controlador dedicado)."""

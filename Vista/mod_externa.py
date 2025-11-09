@@ -327,9 +327,18 @@ class ModExterna(QMainWindow):
         bloques_layout.setContentsMargins(20, 10, 20, 10)
 
         # Dibujar cada bloque uno al lado del otro
+        # Dibujar solo los bloques que ya tienen al menos una clave insertada
+        bloques_dibujados = 0
         for i, bloque in enumerate(self.bloques):
-            bloque_widget = self.crear_bloque_visual(i, bloque)
-            bloques_layout.addWidget(bloque_widget)
+            if any(c is not None for c in bloque):  # solo dibujar si tiene al menos una clave
+                bloque_widget = self.crear_bloque_visual(i, bloque)
+                bloques_layout.addWidget(bloque_widget)
+                bloques_dibujados += 1
+
+        # Si aún no hay bloques usados, mostrar solo un bloque de ejemplo
+        if bloques_dibujados == 0:
+            ejemplo = self.crear_bloque_visual(0, [None] * self.tamanio_bloque)
+            bloques_layout.addWidget(ejemplo)
 
         bloques_layout.addStretch()
         self.contenedor_layout.addWidget(bloques_container)

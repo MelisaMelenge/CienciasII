@@ -30,58 +30,48 @@ class TruncamientoController:
         }
 
     # ==================== INSERCIÓN ====================
-    def insertar_clave(self, clave):
-        # 🔹 Validar que la clave sea numérica (solo dígitos)
+    def insertar_clave(self, clave, posiciones):
+        """
+        Inserta una clave usando las posiciones seleccionadas.
+        Se usa el truncado + 1 como posición global.
+        Si la posición excede el total, se rebobina al inicio.
+        """
         if not str(clave).isdigit():
             return False, "La clave debe ser numérica."
 
-        clave_s = str(clave)  # se mantiene con ceros a la izquierda
-        k = int(clave_s)      # solo para hash
+        clave_s = str(clave).zfill(4)
+        truncada = ''.join(clave_s[i - 1] for i in posiciones)
+        truncada_int = int(truncada) + 1  # ✅ se suma 1
 
-        # 🔹 Verificar límite total
-        total_insertadas = sum(
-            1 for bloque in self.bloques for c in bloque if c is not None
-        ) + len(self.zona_colisiones.zona)
+        # Total de posiciones disponibles
+        total_posiciones = len(self.bloques) * self.tamanio_bloque
 
-        if total_insertadas >= self.num_claves:
-            return False, f"No se pueden insertar más claves. Límite de {self.num_claves} alcanzado."
+        # 🔁 Rebobinar si excede el rango (posición circular)
+        pos_global = ((truncada_int - 1) % total_posiciones) + 1
 
-        # 🔹 Evitar duplicados
+        # 🧮 Calcular bloque y posición interna
+        bloque_idx = (pos_global - 1) // self.tamanio_bloque
+        pos_idx = (pos_global - 1) % self.tamanio_bloque
+
+        # Evitar duplicados
         if self.buscar_clave(clave_s) is not None or clave_s in self.zona_colisiones.zona:
             return False, "La clave ya existe en la estructura."
 
-        num_bloques = len(self.bloques)
-        bloque_idx = k % num_bloques
-        pos_idx = k % self.tamanio_bloque
-
-        # 🔹 Intento de inserción normal
-        for step_b in range(num_bloques):
-            b_idx = (bloque_idx + step_b) % num_bloques
-            bloque = self.bloques[b_idx]
-            for step_p in range(self.tamanio_bloque):
-                p_idx = (pos_idx + step_p) % self.tamanio_bloque
-                if bloque[p_idx] is None:
-                    if step_b == 0 and step_p == 0:
-                        self._guardar_historial()
-                        bloque[p_idx] = clave_s  # guarda "0000" intacto
-                        return True, f"Insertada en bloque {b_idx + 1}, posición {p_idx + 1}."
-                    else:
-                        return (None, "collision", {
-                            "clave": clave_s,
-                            "hash_bloque": bloque_idx,
-                            "bloque_objetivo": b_idx,
-                            "hash_pos": pos_idx,
-                            "pos_objetivo": p_idx
-                        })
-
-        # 🔹 Si no hay hueco → zona de colisiones
-        return (None, "collision", {
-            "clave": clave_s,
-            "hash_bloque": bloque_idx,
-            "bloque_objetivo": None,
-            "hash_pos": pos_idx,
-            "pos_objetivo": None
-        })
+        # Insertar
+        bloque = self.bloques[bloque_idx]
+        if bloque[pos_idx] is None:
+            self._guardar_historial()
+            bloque[pos_idx] = clave_s
+            return True, f"Insertada en bloque {bloque_idx + 1}, posición {pos_idx + 1}."
+        else:
+            # Si está ocupado → zona de colisiones
+            return (None, "collision", {
+                "clave": clave_s,
+                "hash_bloque": None,
+                "bloque_objetivo": bloque_idx,
+                "hash_pos": None,
+                "pos_objetivo": pos_idx
+            })
 
     def insertar_en_zona_colisiones(self, clave):
         """Maneja la inserción en la zona de colisiones (controlador dedicado)."""
