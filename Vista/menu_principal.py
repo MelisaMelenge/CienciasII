@@ -14,7 +14,6 @@ from Vista.arboles_digitales import ArbolesDigitales
 from Vista.tries_residuos import TriesResiduos
 from Vista.multiples_residuos import MultiplesResiduos
 from Vista.arboles_huffman import ArbolesHuffman
-from Vista.Cubetas import Cubetas
 
 # ✅ Importa también las vistas de búsquedas externas
 from Vista.lineal_externa import LinealExterna
@@ -24,7 +23,9 @@ from Vista.cuadrado_externa import CuadradoExterna
 from Vista.truncamiento_externa import TruncamientoExterna
 from Vista.plegamiento_externa import PlegamientoExterna
 from Vista.cambio_base import CambioBase
-
+from Vista.CubetaTotal import CubetaTotal
+from Vista.CubetaParcial import CubetaParcial
+from Vista.Indices import Indices
 
 class MainWindow(QMainWindow):
     def __init__(self, cambiar_pagina_callback):
@@ -63,7 +64,9 @@ class MainWindow(QMainWindow):
         self.tries_residuos = TriesResiduos(cambiar_pagina_callback)
         self.multiples_residuos = MultiplesResiduos(cambiar_pagina_callback)
         self.arboles_huffman = ArbolesHuffman(cambiar_pagina_callback)
-        self.cubetas = Cubetas(cambiar_pagina_callback)
+        self.cubeta_total = CubetaTotal(cambiar_pagina_callback)
+        self.cubeta_parcial = CubetaParcial(cambiar_pagina_callback)
+        self.indices = Indices(cambiar_pagina_callback)
 
         # ----- Añadir al stack -----
         self.stacked.addWidget(self.inicio)                # 0
@@ -92,8 +95,10 @@ class MainWindow(QMainWindow):
         self.stacked.addWidget(self.tries_residuos)        # 17
         self.stacked.addWidget(self.multiples_residuos)    # 18
         self.stacked.addWidget(self.arboles_huffman)       # 19
-        self.stacked.addWidget(self.cubetas)              # 20
-        self.stacked.addWidget(self.cambio_base)  # 21
+        self.stacked.addWidget(self.cambio_base)  # 20
+        self.stacked.addWidget(self.cubeta_total)  # 21
+        self.stacked.addWidget(self.cubeta_parcial)  # 22
+        self.stacked.addWidget(self.indices)  # 23
 
         # Página inicial
         self.stacked.setCurrentIndex(0)
@@ -127,9 +132,10 @@ class MainWindow(QMainWindow):
             "tries_residuos": 17,
             "multiples_residuos": 18,
             "arboles_huffman": 19,
-            "Cubetas": 20,
-            "cambio_base": 21
-
+            "cambio_base": 20,
+            "cubeta_total": 21,
+            "cubeta_parcial": 22,
+            "indices": 23,
         }
 
         if nombre in paginas:
