@@ -118,6 +118,8 @@ class Busqueda(QMainWindow):
         submenu_hash_ext.addAction("Función cuadrado", self.abrir_cuadrado_externa)
         submenu_hash_ext.addAction("Función truncamiento", self.abrir_truncamiento_externa)
         submenu_hash_ext.addAction("Función plegamiento", self.abrir_plegamiento_externa)
+        submenu_hash_ext.addAction("Función cambio de base", self.abrir_cambio_base)
+
         menu_externas.addMenu(submenu_hash_ext)
 
         busquedas_ext_action = menu_bar.addAction("🌍 Búsquedas Externas")
@@ -164,6 +166,7 @@ class Busqueda(QMainWindow):
     def abrir_cuadrado_externa(self): self.cambiar_ventana("cuadrado_externa")
     def abrir_truncamiento_externa(self): self.cambiar_ventana("truncamiento_externa")
     def abrir_plegamiento_externa(self): self.cambiar_ventana("plegamiento_externa")
+    def abrir_cambio_base(self): self.cambiar_ventana("cambio_base")
 
     # Cubetas
     def abrir_cubetas(self):self.cambiar_ventana("Cubetas")

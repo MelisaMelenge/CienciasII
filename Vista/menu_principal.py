@@ -23,6 +23,7 @@ from Vista.mod_externa import ModExterna
 from Vista.cuadrado_externa import CuadradoExterna
 from Vista.truncamiento_externa import TruncamientoExterna
 from Vista.plegamiento_externa import PlegamientoExterna
+from Vista.cambio_base import CambioBase
 
 
 class MainWindow(QMainWindow):
@@ -54,6 +55,7 @@ class MainWindow(QMainWindow):
         self.cuadrado_externa = CuadradoExterna(cambiar_pagina_callback)
         self.truncamiento_externa = TruncamientoExterna(cambiar_pagina_callback)
         self.plegamiento_externa = PlegamientoExterna(cambiar_pagina_callback)
+        self.cambio_base = CambioBase(cambiar_pagina_callback)
 
         # Otros
         self.busqueda_residuos = BusquedaResiduos(cambiar_pagina_callback)
@@ -91,6 +93,7 @@ class MainWindow(QMainWindow):
         self.stacked.addWidget(self.multiples_residuos)    # 18
         self.stacked.addWidget(self.arboles_huffman)       # 19
         self.stacked.addWidget(self.cubetas)              # 20
+        self.stacked.addWidget(self.cambio_base)  # 21
 
         # Página inicial
         self.stacked.setCurrentIndex(0)
@@ -124,7 +127,8 @@ class MainWindow(QMainWindow):
             "tries_residuos": 17,
             "multiples_residuos": 18,
             "arboles_huffman": 19,
-            "Cubetas": 20
+            "Cubetas": 20,
+            "cambio_base": 21
 
         }
 
