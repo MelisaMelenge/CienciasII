@@ -1,9 +1,11 @@
 from PySide6.QtWidgets import (
-    QMainWindow, QWidget, QVBoxLayout, QLabel, QFrame,QDialog,
+    QMainWindow, QWidget, QVBoxLayout, QLabel, QFrame,QDialog,QFileDialog,
     QMessageBox,QSpinBox, QComboBox, QPushButton, QGridLayout, QHBoxLayout, QScrollArea
 )
 from PySide6.QtCore import Qt
 from Vista.dialogo_clave import DialogoClave
+import json
+import os
 
 class CubetaTotal(QMainWindow):
     def __init__(self, cambiar_ventana):
@@ -19,12 +21,13 @@ class CubetaTotal(QMainWindow):
         self.num_digitos = 4
         self.estructura_creada = False
         self.historial = []
+        self.hubo_expansion = False  # Para controlar si ya se expandió alguna vez
 
         # --- Widget central ---
         central = QWidget()
         self.setCentralWidget(central)
         layout = QVBoxLayout(central)
-        layout.setSpacing(20)
+        layout.setSpacing(8)
 
         # --- Encabezado ---
         header = QFrame()
@@ -98,6 +101,7 @@ class CubetaTotal(QMainWindow):
         self.spin_registros.setStyleSheet(estilo_control)
         self.spin_digitos.setStyleSheet(estilo_control)
         self.combo_accion.setStyleSheet(estilo_control)
+        self.combo_accion.currentTextChanged.connect(self.actualizar_botones_accion)
 
         # --- Botones principales ---
         self.btn_crear = QPushButton("Crear estructura")
@@ -113,9 +117,10 @@ class CubetaTotal(QMainWindow):
             QPushButton {
                 background-color: #7C3AED;
                 color: white;
-                padding: 10px 20px;
-                font-size: 16px;
-                border-radius: 10px;
+                padding: 6px 14px;
+                font-size: 14px;
+                border-radius: 8px;
+                min-width: 150px;
             }
             QPushButton:hover {
                 background-color: #6D28D9;
@@ -134,20 +139,20 @@ class CubetaTotal(QMainWindow):
         controles = QVBoxLayout()
 
         fila_controles = QHBoxLayout()
-        fila_controles.setSpacing(20)
+        fila_controles.setSpacing(10)
         fila_controles.setAlignment(Qt.AlignCenter)
 
         lbl_cubetas = QLabel("Número de cubetas:")
-        lbl_cubetas.setStyleSheet("font-size: 16px; font-weight: bold;")
+        lbl_cubetas.setStyleSheet("font-size: 14px; font-weight: bold;")
 
         lbl_registros = QLabel("Registros por cubeta:")
-        lbl_registros.setStyleSheet("font-size: 16px; font-weight: bold;")
+        lbl_registros.setStyleSheet("font-size: 14px; font-weight: bold;")
 
         lbl_digitos = QLabel("Tamaño de claves:")
-        lbl_digitos.setStyleSheet("font-size: 16px; font-weight: bold;")
+        lbl_digitos.setStyleSheet("font-size: 14px; font-weight: bold;")
 
         lbl_accion = QLabel("Acción:")
-        lbl_accion.setStyleSheet("font-size: 16px; font-weight: bold;")
+        lbl_accion.setStyleSheet("font-size: 14px; font-weight: bold;")
 
         fila_controles.addWidget(lbl_cubetas)
         fila_controles.addWidget(self.spin_cubetas)
@@ -159,20 +164,33 @@ class CubetaTotal(QMainWindow):
         fila_controles.addWidget(self.combo_accion)
 
         controles.addLayout(fila_controles)
+        controles.setContentsMargins(0, 0, 0, 0)
 
         # --- Grid de botones ---
-        grid_botones = QGridLayout()
-        grid_botones.addWidget(self.btn_crear, 0, 0)
-        grid_botones.addWidget(self.btn_insertar, 0, 1)
-        grid_botones.addWidget(self.btn_buscar_clave, 0, 2)
-        grid_botones.addWidget(self.btn_eliminar_clave, 0, 3)
-        grid_botones.addWidget(self.btn_deshacer, 1, 0)
-        grid_botones.addWidget(self.btn_guardar, 1, 1)
-        grid_botones.addWidget(self.btn_eliminar, 1, 2)
-        grid_botones.addWidget(self.btn_cargar, 1, 3)
+        self.grid_botones = QGridLayout()
+        self.grid_botones.setHorizontalSpacing(15)
+        self.grid_botones.setVerticalSpacing(6)
+        self.grid_botones.setAlignment(Qt.AlignCenter)
 
-        controles.addLayout(grid_botones)
+        # Agregamos todos los botones al grid (en 2 filas x 3 columnas)
+        # --- Grid fijo (2 filas x 3 columnas) ---
+        # Insertar y Eliminar compartirán el mismo espacio (fila 0, columna 1)
+        self.grid_botones.addWidget(self.btn_crear, 0, 0)
+        self.grid_botones.addWidget(self.btn_insertar, 0, 1)
+        self.grid_botones.addWidget(self.btn_eliminar_clave, 0, 1)  # Mismo lugar
+        self.grid_botones.addWidget(self.btn_buscar_clave, 0, 2)
+        self.grid_botones.addWidget(self.btn_guardar, 1, 0)
+        self.grid_botones.addWidget(self.btn_eliminar, 1, 1)
+        self.grid_botones.addWidget(self.btn_cargar, 1, 2)
+
+        self.grid_botones.setAlignment(Qt.AlignCenter)
+
+
+        controles.addLayout(self.grid_botones)
         layout.addLayout(controles)
+
+        # Inicializar visibilidad según acción actual
+        self.actualizar_botones_accion()
 
         # --- Área de visualización (scroll) ---
         self.scroll = QScrollArea()
@@ -196,8 +214,9 @@ class CubetaTotal(QMainWindow):
         self.btn_insertar.clicked.connect(self.insertar_clave)
         self.btn_buscar_clave.clicked.connect(self.buscar_clave)
         self.btn_eliminar_clave.clicked.connect(self.eliminar_clave)
-        self.btn_deshacer.clicked.connect(self.deshacer)
         self.btn_eliminar.clicked.connect(self.eliminar_estructura)
+        self.btn_guardar.clicked.connect(self.guardar_estructura)  # ← AGREGAR ESTA LÍNEA
+        self.btn_cargar.clicked.connect(self.cargar_estructura)  # ← AGREGAR ESTA LÍNEA
 
     def crear_estructura(self):
         """Crear la estructura de cubetas"""
@@ -230,25 +249,37 @@ class CubetaTotal(QMainWindow):
             return -1
 
     def calcular_ocupacion(self):
-        """Calcular ocupación = registros ocupados / registros disponibles"""
-        ocupados = sum(len(cubeta) for cubeta in self.cubetas)
+        """
+        Calcular ocupación para EXPANSIÓN = registros ocupados (dentro límite R) / espacios disponibles
+
+        Solo cuenta elementos dentro del límite R.
+        Si es >= 75%, se expande.
+        """
+        ocupados_reales = sum(min(len(cubeta), self.R) for cubeta in self.cubetas)
         disponibles = self.n * self.R
-        return ocupados / disponibles if disponibles > 0 else 0
+        return ocupados_reales / disponibles if disponibles > 0 else 0
 
     def insertar_clave(self):
-        """Insertar una nueva clave"""
+        """Insertar una nueva clave con desbordamiento visible antes de expandir"""
         if not self.estructura_creada:
             QMessageBox.warning(self, "Error", "Primero debe crear la estructura.")
             return
 
-        dialogo = DialogoClave(self, "Insertar Clave", self.num_digitos)
+        dialogo = DialogoClave(self.num_digitos, "Insertar Clave", "insertar", self)
         if dialogo.exec() == QDialog.Accepted:
             clave = dialogo.get_clave()
 
+            # Validar clave
             if len(clave) != self.num_digitos or not clave.isdigit():
                 QMessageBox.warning(self, "Error",
                                     f"La clave debe tener exactamente {self.num_digitos} dígitos.")
                 return
+
+            # Verificar duplicados
+            for cubeta in self.cubetas:
+                if clave in cubeta:
+                    QMessageBox.warning(self, "Error", "La clave ya existe.")
+                    return
 
             # Guardar estado para deshacer
             self.guardar_estado()
@@ -256,51 +287,57 @@ class CubetaTotal(QMainWindow):
             # Calcular posición
             posicion = self.calcular_posicion(clave)
 
-            # Verificar si la clave ya existe
-            for cubeta in self.cubetas:
-                if clave in cubeta:
-                    QMessageBox.warning(self, "Error", "La clave ya existe.")
-                    return
+            # SIEMPRE insertar en la cubeta correspondiente (permitir desbordamiento)
+            self.cubetas[posicion].append(clave)
 
-            # Insertar en la cubeta correspondiente
-            if len(self.cubetas[posicion]) < self.R:
-                self.cubetas[posicion].append(clave)
-                self.actualizar_visualizacion()
-
-                # Verificar si se debe expandir
-                ocupacion = self.calcular_ocupacion()
-                if ocupacion >= 0.75:
-                    self.expandir()
-            else:
-                QMessageBox.warning(self, "Error",
-                                    f"La cubeta {posicion} está llena. Se requiere expansión manual.")
-
-    def expandir(self):
-        """Expandir la estructura (duplicar número de cubetas)"""
-        msg = f"Ocupación: {self.calcular_ocupacion() * 100:.1f}%\n"
-        msg += f"Se expandirá de {self.n}x{self.R} a {self.n * 2}x{self.R}"
-
-        respuesta = QMessageBox.question(self, "Expansión", msg,
-                                         QMessageBox.Yes | QMessageBox.No)
-
-        if respuesta == QMessageBox.Yes:
-            # Guardar todas las claves
-            todas_claves = []
-            for cubeta in self.cubetas:
-                todas_claves.extend(cubeta)
-
-            # Duplicar número de cubetas
-            self.n = self.n * 2
-            self.cubetas = [[] for _ in range(self.n)]
-
-            # Re-insertar todas las claves
-            for clave in todas_claves:
-                posicion = self.calcular_posicion(clave)
-                self.cubetas[posicion].append(clave)
-
+            # Actualizar visualización para mostrar el desbordamiento
             self.actualizar_visualizacion()
-            QMessageBox.information(self, "Éxito",
-                                    f"Estructura expandida a {self.n} cubetas")
+
+            # Calcular ocupación REAL (considerando solo espacios dentro del límite R)
+            ocupados_reales = sum(min(len(cubeta), self.R) for cubeta in self.cubetas)
+            disponibles = self.n * self.R
+            ocupacion_real = ocupados_reales / disponibles if disponibles > 0 else 0
+
+            # Si la cubeta desbordó o la ocupación >= 75%, expandir
+            if len(self.cubetas[posicion]) > self.R or ocupacion_real >= 0.75:
+                QMessageBox.information(
+                    self, "Desbordamiento detectado",
+                    f"La clave {clave} fue insertada en la cubeta {posicion}.\n"
+                    f"Ocupación real: {ocupacion_real * 100:.1f}%\n"
+                    f"Se procederá a expandir la estructura."
+                )
+                self.expandir_total()
+
+    def expandir_total(self):
+        self.hubo_expansion = True
+
+        """Expansión total automática: duplica cubetas cuando la ocupación ≥ 75 %"""
+        ocupacion = self.calcular_ocupacion()
+        if ocupacion < 0.75:
+            return  # aún no es necesario expandir
+
+        antiguo_n = self.n
+        nuevo_n = self.n * 2
+
+        # Guardar todas las claves actuales
+        todas_claves = [clave for cubeta in self.cubetas for clave in cubeta]
+
+        # Reasignar estructura
+        self.n = nuevo_n
+        self.cubetas = [[] for _ in range(self.n)]
+
+        # Reinsertar claves con nuevo módulo
+        for clave in todas_claves:
+            pos = self.calcular_posicion(clave)
+            self.cubetas[pos].append(clave)
+
+        self.actualizar_visualizacion()
+
+        QMessageBox.information(
+            self, "Expansión total",
+            f"Ocupación: {ocupacion * 100:.1f}%\n"
+            f"Estructura expandida de {antiguo_n} a {nuevo_n} cubetas."
+        )
 
     def buscar_clave(self):
         """Buscar una clave"""
@@ -308,7 +345,7 @@ class CubetaTotal(QMainWindow):
             QMessageBox.warning(self, "Error", "Primero debe crear la estructura.")
             return
 
-        dialogo = DialogoClave(self, "Buscar Clave", self.num_digitos)
+        dialogo = DialogoClave(self.num_digitos, "Buscar Clave", "buscar", self)
         if dialogo.exec() == QDialog.Accepted:
             clave = dialogo.get_clave()
 
@@ -323,15 +360,16 @@ class CubetaTotal(QMainWindow):
                                         f"La clave {clave} no existe en la estructura.")
 
     def eliminar_clave(self):
-        """Eliminar una clave"""
+        """Eliminar una clave con reducción automática"""
         if not self.estructura_creada:
             QMessageBox.warning(self, "Error", "Primero debe crear la estructura.")
             return
 
-        dialogo = DialogoClave(self, "Eliminar Clave", self.num_digitos)
+        dialogo = DialogoClave(self.num_digitos, "Eliminar Clave", "eliminar", self)
         if dialogo.exec() == QDialog.Accepted:
             clave = dialogo.get_clave()
 
+            # Guardar estado para deshacer
             self.guardar_estado()
 
             posicion = self.calcular_posicion(clave)
@@ -339,8 +377,22 @@ class CubetaTotal(QMainWindow):
             if clave in self.cubetas[posicion]:
                 self.cubetas[posicion].remove(clave)
                 self.actualizar_visualizacion()
-                QMessageBox.information(self, "Éxito",
-                                        f"Clave {clave} eliminada de la cubeta {posicion}")
+
+                # Calcular ocupación para reducción
+                ocupacion_reduccion = self.calcular_ocupacion_reduccion()
+
+                # Verificar si se puede reducir (ocupación <= 80% y n >= 4)
+                if ocupacion_reduccion <= 0.80 and self.n >= 4:
+                    QMessageBox.information(
+                        self, "Reducción detectada",
+                        f"La clave {clave} fue eliminada de la cubeta {posicion}.\n"
+                        f"Espacios ocupados / cubetas: {ocupacion_reduccion * 100:.1f}%\n"
+                        f"Se procederá a reducir la estructura."
+                    )
+                    self.reducir_total()
+                else:
+                    QMessageBox.information(self, "Éxito",
+                                            f"Clave {clave} eliminada de la cubeta {posicion}")
             else:
                 QMessageBox.warning(self, "Error",
                                     f"La clave {clave} no existe.")
@@ -353,20 +405,6 @@ class CubetaTotal(QMainWindow):
             'R': self.R
         }
         self.historial.append(estado)
-
-    def deshacer(self):
-        """Deshacer último movimiento"""
-        if not self.historial:
-            QMessageBox.information(self, "Info", "No hay acciones para deshacer.")
-            return
-
-        estado = self.historial.pop()
-        self.cubetas = estado['cubetas']
-        self.n = estado['n']
-        self.R = estado['R']
-
-        self.actualizar_visualizacion()
-        QMessageBox.information(self, "Éxito", "Acción deshecha.")
 
     def eliminar_estructura(self):
         """Eliminar la estructura completa"""
@@ -393,7 +431,7 @@ class CubetaTotal(QMainWindow):
             self.contenedor_layout.addWidget(self.lbl_info)
 
     def actualizar_visualizacion(self):
-        """Actualizar la visualización de las cubetas"""
+        """Actualizar la visualización: cubetas horizontales, registros verticales"""
         # Limpiar contenedor
         while self.contenedor_layout.count():
             item = self.contenedor_layout.takeAt(0)
@@ -402,51 +440,341 @@ class CubetaTotal(QMainWindow):
 
         # Título con ocupación
         ocupacion = self.calcular_ocupacion()
-        info_layout = QHBoxLayout()
-        info_layout.setAlignment(Qt.AlignCenter)
-
-        titulo = QLabel(f"Estructura: {self.n} cubetas x {self.R} registros")
-        titulo.setStyleSheet("font-size: 18px; font-weight: bold; color: #4C1D95;")
-
-        ocupacion_lbl = QLabel(f"Ocupación: {ocupacion * 100:.1f}%")
         color = "#059669" if ocupacion < 0.75 else "#DC2626"
-        ocupacion_lbl.setStyleSheet(f"font-size: 18px; font-weight: bold; color: {color};")
 
-        info_layout.addWidget(titulo)
-        info_layout.addWidget(QLabel(" | "))
-        info_layout.addWidget(ocupacion_lbl)
+        lbl_info = QLabel(
+            f"<b>Estructura:</b> {self.n} cubetas x {self.R} registros "
+            f"<span style='color:{color}; font-weight:bold;'>| Ocupación: {ocupacion * 100:.1f}%</span>"
+        )
+        lbl_info.setAlignment(Qt.AlignCenter)
+        lbl_info.setStyleSheet("font-size: 14px; margin-bottom: 10px;")
+        self.contenedor_layout.addWidget(lbl_info)
 
-        self.contenedor_layout.addLayout(info_layout)
+        # Crear tabla usando QGridLayout
+        tabla_widget = QWidget()
+        grid = QGridLayout(tabla_widget)
+        grid.setSpacing(2)
+        grid.setContentsMargins(0, 0, 0, 0)
 
-        # Crear grid de cubetas
-        for i, cubeta in enumerate(self.cubetas):
-            frame = QFrame()
-            frame.setStyleSheet("""
-                QFrame {
-                    background-color: #F3F4F6;
-                    border: 2px solid #7C3AED;
-                    border-radius: 8px;
-                    padding: 10px;
-                }
+        # ==================== ENCABEZADO (CUBETAS) ====================
+        # Esquina superior izquierda vacía
+        lbl_esquina = QLabel("")
+        lbl_esquina.setStyleSheet("""
+            background-color: #7C3AED;
+            border: 1px solid #6D28D9;
+        """)
+        lbl_esquina.setFixedWidth(55)
+        lbl_esquina.setFixedHeight(28)
+        grid.addWidget(lbl_esquina, 0, 0)
+
+        # Headers de cubetas (columnas)
+        for i in range(self.n):
+            lbl_cubeta = QLabel(f"C{i}")
+            lbl_cubeta.setAlignment(Qt.AlignCenter)
+            lbl_cubeta.setStyleSheet("""
+                background-color: #7C3AED;
+                color: white;
+                font-size: 12px;
+                font-weight: bold;
+                padding: 6px 8px;
+                border: 1px solid #6D28D9;
             """)
+            lbl_cubeta.setMinimumWidth(60)
+            lbl_cubeta.setMaximumWidth(80)
+            lbl_cubeta.setFixedHeight(28)
+            grid.addWidget(lbl_cubeta, 0, i + 1)
 
-            layout = QVBoxLayout(frame)
+        # ==================== FILAS DE REGISTROS ====================
+        for j in range(self.R):
+            # Header de registro (fila)
+            lbl_registro = QLabel(f"R{j + 1}")
+            lbl_registro.setAlignment(Qt.AlignCenter)
+            lbl_registro.setStyleSheet("""
+                background-color: #7C3AED;
+                color: white;
+                font-size: 12px;
+                font-weight: bold;
+                padding: 6px 8px;
+                border: 1px solid #6D28D9;
+            """)
+            lbl_registro.setFixedWidth(55)
+            lbl_registro.setFixedHeight(30)
+            grid.addWidget(lbl_registro, j + 1, 0)
 
-            # Título de cubeta
-            titulo_cubeta = QLabel(f"Cubeta {i}")
-            titulo_cubeta.setStyleSheet("font-size: 16px; font-weight: bold; color: #7C3AED;")
-            titulo_cubeta.setAlignment(Qt.AlignCenter)
-            layout.addWidget(titulo_cubeta)
+            # Celdas de datos
+            for i in range(self.n):
+                cubeta = self.cubetas[i]
+                bg_color = "#F3F4F6" if i % 2 == 0 else "#FFFFFF"
 
-            # Registros
-            for j in range(self.R):
                 if j < len(cubeta):
-                    lbl = QLabel(f"R{j + 1}: {cubeta[j]}")
-                    lbl.setStyleSheet("font-size: 14px; color: #1F2937; padding: 5px;")
+                    # Registro ocupado
+                    lbl_val = QLabel(cubeta[j])
+                    lbl_val.setStyleSheet(f"""
+                        background-color: {bg_color};
+                        color: #1F2937;
+                        font-size: 12px;
+                        font-weight: 500;
+                        padding: 6px 8px;
+                        border: 1px solid #E5E7EB;
+                    """)
                 else:
-                    lbl = QLabel(f"R{j + 1}: ---")
-                    lbl.setStyleSheet("font-size: 14px; color: #9CA3AF; padding: 5px;")
-                layout.addWidget(lbl)
+                    # Celda vacía
+                    lbl_val = QLabel("---")
+                    lbl_val.setStyleSheet(f"""
+                        background-color: {bg_color};
+                        color: #9CA3AF;
+                        font-size: 11px;
+                        padding: 6px 8px;
+                        border: 1px solid #E5E7EB;
+                    """)
 
-            self.contenedor_layout.addWidget(frame)
+                lbl_val.setAlignment(Qt.AlignCenter)
+                lbl_val.setMinimumWidth(60)
+                lbl_val.setMaximumWidth(80)
+                lbl_val.setFixedHeight(30)
+                grid.addWidget(lbl_val, j + 1, i + 1)
 
+        # ==================== DESBORDAMIENTOS (sin cuadrado) ====================
+        fila_desborde = self.R + 1
+        hay_desbordamientos = False
+
+        for i in range(self.n):
+            cubeta = self.cubetas[i]
+            if len(cubeta) > self.R:
+                hay_desbordamientos = True
+                # Mostrar elementos que exceden el límite
+                extras = cubeta[self.R:]
+                texto_extras = ", ".join(extras)
+
+                lbl_extra = QLabel(texto_extras)
+                lbl_extra.setAlignment(Qt.AlignCenter)
+                lbl_extra.setStyleSheet("""
+                    color: #DC2626;
+                    font-size: 11px;
+                    font-weight: bold;
+                    padding: 4px;
+                    background-color: #FEE2E2;
+                """)
+                lbl_extra.setMinimumWidth(60)
+                lbl_extra.setMaximumWidth(80)
+                grid.addWidget(lbl_extra, fila_desborde, i + 1)
+
+        # Si hay desbordamientos, agregar label indicador
+        if hay_desbordamientos:
+            lbl_desborde_txt = QLabel("Desborde")
+            lbl_desborde_txt.setAlignment(Qt.AlignCenter)
+            lbl_desborde_txt.setStyleSheet("""
+                background-color: #FEE2E2;
+                color: #DC2626;
+                font-size: 10px;
+                font-weight: bold;
+                padding: 4px;
+                border: 1px solid #FCA5A5;
+            """)
+            lbl_desborde_txt.setFixedWidth(55)
+            grid.addWidget(lbl_desborde_txt, fila_desborde, 0)
+
+        # Configurar que las columnas no se estiren
+        grid.setColumnStretch(0, 0)
+        for i in range(1, self.n + 1):
+            grid.setColumnStretch(i, 0)
+
+        # Agregar la tabla al contenedor
+        self.contenedor_layout.addWidget(tabla_widget, alignment=Qt.AlignTop | Qt.AlignHCenter)
+        self.contenedor_layout.addStretch()
+
+    def actualizar_botones_accion(self):
+        """Mostrar los botones según la acción seleccionada (Expandir o Reducir)"""
+        accion = self.combo_accion.currentText()
+
+        # Primero ocultamos ambos
+        self.btn_insertar.hide()
+        self.btn_eliminar_clave.hide()
+
+        # Mostrar el que corresponda en el mismo lugar
+        if accion == "Expandir":
+            self.btn_insertar.show()
+        elif accion == "Reducir":
+            if self.hubo_expansion:
+                self.btn_eliminar_clave.show()
+            else:
+                QMessageBox.warning(
+                    self, "Aviso",
+                    "No puede reducir porque no ha habido ninguna expansión todavía."
+                )
+                self.combo_accion.setCurrentText("Expandir")
+                self.actualizar_botones_accion()
+                return
+
+        # Mantener visibles los demás
+        self.btn_crear.show()
+        self.btn_buscar_clave.show()
+        self.btn_guardar.show()
+        self.btn_eliminar.show()
+        self.btn_cargar.show()
+
+
+    def calcular_ocupacion_reduccion(self):
+        """
+        Calcular ocupación para REDUCCIÓN = espacios ocupados / número de cubetas
+
+        Cuenta TODOS los elementos (incluso desbordados) dividido por número de cubetas.
+        Si el resultado es <= 80%, se puede reducir.
+        """
+        espacios_ocupados = sum(len(cubeta) for cubeta in self.cubetas)
+        return espacios_ocupados / self.n if self.n > 0 else 0
+
+
+    def reducir_total(self):
+        """Reducción total: reduce cubetas a la mitad cuando ocupación <= 80%"""
+
+        # Validar que se pueda reducir
+        if self.n < 4:
+            QMessageBox.warning(
+                self, "No se puede reducir",
+                "La estructura tiene menos de 4 cubetas. No se puede reducir más."
+            )
+            return
+
+        ocupacion_reduccion = self.calcular_ocupacion_reduccion()
+
+        if ocupacion_reduccion > 0.80:
+            QMessageBox.warning(
+                self, "No se puede reducir",
+                f"La ocupación ({ocupacion_reduccion * 100:.1f}%) es mayor a 80%.\n"
+                "No se puede reducir la estructura."
+            )
+            return
+
+        antiguo_n = self.n
+        nuevo_n = self.n // 2
+
+        # Guardar todas las claves actuales
+        todas_claves = [clave for cubeta in self.cubetas for clave in cubeta]
+
+        # Reasignar estructura
+        self.n = nuevo_n
+        self.cubetas = [[] for _ in range(self.n)]
+
+        # Reinsertar claves con nuevo módulo
+        for clave in todas_claves:
+            pos = self.calcular_posicion(clave)
+            self.cubetas[pos].append(clave)
+
+        self.actualizar_visualizacion()
+
+        QMessageBox.information(
+            self, "Reducción total",
+            f"Ocupación: {ocupacion_reduccion * 100:.1f}%\n"
+            f"Estructura reducida de {antiguo_n} a {nuevo_n} cubetas."
+        )
+
+    def guardar_estructura(self):
+        """Guardar la estructura actual en un archivo JSON"""
+        if not self.estructura_creada:
+            QMessageBox.warning(self, "Error", "No hay estructura para guardar.")
+            return
+
+        # Abrir diálogo para seleccionar ubicación y nombre
+        archivo, _ = QFileDialog.getSaveFileName(
+            self,
+            "Guardar estructura",
+            "",
+            "Archivos JSON (*.json);;Todos los archivos (*)"
+        )
+
+        if not archivo:
+            return  # Usuario canceló
+
+        # Asegurar extensión .json
+        if not archivo.endswith('.json'):
+            archivo += '.json'
+
+        try:
+            # Preparar datos a guardar
+            datos = {
+                "n": self.n,
+                "R": self.R,
+                "num_digitos": self.num_digitos,
+                "cubetas": self.cubetas,
+                "hubo_expansion": self.hubo_expansion
+            }
+
+            # Guardar en archivo
+            with open(archivo, 'w', encoding='utf-8') as f:
+                json.dump(datos, f, indent=4, ensure_ascii=False)
+
+            QMessageBox.information(
+                self, "Éxito",
+                f"Estructura guardada correctamente en:\n{archivo}"
+            )
+
+        except Exception as e:
+            QMessageBox.critical(
+                self, "Error",
+                f"Error al guardar la estructura:\n{str(e)}"
+            )
+
+    def cargar_estructura(self):
+                """Cargar una estructura desde un archivo JSON"""
+                # Abrir diálogo para seleccionar archivo
+                archivo, _ = QFileDialog.getOpenFileName(
+                    self,
+                    "Cargar estructura",
+                    "",
+                    "Archivos JSON (*.json);;Todos los archivos (*)"
+                )
+
+                if not archivo:
+                    return  # Usuario canceló
+
+                if not os.path.exists(archivo):
+                    QMessageBox.warning(self, "Error", f"El archivo no existe:\n{archivo}")
+                    return
+
+                try:
+                    # Leer archivo
+                    with open(archivo, 'r', encoding='utf-8') as f:
+                        datos = json.load(f)
+
+                    # Validar datos
+                    if not all(k in datos for k in ["n", "R", "num_digitos", "cubetas"]):
+                        QMessageBox.warning(
+                            self, "Error",
+                            "El archivo no contiene una estructura válida."
+                        )
+                        return
+
+                    # Restaurar datos
+                    self.n = datos["n"]
+                    self.R = datos["R"]
+                    self.num_digitos = datos["num_digitos"]
+                    self.cubetas = datos["cubetas"]
+                    self.hubo_expansion = datos.get("hubo_expansion", False)
+                    self.estructura_creada = True
+                    self.historial = []
+
+                    # Actualizar controles de la interfaz
+                    self.spin_cubetas.setValue(self.n)
+                    self.spin_registros.setValue(self.R)
+                    self.spin_digitos.setValue(self.num_digitos)
+
+                    # Actualizar visualización
+                    self.actualizar_visualizacion()
+
+                    QMessageBox.information(
+                        self, "Éxito",
+                        f"Estructura cargada correctamente desde:\n{archivo}\n\n"
+                        f"{self.n} cubetas x {self.R} registros"
+                    )
+
+                except json.JSONDecodeError:
+                    QMessageBox.critical(
+                        self, "Error",
+                        "El archivo no es un JSON válido."
+                    )
+                except Exception as e:
+                    QMessageBox.critical(
+                        self, "Error",
+                        f"Error al cargar la estructura:\n{str(e)}"
+                    )

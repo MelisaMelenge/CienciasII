@@ -27,6 +27,11 @@ from Vista.CubetaTotal import CubetaTotal
 from Vista.CubetaParcial import CubetaParcial
 from Vista.Indices import Indices
 
+#grafos
+from Vista.interseccion_grafos import InterseccionGrafos
+from Vista.union_grafos import UnionGrafos
+from Vista.suma_anillo_grafos import SumaAnilloGrafos
+
 class MainWindow(QMainWindow):
     def __init__(self, cambiar_pagina_callback):
         super().__init__()
@@ -40,6 +45,10 @@ class MainWindow(QMainWindow):
         self.inicio = Inicio(cambiar_pagina_callback)
         self.busqueda = Busqueda(cambiar_pagina_callback)
         self.grafos = Grafos(cambiar_pagina_callback)
+        # Operaciones entre grafos
+        self.interseccion_grafos = InterseccionGrafos(cambiar_pagina_callback)
+        self.union_grafos = UnionGrafos(cambiar_pagina_callback)
+        self.suma_anillo_grafos = SumaAnilloGrafos(cambiar_pagina_callback)
 
         # Internas
         self.lineal_interna = LinealInterna(cambiar_pagina_callback)
@@ -100,6 +109,11 @@ class MainWindow(QMainWindow):
         self.stacked.addWidget(self.cubeta_parcial)  # 22
         self.stacked.addWidget(self.indices)  # 23
 
+        #Grafos
+        self.stacked.addWidget(self.interseccion_grafos)  # 24
+        self.stacked.addWidget(self.union_grafos)  # 25
+        self.stacked.addWidget(self.suma_anillo_grafos)  # 26
+
         # Página inicial
         self.stacked.setCurrentIndex(0)
 
@@ -136,6 +150,11 @@ class MainWindow(QMainWindow):
             "cubeta_total": 21,
             "cubeta_parcial": 22,
             "indices": 23,
+
+            #grafos
+            "interseccion_grafos": 24,
+            "union_grafos": 25,
+            "suma_anillo_grafos": 26,
         }
 
         if nombre in paginas:
