@@ -88,7 +88,7 @@ class InterseccionGrafos(QMainWindow):
         grafo1_layout = QVBoxLayout(grafo1_container)
         grafo1_layout.setSpacing(8)
 
-        label_grafo1 = QLabel(" Grafo 1")
+        label_grafo1 = QLabel("Grafo 1")
         label_grafo1.setStyleSheet("font-size: 15px; font-weight: bold; color: #6C4E31;")
         grafo1_layout.addWidget(label_grafo1, alignment=Qt.AlignCenter)
 
@@ -119,13 +119,17 @@ class InterseccionGrafos(QMainWindow):
         botones_archivo_g1.addWidget(self.btn_cargar_g1)
         grafo1_layout.addLayout(botones_archivo_g1)
 
-        # Botón limpiar grafo 1
-        self.btn_limpiar_g1 = QPushButton(" Limpiar")
-        grafo1_layout.addWidget(self.btn_limpiar_g1)
+        # NUEVO: Botones Limpiar y Eliminar Vértice en la misma fila
+        botones_extra_g1 = QHBoxLayout()
+        self.btn_limpiar_g1 = QPushButton("Limpiar")
+        self.btn_eliminar_vertice_g1 = QPushButton("- Vértice")
+        botones_extra_g1.addWidget(self.btn_limpiar_g1)
+        botones_extra_g1.addWidget(self.btn_eliminar_vertice_g1)
+        grafo1_layout.addLayout(botones_extra_g1)
 
         # --- BOTÓN CALCULAR ---
         self.btn_calcular = QPushButton("Calcular Intersección")
-        self.btn_calcular.setFixedHeight(80)
+        self.btn_calcular.setFixedHeight(60)
         self.btn_calcular.setStyleSheet("""
             QPushButton {
                 background-color: #9c724a;
@@ -138,6 +142,7 @@ class InterseccionGrafos(QMainWindow):
             QPushButton:hover { background-color: #6C4E31; }
         """)
 
+        # --- GRAFO 2 ---
         # --- GRAFO 2 ---
         grafo2_container = QWidget()
         grafo2_layout = QVBoxLayout(grafo2_container)
@@ -174,26 +179,30 @@ class InterseccionGrafos(QMainWindow):
         botones_archivo_g2.addWidget(self.btn_cargar_g2)
         grafo2_layout.addLayout(botones_archivo_g2)
 
-        # Botón limpiar grafo 2
-        self.btn_limpiar_g2 = QPushButton(" Limpiar")
-        grafo2_layout.addWidget(self.btn_limpiar_g2)
+        # NUEVO: Botones Limpiar y Eliminar Vértice en la misma fila
+        botones_extra_g2 = QHBoxLayout()
+        self.btn_limpiar_g2 = QPushButton("Limpiar")
+        self.btn_eliminar_vertice_g2 = QPushButton("- Vértice")
+        botones_extra_g2.addWidget(self.btn_limpiar_g2)
+        botones_extra_g2.addWidget(self.btn_eliminar_vertice_g2)
+        grafo2_layout.addLayout(botones_extra_g2)
 
         # Estilos de botones
         for btn in (self.btn_crear_g1, self.btn_agregar_arista_g1, self.btn_eliminar_arista_g1,
-                    self.btn_guardar_g1, self.btn_cargar_g1, self.btn_limpiar_g1,
+                    self.btn_guardar_g1, self.btn_cargar_g1, self.btn_limpiar_g1, self.btn_eliminar_vertice_g1,
                     self.btn_crear_g2, self.btn_agregar_arista_g2, self.btn_eliminar_arista_g2,
-                    self.btn_guardar_g2, self.btn_cargar_g2, self.btn_limpiar_g2):
+                    self.btn_guardar_g2, self.btn_cargar_g2, self.btn_limpiar_g2, self.btn_eliminar_vertice_g2):
             btn.setStyleSheet("""
-                QPushButton {
-                    background-color: #6C4E31;
-                    color: #FFEAC5;
-                    padding: 6px 10px;
-                    font-size: 13px;
-                    border-radius: 6px;
-                    min-width: 70px;
-                }
-                QPushButton:hover { background-color: #9c724a; }
-            """)
+                        QPushButton {
+                            background-color: #6C4E31;
+                            color: #FFEAC5;
+                            padding: 6px 10px;
+                            font-size: 13px;
+                            border-radius: 6px;
+                            min-width: 70px;
+                        }
+                        QPushButton:hover { background-color: #9c724a; }
+                    """)
 
         for widget in (self.vertices_g1, self.vertices_g2):
             widget.setStyleSheet("""
@@ -717,3 +726,140 @@ class InterseccionGrafos(QMainWindow):
         self.visual_interseccion.set_grafo(0, [], {})
         DialogoClave(0, "Intersección limpiada", "mensaje", self,
                      "La visualización de la intersección\nha sido limpiada exitosamente.").exec()
+
+    def eliminar_vertice_g1(self):
+        """Elimina un vértice del Grafo 1"""
+        if self.grafo1_vertices == 0:
+            DialogoClave(0, "Error", "mensaje", self,
+                         "No hay vértices para eliminar en el Grafo 1.").exec()
+            return
+
+        from PySide6.QtWidgets import QInputDialog
+
+        # Crear lista de opciones con etiquetas
+        opciones = [f"{i + 1}: {self.grafo1_etiquetas.get(i, str(i + 1))}"
+                    for i in range(self.grafo1_vertices)]
+
+        opcion, ok = QInputDialog.getItem(
+            self,
+            "Eliminar Vértice",
+            "Selecciona el vértice a eliminar:",
+            opciones,
+            0,
+            False
+        )
+
+        if ok and opcion:
+            # Extraer el índice del vértice seleccionado
+            indice = int(opcion.split(":")[0]) - 1
+            etiqueta_eliminada = self.grafo1_etiquetas.get(indice, str(indice + 1))
+
+            # Eliminar todas las aristas conectadas a este vértice
+            aristas_nuevas = []
+            ponderaciones_nuevas = {}
+
+            for arista in self.grafo1_aristas:
+                origen, destino = arista
+                # Si la arista no involucra al vértice eliminado
+                if origen != indice and destino != indice:
+                    # Ajustar índices si son mayores que el índice eliminado
+                    nuevo_origen = origen if origen < indice else origen - 1
+                    nuevo_destino = destino if destino < indice else destino - 1
+                    nueva_arista = (nuevo_origen, nuevo_destino)
+                    aristas_nuevas.append(nueva_arista)
+
+                    # Transferir ponderación si existe
+                    if arista in self.grafo1_ponderaciones:
+                        ponderaciones_nuevas[nueva_arista] = self.grafo1_ponderaciones[arista]
+
+            # Actualizar etiquetas
+            etiquetas_nuevas = {}
+            for i in range(self.grafo1_vertices):
+                if i < indice:
+                    etiquetas_nuevas[i] = self.grafo1_etiquetas.get(i, str(i + 1))
+                elif i > indice:
+                    etiquetas_nuevas[i - 1] = self.grafo1_etiquetas.get(i, str(i + 1))
+
+            # Actualizar el grafo
+            self.grafo1_vertices -= 1
+            self.grafo1_aristas = aristas_nuevas
+            self.grafo1_etiquetas = etiquetas_nuevas
+            self.grafo1_ponderaciones = ponderaciones_nuevas
+
+            self.vertices_g1.setValue(self.grafo1_vertices)
+            self.visual_g1.set_grafo(self.grafo1_vertices, self.grafo1_aristas,
+                                     self.grafo1_etiquetas, self.grafo1_ponderaciones)
+
+            DialogoClave(0, "Vértice eliminado", "mensaje", self,
+                         f"Vértice '{etiqueta_eliminada}' eliminado del Grafo 1.\n\n"
+                         f"Vértices restantes: {self.grafo1_vertices}\n"
+                         f"Aristas eliminadas: {len(self.grafo1_aristas) - len(aristas_nuevas)}").exec()
+
+    def eliminar_vertice_g2(self):
+        """Elimina un vértice del Grafo 2"""
+        if self.grafo2_vertices == 0:
+            DialogoClave(0, "Error", "mensaje", self,
+                         "No hay vértices para eliminar en el Grafo 2.").exec()
+            return
+
+        from PySide6.QtWidgets import QInputDialog
+
+        # Crear lista de opciones con etiquetas
+        opciones = [f"{i + 1}: {self.grafo2_etiquetas.get(i, str(i + 1))}"
+                    for i in range(self.grafo2_vertices)]
+
+        opcion, ok = QInputDialog.getItem(
+            self,
+            "Eliminar Vértice",
+            "Selecciona el vértice a eliminar:",
+            opciones,
+            0,
+            False
+        )
+
+        if ok and opcion:
+            # Extraer el índice del vértice seleccionado
+            indice = int(opcion.split(":")[0]) - 1
+            etiqueta_eliminada = self.grafo2_etiquetas.get(indice, str(indice + 1))
+
+            # Eliminar todas las aristas conectadas a este vértice
+            aristas_nuevas = []
+            ponderaciones_nuevas = {}
+
+            for arista in self.grafo2_aristas:
+                origen, destino = arista
+                # Si la arista no involucra al vértice eliminado
+                if origen != indice and destino != indice:
+                    # Ajustar índices si son mayores que el índice eliminado
+                    nuevo_origen = origen if origen < indice else origen - 1
+                    nuevo_destino = destino if destino < indice else destino - 1
+                    nueva_arista = (nuevo_origen, nuevo_destino)
+                    aristas_nuevas.append(nueva_arista)
+
+                    # Transferir ponderación si existe
+                    if arista in self.grafo2_ponderaciones:
+                        ponderaciones_nuevas[nueva_arista] = self.grafo2_ponderaciones[arista]
+
+            # Actualizar etiquetas
+            etiquetas_nuevas = {}
+            for i in range(self.grafo2_vertices):
+                if i < indice:
+                    etiquetas_nuevas[i] = self.grafo2_etiquetas.get(i, str(i + 1))
+                elif i > indice:
+                    etiquetas_nuevas[i - 1] = self.grafo2_etiquetas.get(i, str(i + 1))
+
+            # Actualizar el grafo
+            self.grafo2_vertices -= 1
+            self.grafo2_aristas = aristas_nuevas
+            self.grafo2_etiquetas = etiquetas_nuevas
+            self.grafo2_ponderaciones = ponderaciones_nuevas
+
+            self.vertices_g2.setValue(self.grafo2_vertices)
+            self.visual_g2.set_grafo(self.grafo2_vertices, self.grafo2_aristas,
+                                     self.grafo2_etiquetas, self.grafo2_ponderaciones)
+
+            aristas_eliminadas = len(self.grafo2_aristas) - len(aristas_nuevas)
+            DialogoClave(0, "Vértice eliminado", "mensaje", self,
+                         f"Vértice '{etiqueta_eliminada}' eliminado del Grafo 2.\n\n"
+                         f"Vértices restantes: {self.grafo2_vertices}\n"
+                         f"Aristas eliminadas: {aristas_eliminadas}").exec()
