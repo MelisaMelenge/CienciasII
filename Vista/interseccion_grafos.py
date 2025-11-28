@@ -1,90 +1,12 @@
 from PySide6.QtWidgets import (
     QMainWindow, QWidget, QVBoxLayout, QLabel, QFrame,
-    QHBoxLayout, QScrollArea, QPushButton, QSpinBox,
-    QGridLayout, QMessageBox
+    QHBoxLayout, QScrollArea, QPushButton, QSpinBox, QFileDialog
 )
-from PySide6.QtCore import Qt, QPointF
-from PySide6.QtGui import QPainter, QPen, QColor, QFont
+from PySide6.QtCore import Qt
+from Vista.visualizador_grafo import VisualizadorGrafo
 from Vista.dialogo_arista import DialogoArista
-import math
-
-
-class VisualizadorGrafo(QWidget):
-    """Widget para visualizar un grafo"""
-
-    def __init__(self, titulo="Grafo", parent=None):
-        super().__init__(parent)
-        self.titulo = titulo
-        self.vertices = []
-        self.aristas = []
-        self.num_vertices = 0
-        self.setMinimumSize(350, 350)
-        self.setMaximumSize(350, 350)
-
-    def set_grafo(self, num_vertices, aristas):
-        self.num_vertices = num_vertices
-        self.aristas = aristas
-        self.calcular_posiciones()
-        self.update()
-
-    def calcular_posiciones(self):
-        """Calcula las posiciones de los vértices en círculo"""
-        self.vertices = []
-        if self.num_vertices == 0:
-            return
-
-        centro_x = self.width() / 2
-        centro_y = self.height() / 2
-        radio = min(centro_x, centro_y) - 40
-
-        for i in range(self.num_vertices):
-            angulo = 2 * math.pi * i / self.num_vertices - math.pi / 2
-            x = centro_x + radio * math.cos(angulo)
-            y = centro_y + radio * math.sin(angulo)
-            self.vertices.append(QPointF(x, y))
-
-    def paintEvent(self, event):
-        painter = QPainter(self)
-        painter.setRenderHint(QPainter.Antialiasing)
-
-        # Fondo
-        painter.fillRect(self.rect(), QColor("#FFF3E0"))
-
-        # Título
-        painter.setFont(QFont("Arial", 12, QFont.Bold))
-        painter.setPen(QColor("#6C4E31"))
-        painter.drawText(self.rect().adjusted(0, 5, 0, 0), Qt.AlignTop | Qt.AlignHCenter, self.titulo)
-
-        if self.num_vertices == 0:
-            painter.setFont(QFont("Arial", 10))
-            painter.setPen(QColor("#9c724a"))
-            painter.drawText(self.rect(), Qt.AlignCenter, "Sin grafo")
-            return
-
-        # Dibujar aristas
-        pen = QPen(QColor("#bf8f62"), 2)
-        painter.setPen(pen)
-        for origen, destino in self.aristas:
-            if origen < len(self.vertices) and destino < len(self.vertices):
-                painter.drawLine(self.vertices[origen], self.vertices[destino])
-
-        # Dibujar vértices
-        for i, pos in enumerate(self.vertices):
-            # Círculo del vértice
-            painter.setBrush(QColor("#6C4E31"))
-            painter.setPen(QPen(QColor("#2d1f15"), 2))
-            painter.drawEllipse(pos, 20, 20)
-
-            # Número del vértice
-            painter.setPen(QColor("#FFEAC5"))
-            painter.setFont(QFont("Arial", 10, QFont.Bold))
-            texto = str(i + 1)
-            rect = painter.fontMetrics().boundingRect(texto)
-            painter.drawText(
-                int(pos.x() - rect.width() / 2),
-                int(pos.y() + rect.height() / 4),
-                texto
-            )
+from Vista.dialogo_clave import DialogoClave
+import json
 
 
 class InterseccionGrafos(QMainWindow):
@@ -95,8 +17,10 @@ class InterseccionGrafos(QMainWindow):
         # Datos de los grafos
         self.grafo1_vertices = 0
         self.grafo1_aristas = []
+        self.grafo1_etiquetas = {}
         self.grafo2_vertices = 0
         self.grafo2_aristas = []
+        self.grafo2_etiquetas = {}
 
         self.setWindowTitle("Ciencias de la Computación II - Intersección de Grafos")
 
@@ -147,7 +71,7 @@ class InterseccionGrafos(QMainWindow):
         btn_grafos.clicked.connect(lambda: self.cambiar_ventana("grafos"))
         layout.addWidget(header)
 
-        # ======= CONTROLES COMPACTOS Y ESTÉTICOS =======
+        # ======= CONTROLES =======
         controles_frame = QFrame()
         controles_frame.setStyleSheet("""
             QFrame {
@@ -156,51 +80,58 @@ class InterseccionGrafos(QMainWindow):
             }
         """)
         controles_layout = QHBoxLayout(controles_frame)
-        controles_layout.setSpacing(30)
-        controles_layout.setContentsMargins(25, 12, 25, 12)
+        controles_layout.setSpacing(20)
+        controles_layout.setContentsMargins(15, 12, 15, 12)
 
         # --- GRAFO 1 ---
         grafo1_container = QWidget()
-        grafo1_layout = QHBoxLayout(grafo1_container)
-        grafo1_layout.setSpacing(10)
-        grafo1_layout.setContentsMargins(0, 0, 0, 0)
+        grafo1_layout = QVBoxLayout(grafo1_container)
+        grafo1_layout.setSpacing(8)
 
-        label_grafo1 = QLabel("Grafo 1")
-        label_grafo1.setStyleSheet("font-size: 14px; font-weight: bold; color: #6C4E31;")
+        label_grafo1 = QLabel(" Grafo 1")
+        label_grafo1.setStyleSheet("font-size: 15px; font-weight: bold; color: #6C4E31;")
+        grafo1_layout.addWidget(label_grafo1, alignment=Qt.AlignCenter)
 
+        config_g1 = QHBoxLayout()
         lbl_v1 = QLabel("Vértices:")
-        lbl_v1.setStyleSheet("font-size: 13px; color: #2d1f15;")
+        lbl_v1.setStyleSheet("font-size: 12px; color: #2d1f15;")
+        config_g1.addWidget(lbl_v1)
         self.vertices_g1 = QSpinBox()
         self.vertices_g1.setRange(1, 20)
         self.vertices_g1.setValue(4)
         self.vertices_g1.setFixedWidth(60)
-        self.vertices_g1.setStyleSheet("""
-            QSpinBox {
-                padding: 4px;
-                border: 2px solid #bf8f62;
-                border-radius: 5px;
-                background: white;
-            }
-        """)
-
+        config_g1.addWidget(self.vertices_g1)
         self.btn_crear_g1 = QPushButton("Crear")
-        self.btn_agregar_arista_g1 = QPushButton("+ Arista")
+        config_g1.addWidget(self.btn_crear_g1)
+        grafo1_layout.addLayout(config_g1)
 
-        grafo1_layout.addWidget(label_grafo1)
-        grafo1_layout.addWidget(lbl_v1)
-        grafo1_layout.addWidget(self.vertices_g1)
-        grafo1_layout.addWidget(self.btn_crear_g1)
-        grafo1_layout.addWidget(self.btn_agregar_arista_g1)
+        botones_g1 = QHBoxLayout()
+        self.btn_agregar_arista_g1 = QPushButton("+ Arista")
+        self.btn_eliminar_arista_g1 = QPushButton("- Arista")
+        botones_g1.addWidget(self.btn_agregar_arista_g1)
+        botones_g1.addWidget(self.btn_eliminar_arista_g1)
+        grafo1_layout.addLayout(botones_g1)
+
+        botones_archivo_g1 = QHBoxLayout()
+        self.btn_guardar_g1 = QPushButton("Guardar")
+        self.btn_cargar_g1 = QPushButton("Cargar")
+        botones_archivo_g1.addWidget(self.btn_guardar_g1)
+        botones_archivo_g1.addWidget(self.btn_cargar_g1)
+        grafo1_layout.addLayout(botones_archivo_g1)
+
+        # Botón limpiar grafo 1
+        self.btn_limpiar_g1 = QPushButton(" Limpiar")
+        grafo1_layout.addWidget(self.btn_limpiar_g1)
 
         # --- BOTÓN CALCULAR ---
-        self.btn_calcular = QPushButton("🔀 Calcular\nIntersección")
-        self.btn_calcular.setFixedHeight(50)
+        self.btn_calcular = QPushButton("Calcular Intersección")
+        self.btn_calcular.setFixedHeight(80)
         self.btn_calcular.setStyleSheet("""
             QPushButton {
                 background-color: #9c724a;
                 color: #FFEAC5;
                 padding: 5px 20px;
-                font-size: 13px;
+                font-size: 14px;
                 font-weight: bold;
                 border-radius: 8px;
             }
@@ -209,45 +140,54 @@ class InterseccionGrafos(QMainWindow):
 
         # --- GRAFO 2 ---
         grafo2_container = QWidget()
-        grafo2_layout = QHBoxLayout(grafo2_container)
-        grafo2_layout.setSpacing(10)
-        grafo2_layout.setContentsMargins(0, 0, 0, 0)
+        grafo2_layout = QVBoxLayout(grafo2_container)
+        grafo2_layout.setSpacing(8)
 
         label_grafo2 = QLabel("Grafo 2")
-        label_grafo2.setStyleSheet("font-size: 14px; font-weight: bold; color: #6C4E31;")
+        label_grafo2.setStyleSheet("font-size: 15px; font-weight: bold; color: #6C4E31;")
+        grafo2_layout.addWidget(label_grafo2, alignment=Qt.AlignCenter)
 
+        config_g2 = QHBoxLayout()
         lbl_v2 = QLabel("Vértices:")
-        lbl_v2.setStyleSheet("font-size: 13px; color: #2d1f15;")
+        lbl_v2.setStyleSheet("font-size: 12px; color: #2d1f15;")
+        config_g2.addWidget(lbl_v2)
         self.vertices_g2 = QSpinBox()
         self.vertices_g2.setRange(1, 20)
         self.vertices_g2.setValue(4)
         self.vertices_g2.setFixedWidth(60)
-        self.vertices_g2.setStyleSheet("""
-            QSpinBox {
-                padding: 4px;
-                border: 2px solid #bf8f62;
-                border-radius: 5px;
-                background: white;
-            }
-        """)
-
+        config_g2.addWidget(self.vertices_g2)
         self.btn_crear_g2 = QPushButton("Crear")
-        self.btn_agregar_arista_g2 = QPushButton("+ Arista")
+        config_g2.addWidget(self.btn_crear_g2)
+        grafo2_layout.addLayout(config_g2)
 
-        grafo2_layout.addWidget(label_grafo2)
-        grafo2_layout.addWidget(lbl_v2)
-        grafo2_layout.addWidget(self.vertices_g2)
-        grafo2_layout.addWidget(self.btn_crear_g2)
-        grafo2_layout.addWidget(self.btn_agregar_arista_g2)
+        botones_g2 = QHBoxLayout()
+        self.btn_agregar_arista_g2 = QPushButton("+ Arista")
+        self.btn_eliminar_arista_g2 = QPushButton("- Arista")
+        botones_g2.addWidget(self.btn_agregar_arista_g2)
+        botones_g2.addWidget(self.btn_eliminar_arista_g2)
+        grafo2_layout.addLayout(botones_g2)
+
+        botones_archivo_g2 = QHBoxLayout()
+        self.btn_guardar_g2 = QPushButton("Guardar")
+        self.btn_cargar_g2 = QPushButton("Cargar")
+        botones_archivo_g2.addWidget(self.btn_guardar_g2)
+        botones_archivo_g2.addWidget(self.btn_cargar_g2)
+        grafo2_layout.addLayout(botones_archivo_g2)
+
+        # Botón limpiar grafo 2
+        self.btn_limpiar_g2 = QPushButton(" Limpiar")
+        grafo2_layout.addWidget(self.btn_limpiar_g2)
 
         # Estilos de botones
-        for btn in (self.btn_crear_g1, self.btn_agregar_arista_g1,
-                    self.btn_crear_g2, self.btn_agregar_arista_g2):
+        for btn in (self.btn_crear_g1, self.btn_agregar_arista_g1, self.btn_eliminar_arista_g1,
+                    self.btn_guardar_g1, self.btn_cargar_g1, self.btn_limpiar_g1,
+                    self.btn_crear_g2, self.btn_agregar_arista_g2, self.btn_eliminar_arista_g2,
+                    self.btn_guardar_g2, self.btn_cargar_g2, self.btn_limpiar_g2):
             btn.setStyleSheet("""
                 QPushButton {
                     background-color: #6C4E31;
                     color: #FFEAC5;
-                    padding: 6px 12px;
+                    padding: 6px 10px;
                     font-size: 13px;
                     border-radius: 6px;
                     min-width: 70px;
@@ -255,14 +195,23 @@ class InterseccionGrafos(QMainWindow):
                 QPushButton:hover { background-color: #9c724a; }
             """)
 
-        # Agregar todo al layout principal
+        for widget in (self.vertices_g1, self.vertices_g2):
+            widget.setStyleSheet("""
+                QSpinBox {
+                    padding: 4px;
+                    border: 2px solid #bf8f62;
+                    border-radius: 5px;
+                    background: white;
+                }
+            """)
+
         controles_layout.addWidget(grafo1_container)
         controles_layout.addWidget(self.btn_calcular)
         controles_layout.addWidget(grafo2_container)
 
         layout.addWidget(controles_frame)
 
-        # ======= AREA DE VISUALIZACION =======
+        # ======= VISUALIZACIÓN =======
         self.scroll = QScrollArea()
         self.scroll.setWidgetResizable(True)
         self.scroll.setStyleSheet("QScrollArea { background-color: transparent; border: none; }")
@@ -275,14 +224,13 @@ class InterseccionGrafos(QMainWindow):
         self.scroll.setWidget(self.contenedor)
         layout.addWidget(self.scroll)
 
-        # Visualizadores de grafos
         grafos_layout = QHBoxLayout()
         grafos_layout.setSpacing(20)
         grafos_layout.setAlignment(Qt.AlignCenter)
 
-        self.visual_g1 = VisualizadorGrafo("Grafo 1")
-        self.visual_g2 = VisualizadorGrafo("Grafo 2")
-        self.visual_interseccion = VisualizadorGrafo("Intersección (G1 ∩ G2)")
+        self.visual_g1 = VisualizadorGrafo("Grafo 1", parent=self, es_editable=True)
+        self.visual_g2 = VisualizadorGrafo("Grafo 2", parent=self, es_editable=True)
+        self.visual_interseccion = VisualizadorGrafo("Intersección (G1 ∩ G2)", parent=self, es_editable=False)
 
         for visual in (self.visual_g1, self.visual_g2, self.visual_interseccion):
             visual.setStyleSheet("""
@@ -297,6 +245,62 @@ class InterseccionGrafos(QMainWindow):
 
         self.contenedor_layout.addLayout(grafos_layout)
 
+        # ======= BOTONES ADICIONALES =======
+        botones_extras = QHBoxLayout()
+        botones_extras.setSpacing(15)
+        botones_extras.setAlignment(Qt.AlignCenter)
+
+        # Botón para guardar la intersección
+        btn_guardar_interseccion = QPushButton("Guardar Intersección")
+        btn_guardar_interseccion.setStyleSheet("""
+            QPushButton {
+                background-color: #9c724a;
+                color: #FFEAC5;
+                padding: 8px 16px;
+                font-size: 13px;
+                font-weight: bold;
+                border-radius: 8px;
+            }
+            QPushButton:hover { background-color: #6C4E31; }
+        """)
+        btn_guardar_interseccion.clicked.connect(self.guardar_interseccion)
+
+        # Botón para limpiar la intersección
+        btn_limpiar_interseccion = QPushButton(" Limpiar Intersección")
+        btn_limpiar_interseccion.setStyleSheet("""
+            QPushButton {
+                background-color: #9c724a;
+                color: #FFEAC5;
+                padding: 8px 16px;
+                font-size: 13px;
+                font-weight: bold;
+                border-radius: 8px;
+            }
+            QPushButton:hover { background-color: #9c724a; }
+        """)
+        btn_limpiar_interseccion.clicked.connect(self.limpiar_interseccion)
+
+        # Botón para limpiar todo
+        btn_limpiar_todo = QPushButton(" Limpiar Todo")
+        btn_limpiar_todo.setStyleSheet("""
+            QPushButton {
+                background-color: #9c724a;
+                color: white;
+                padding: 8px 16px;
+                font-size: 13px;
+                font-weight: bold;
+                border-radius: 8px;
+            }
+            QPushButton:hover { background-color: #c9302c; }
+        """)
+        btn_limpiar_todo.clicked.connect(self.limpiar_todo)
+
+        botones_extras.addWidget(btn_guardar_interseccion)
+        botones_extras.addWidget(btn_limpiar_interseccion)
+        botones_extras.addWidget(btn_limpiar_todo)
+
+        self.contenedor_layout.addLayout(botones_extras)
+
         self.setCentralWidget(central)
 
         # ======= CONEXIONES =======
@@ -304,70 +308,412 @@ class InterseccionGrafos(QMainWindow):
         self.btn_crear_g2.clicked.connect(self.crear_grafo2)
         self.btn_agregar_arista_g1.clicked.connect(self.agregar_arista_g1)
         self.btn_agregar_arista_g2.clicked.connect(self.agregar_arista_g2)
+        self.btn_eliminar_arista_g1.clicked.connect(self.eliminar_arista_g1)
+        self.btn_eliminar_arista_g2.clicked.connect(self.eliminar_arista_g2)
+        self.btn_guardar_g1.clicked.connect(self.guardar_grafo1)
+        self.btn_cargar_g1.clicked.connect(self.cargar_grafo1)
+        self.btn_guardar_g2.clicked.connect(self.guardar_grafo2)
+        self.btn_cargar_g2.clicked.connect(self.cargar_grafo2)
+        self.btn_limpiar_g1.clicked.connect(self.limpiar_grafo1)
+        self.btn_limpiar_g2.clicked.connect(self.limpiar_grafo2)
         self.btn_calcular.clicked.connect(self.calcular_interseccion)
 
-    # ==================== FUNCIONES ====================
+    # ==================== FUNCIONES GRAFO 1 ====================
     def crear_grafo1(self):
         self.grafo1_vertices = self.vertices_g1.value()
         self.grafo1_aristas = []
-        self.visual_g1.set_grafo(self.grafo1_vertices, self.grafo1_aristas)
-        QMessageBox.information(self, "Grafo 1", f"Grafo 1 creado con {self.grafo1_vertices} vértices.")
-
-    def crear_grafo2(self):
-        self.grafo2_vertices = self.vertices_g2.value()
-        self.grafo2_aristas = []
-        self.visual_g2.set_grafo(self.grafo2_vertices, self.grafo2_aristas)
-        QMessageBox.information(self, "Grafo 2", f"Grafo 2 creado con {self.grafo2_vertices} vértices.")
+        self.grafo1_etiquetas = {i: str(i + 1) for i in range(self.grafo1_vertices)}
+        self.visual_g1.set_grafo(self.grafo1_vertices, self.grafo1_aristas, self.grafo1_etiquetas)
+        DialogoClave(0, "Grafo 1", "mensaje", self,
+                     f"Grafo 1 creado con {self.grafo1_vertices} vértices.\n\n"
+                     "Haz clic en un vértice para cambiar su etiqueta.").exec()
 
     def agregar_arista_g1(self):
         if self.grafo1_vertices == 0:
-            QMessageBox.warning(self, "Error", "Primero debes crear el Grafo 1.")
+            DialogoClave(0, "Error", "mensaje", self,
+                         "Primero debes crear el Grafo 1.").exec()
             return
 
-        dlg = DialogoArista(self.grafo1_vertices, self)
+        dlg = DialogoArista(self.grafo1_vertices, self, self.grafo1_etiquetas)
         if dlg.exec():
             arista = dlg.get_arista()
+            if arista[0] == arista[1]:
+                DialogoClave(0, "Error", "mensaje", self,
+                             "No se permiten bucles\n(arista de un vértice a sí mismo).").exec()
+                return
             if arista not in self.grafo1_aristas:
                 self.grafo1_aristas.append(arista)
-                self.visual_g1.set_grafo(self.grafo1_vertices, self.grafo1_aristas)
-                QMessageBox.information(self, "Arista agregada",
-                                        f"Arista ({arista[0] + 1}, {arista[1] + 1}) agregada al Grafo 1.")
+                self.visual_g1.set_grafo(self.grafo1_vertices, self.grafo1_aristas, self.grafo1_etiquetas)
+                etiq_origen = self.grafo1_etiquetas.get(arista[0], str(arista[0] + 1))
+                etiq_destino = self.grafo1_etiquetas.get(arista[1], str(arista[1] + 1))
+                DialogoClave(0, "Arista agregada", "mensaje", self,
+                             f"Arista ({etiq_origen} ↔ {etiq_destino}) agregada al Grafo 1.").exec()
+            else:
+                DialogoClave(0, "Advertencia", "mensaje", self,
+                             "Esta arista ya existe en el Grafo 1.").exec()
+
+    def eliminar_arista_g1(self):
+        if self.grafo1_vertices == 0:
+            DialogoClave(0, "Error", "mensaje", self,
+                         "Primero debes crear el Grafo 1.").exec()
+            return
+
+        if not self.grafo1_aristas:
+            DialogoClave(0, "Error", "mensaje", self,
+                         "No hay aristas para eliminar en el Grafo 1.").exec()
+            return
+
+        dlg = DialogoArista(self.grafo1_vertices, self, self.grafo1_etiquetas)
+        if dlg.exec():
+            arista = dlg.get_arista()
+            if arista in self.grafo1_aristas:
+                self.grafo1_aristas.remove(arista)
+                self.visual_g1.set_grafo(self.grafo1_vertices, self.grafo1_aristas, self.grafo1_etiquetas)
+                etiq_origen = self.grafo1_etiquetas.get(arista[0], str(arista[0] + 1))
+                etiq_destino = self.grafo1_etiquetas.get(arista[1], str(arista[1] + 1))
+                DialogoClave(0, "Arista eliminada", "mensaje", self,
+                             f"Arista ({etiq_origen} ↔ {etiq_destino}) eliminada del Grafo 1.").exec()
+            else:
+                etiq_origen = self.grafo1_etiquetas.get(arista[0], str(arista[0] + 1))
+                etiq_destino = self.grafo1_etiquetas.get(arista[1], str(arista[1] + 1))
+                DialogoClave(0, "Error", "mensaje", self,
+                             f"La arista ({etiq_origen} ↔ {etiq_destino}) no existe en el Grafo 1.").exec()
+
+    def limpiar_grafo1(self):
+        """Limpia completamente el Grafo 1"""
+        if self.grafo1_vertices == 0:
+            DialogoClave(0, "Información", "mensaje", self,
+                         "El Grafo 1 ya está vacío.").exec()
+            return
+
+        self.grafo1_vertices = 0
+        self.grafo1_aristas = []
+        self.grafo1_etiquetas = {}
+        self.visual_g1.set_grafo(0, [], {})
+        self.vertices_g1.setValue(4)  # Resetear a valor por defecto
+
+        DialogoClave(0, "Limpieza exitosa", "mensaje", self,
+                     "Grafo 1 limpiado completamente.").exec()
+
+    def guardar_grafo1(self):
+        if self.grafo1_vertices == 0:
+            DialogoClave(0, "Error", "mensaje", self,
+                         "No hay grafo para guardar.").exec()
+            return
+
+        archivo, _ = QFileDialog.getSaveFileName(
+            self, "Guardar Grafo 1", "", "JSON Files (*.json)"
+        )
+
+        if archivo:
+            try:
+                datos = self.visual_g1.get_datos_grafo()
+                with open(archivo, 'w', encoding='utf-8') as f:
+                    json.dump(datos, f, indent=4, ensure_ascii=False)
+                DialogoClave(0, "Éxito", "mensaje", self,
+                             f"Grafo 1 guardado exitosamente en:\n{archivo}").exec()
+            except Exception as e:
+                DialogoClave(0, "Error", "mensaje", self,
+                             f"Error al guardar el archivo:\n{str(e)}").exec()
+
+    def cargar_grafo1(self):
+        archivo, _ = QFileDialog.getOpenFileName(
+            self, "Cargar Grafo 1", "", "JSON Files (*.json)"
+        )
+
+        if archivo:
+            try:
+                with open(archivo, 'r', encoding='utf-8') as f:
+                    datos = json.load(f)
+
+                self.grafo1_vertices = datos['vertices']
+                self.grafo1_aristas = [tuple(a) for a in datos['aristas']]
+                self.grafo1_etiquetas = {int(k): v for k, v in datos.get('etiquetas', {}).items()}
+
+                self.vertices_g1.setValue(self.grafo1_vertices)
+                self.visual_g1.set_grafo(self.grafo1_vertices, self.grafo1_aristas, self.grafo1_etiquetas)
+
+                DialogoClave(0, "Éxito", "mensaje", self,
+                             f"Grafo 1 cargado exitosamente:\n"
+                             f"• Vértices: {self.grafo1_vertices}\n"
+                             f"• Aristas: {len(self.grafo1_aristas)}").exec()
+            except Exception as e:
+                DialogoClave(0, "Error", "mensaje", self,
+                             f"Error al cargar el archivo:\n{str(e)}").exec()
+
+    # ==================== FUNCIONES GRAFO 2 ====================
+    def crear_grafo2(self):
+        self.grafo2_vertices = self.vertices_g2.value()
+        self.grafo2_aristas = []
+        self.grafo2_etiquetas = {i: str(i + 1) for i in range(self.grafo2_vertices)}
+        self.visual_g2.set_grafo(self.grafo2_vertices, self.grafo2_aristas, self.grafo2_etiquetas)
+        DialogoClave(0, "Grafo 2", "mensaje", self,
+                     f"Grafo 2 creado con {self.grafo2_vertices} vértices.\n\n"
+                     "Haz clic en un vértice para cambiar su etiqueta.").exec()
 
     def agregar_arista_g2(self):
         if self.grafo2_vertices == 0:
-            QMessageBox.warning(self, "Error", "Primero debes crear el Grafo 2.")
+            DialogoClave(0, "Error", "mensaje", self,
+                         "Primero debes crear el Grafo 2.").exec()
             return
 
-        dlg = DialogoArista(self.grafo2_vertices, self)
+        dlg = DialogoArista(self.grafo2_vertices, self, self.grafo2_etiquetas)
         if dlg.exec():
             arista = dlg.get_arista()
+            if arista[0] == arista[1]:
+                DialogoClave(0, "Error", "mensaje", self,
+                             "No se permiten bucles\n(arista de un vértice a sí mismo).").exec()
+                return
             if arista not in self.grafo2_aristas:
                 self.grafo2_aristas.append(arista)
-                self.visual_g2.set_grafo(self.grafo2_vertices, self.grafo2_aristas)
-                QMessageBox.information(self, "Arista agregada",
-                                        f"Arista ({arista[0] + 1}, {arista[1] + 1}) agregada al Grafo 2.")
+                self.visual_g2.set_grafo(self.grafo2_vertices, self.grafo2_aristas, self.grafo2_etiquetas)
+                etiq_origen = self.grafo2_etiquetas.get(arista[0], str(arista[0] + 1))
+                etiq_destino = self.grafo2_etiquetas.get(arista[1], str(arista[1] + 1))
+                DialogoClave(0, "Arista agregada", "mensaje", self,
+                             f"Arista ({etiq_origen} ↔ {etiq_destino}) agregada al Grafo 2.").exec()
+            else:
+                DialogoClave(0, "Advertencia", "mensaje", self,
+                             "Esta arista ya existe en el Grafo 2.").exec()
 
-    def calcular_interseccion(self):
-        if self.grafo1_vertices == 0 or self.grafo2_vertices == 0:
-            QMessageBox.warning(self, "Error", "Debes crear ambos grafos primero.")
+    def eliminar_arista_g2(self):
+        if self.grafo2_vertices == 0:
+            DialogoClave(0, "Error", "mensaje", self,
+                         "Primero debes crear el Grafo 2.").exec()
             return
 
-        # La intersección tiene los vértices del menor grafo
-        vertices_interseccion = min(self.grafo1_vertices, self.grafo2_vertices)
+        if not self.grafo2_aristas:
+            DialogoClave(0, "Error", "mensaje", self,
+                         "No hay aristas para eliminar en el Grafo 2.").exec()
+            return
 
-        # Las aristas de la intersección son las que están en ambos grafos
-        # y cuyos vértices existen en ambos
+        dlg = DialogoArista(self.grafo2_vertices, self, self.grafo2_etiquetas)
+        if dlg.exec():
+            arista = dlg.get_arista()
+            if arista in self.grafo2_aristas:
+                self.grafo2_aristas.remove(arista)
+                self.visual_g2.set_grafo(self.grafo2_vertices, self.grafo2_aristas, self.grafo2_etiquetas)
+                etiq_origen = self.grafo2_etiquetas.get(arista[0], str(arista[0] + 1))
+                etiq_destino = self.grafo2_etiquetas.get(arista[1], str(arista[1] + 1))
+                DialogoClave(0, "Arista eliminada", "mensaje", self,
+                             f"Arista ({etiq_origen} ↔ {etiq_destino}) eliminada del Grafo 2.").exec()
+            else:
+                etiq_origen = self.grafo2_etiquetas.get(arista[0], str(arista[0] + 1))
+                etiq_destino = self.grafo2_etiquetas.get(arista[1], str(arista[1] + 1))
+                DialogoClave(0, "Error", "mensaje", self,
+                             f"La arista ({etiq_origen} ↔ {etiq_destino}) no existe en el Grafo 2.").exec()
+
+    def limpiar_grafo2(self):
+        """Limpia completamente el Grafo 2"""
+        if self.grafo2_vertices == 0:
+            DialogoClave(0, "Información", "mensaje", self,
+                         "El Grafo 2 ya está vacío.").exec()
+            return
+
+        self.grafo2_vertices = 0
+        self.grafo2_aristas = []
+        self.grafo2_etiquetas = {}
+        self.visual_g2.set_grafo(0, [], {})
+        self.vertices_g2.setValue(4)  # Resetear a valor por defecto
+
+        DialogoClave(0, "Limpieza exitosa", "mensaje", self,
+                     "Grafo 2 limpiado completamente.").exec()
+
+    def guardar_grafo2(self):
+        if self.grafo2_vertices == 0:
+            DialogoClave(0, "Error", "mensaje", self,
+                         "No hay grafo para guardar.").exec()
+            return
+
+        archivo, _ = QFileDialog.getSaveFileName(
+            self, "Guardar Grafo 2", "", "JSON Files (*.json)"
+        )
+
+        if archivo:
+            try:
+                datos = self.visual_g2.get_datos_grafo()
+                with open(archivo, 'w', encoding='utf-8') as f:
+                    json.dump(datos, f, indent=4, ensure_ascii=False)
+                DialogoClave(0, "Éxito", "mensaje", self,
+                             f"Grafo 2 guardado exitosamente en:\n{archivo}").exec()
+            except Exception as e:
+                DialogoClave(0, "Error", "mensaje", self,
+                             f"Error al guardar el archivo:\n{str(e)}").exec()
+
+    def cargar_grafo2(self):
+        archivo, _ = QFileDialog.getOpenFileName(
+            self, "Cargar Grafo 2", "", "JSON Files (*.json)"
+        )
+
+        if archivo:
+            try:
+                with open(archivo, 'r', encoding='utf-8') as f:
+                    datos = json.load(f)
+
+                self.grafo2_vertices = datos['vertices']
+                self.grafo2_aristas = [tuple(a) for a in datos['aristas']]
+                self.grafo2_etiquetas = {int(k): v for k, v in datos.get('etiquetas', {}).items()}
+
+                self.vertices_g2.setValue(self.grafo2_vertices)
+                self.visual_g2.set_grafo(self.grafo2_vertices, self.grafo2_aristas, self.grafo2_etiquetas)
+
+                DialogoClave(0, "Éxito", "mensaje", self,
+                             f"Grafo 2 cargado exitosamente:\n"
+                             f"• Vértices: {self.grafo2_vertices}\n"
+                             f"• Aristas: {len(self.grafo2_aristas)}").exec()
+            except Exception as e:
+                DialogoClave(0, "Error", "mensaje", self,
+                             f"Error al cargar el archivo:\n{str(e)}").exec()
+
+    def limpiar_grafo1(self):
+        """Limpia completamente el Grafo 1"""
+        self.grafo1_vertices = 0
+        self.grafo1_aristas = []
+        self.grafo1_etiquetas = {}
+        self.vertices_g1.setValue(4)
+        self.visual_g1.set_grafo(0, [], {})
+        DialogoClave(0, "Limpieza completada", "mensaje", self,
+                     "Grafo 1 limpiado exitosamente.").exec()
+
+    def limpiar_grafo2(self):
+        """Limpia completamente el Grafo 2"""
+        self.grafo2_vertices = 0
+        self.grafo2_aristas = []
+        self.grafo2_etiquetas = {}
+        self.vertices_g2.setValue(4)
+        self.visual_g2.set_grafo(0, [], {})
+        DialogoClave(0, "Limpieza completada", "mensaje", self,
+                     "Grafo 2 limpiado exitosamente.").exec()
+
+    # ==================== CALCULAR INTERSECCIÓN ====================
+    def calcular_interseccion(self):
+        if self.grafo1_vertices == 0 or self.grafo2_vertices == 0:
+            DialogoClave(0, "Error", "mensaje", self,
+                         "Debes crear ambos grafos primero.").exec()
+            return
+
+        # Obtener etiquetas de ambos grafos
+        etiquetas_g1 = set(self.grafo1_etiquetas.values())
+        etiquetas_g2 = set(self.grafo2_etiquetas.values())
+
+        # Vértices de la intersección: etiquetas que están en ambos grafos
+        etiquetas_comunes = etiquetas_g1.intersection(etiquetas_g2)
+
+        if not etiquetas_comunes:
+            DialogoClave(0, "Intersección vacía", "mensaje", self,
+                         "No hay vértices con etiquetas comunes\n"
+                         "entre ambos grafos.\n\n"
+                         "La intersección está vacía.").exec()
+            self.visual_interseccion.set_grafo(0, [], {})
+            return
+
+        # Crear mapeo de etiquetas a índices para cada grafo
+        etiq_a_indice_g1 = {etiq: idx for idx, etiq in self.grafo1_etiquetas.items()}
+        etiq_a_indice_g2 = {etiq: idx for idx, etiq in self.grafo2_etiquetas.items()}
+
+        # Crear nuevo mapeo para la intersección
+        etiquetas_interseccion = {}
+        etiq_a_nuevo_indice = {}
+        nuevo_indice = 0
+        for etiq in sorted(etiquetas_comunes):
+            etiquetas_interseccion[nuevo_indice] = etiq
+            etiq_a_nuevo_indice[etiq] = nuevo_indice
+            nuevo_indice += 1
+
+        vertices_interseccion = len(etiquetas_comunes)
+
+        # Buscar aristas comunes basadas en etiquetas
         aristas_interseccion = []
-        for arista in self.grafo1_aristas:
-            origen, destino = arista
-            if (origen < vertices_interseccion and
-                    destino < vertices_interseccion and
-                    arista in self.grafo2_aristas):
-                aristas_interseccion.append(arista)
+        for arista1 in self.grafo1_aristas:
+            idx_orig_g1, idx_dest_g1 = arista1
+            etiq_orig = self.grafo1_etiquetas.get(idx_orig_g1)
+            etiq_dest = self.grafo1_etiquetas.get(idx_dest_g1)
 
-        self.visual_interseccion.set_grafo(vertices_interseccion, aristas_interseccion)
+            # Verificar si ambas etiquetas están en la intersección
+            if etiq_orig in etiquetas_comunes and etiq_dest in etiquetas_comunes:
+                # Buscar si existe la misma arista (por etiquetas) en grafo 2
+                idx_orig_g2 = etiq_a_indice_g2.get(etiq_orig)
+                idx_dest_g2 = etiq_a_indice_g2.get(etiq_dest)
 
-        QMessageBox.information(self, "Intersección calculada",
-                                f"Intersección calculada:\n\n"
-                                f"• Vértices: {vertices_interseccion}\n"
-                                f"• Aristas comunes: {len(aristas_interseccion)}")
+                if idx_orig_g2 is not None and idx_dest_g2 is not None:
+                    arista2 = tuple(sorted([idx_orig_g2, idx_dest_g2]))
+                    if arista2 in self.grafo2_aristas:
+                        # Agregar arista con nuevos índices
+                        nuevo_orig = etiq_a_nuevo_indice[etiq_orig]
+                        nuevo_dest = etiq_a_nuevo_indice[etiq_dest]
+                        nueva_arista = tuple(sorted([nuevo_orig, nuevo_dest]))
+                        if nueva_arista not in aristas_interseccion:
+                            aristas_interseccion.append(nueva_arista)
+
+        self.visual_interseccion.set_grafo(vertices_interseccion, aristas_interseccion,
+                                           etiquetas_interseccion)
+
+        DialogoClave(0, "Intersección calculada", "mensaje", self,
+                     f"Intersección calculada exitosamente:\n\n"
+                     f"Vértices comunes: {vertices_interseccion}\n"
+                     f"    Etiquetas: {', '.join(sorted(etiquetas_comunes))}\n\n"
+                     f"Aristas comunes: {len(aristas_interseccion)}\n\n"
+                     f"Solo incluye vértices y aristas que existen\n"
+                     f"en ambos grafos con las mismas etiquetas.").exec()
+
+    # ==================== ACTUALIZAR ETIQUETAS ====================
+    def actualizar_etiquetas(self, titulo_grafo, nuevas_etiquetas):
+        """Actualiza las etiquetas cuando se modifican desde el visualizador"""
+        if "Grafo 1" in titulo_grafo:
+            self.grafo1_etiquetas = nuevas_etiquetas
+        elif "Grafo 2" in titulo_grafo:
+            self.grafo2_etiquetas = nuevas_etiquetas
+
+        # ==================== GUARDAR INTERSECCIÓN ====================
+    def guardar_interseccion(self):
+        if self.visual_interseccion.num_vertices == 0:
+            DialogoClave(0, "Error", "mensaje", self,
+                         "Primero debes calcular la intersección.").exec()
+            return
+
+        archivo, _ = QFileDialog.getSaveFileName(self, "Guardar Intersección", "", "JSON Files (*.json)")
+
+        if archivo:
+            try:
+                datos = self.visual_interseccion.get_datos_grafo()
+                with open(archivo, 'w', encoding='utf-8') as f:
+                    json.dump(datos, f, indent=4, ensure_ascii=False)
+                DialogoClave(0, "Éxito", "mensaje", self,
+                            f"Intersección guardada exitosamente en:\n{archivo}").exec()
+            except Exception as e:
+                DialogoClave(0, "Error", "mensaje", self,
+                            f"Error al guardar el archivo:\n{str(e)}").exec()
+
+    # ==================== LIMPIAR TODO ====================
+    def limpiar_todo(self):
+        """Limpia todos los grafos y la intersección"""
+        self.grafo1_vertices = 0
+        self.grafo1_aristas = []
+        self.grafo1_etiquetas = {}
+        self.vertices_g1.setValue(4)
+        self.visual_g1.set_grafo(0, [], {})
+
+        self.grafo2_vertices = 0
+        self.grafo2_aristas = []
+        self.grafo2_etiquetas = {}
+        self.vertices_g2.setValue(4)
+        self.visual_g2.set_grafo(0, [], {})
+
+        self.visual_interseccion.set_grafo(0, [], {})
+
+        DialogoClave(0, "Limpieza completada", "mensaje", self,
+                     "Todos los grafos han sido limpiados:\n\n"
+                     "• Grafo 1: limpio\n"
+                     "• Grafo 2: limpio\n"
+                     "• Intersección: limpia").exec()
+
+    # ==================== LIMPIAR INTERSECCIÓN ====================
+    def limpiar_interseccion(self):
+        """Limpia solo la visualización de la intersección"""
+        if self.visual_interseccion.num_vertices == 0:
+            DialogoClave(0, "Información", "mensaje", self,
+                         "La intersección ya está vacía.").exec()
+            return
+
+        self.visual_interseccion.set_grafo(0, [], {})
+        DialogoClave(0, "Intersección limpiada", "mensaje", self,
+                     "La visualización de la intersección\nha sido limpiada exitosamente.").exec()

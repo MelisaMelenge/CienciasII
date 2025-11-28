@@ -1,14 +1,16 @@
 from PySide6.QtWidgets import (
-    QDialog, QVBoxLayout, QLabel, QSpinBox, QDialogButtonBox
+    QDialog, QVBoxLayout, QLabel, QComboBox, QDialogButtonBox
 )
 
-class DialogoArista(QDialog):
-    """Diálogo para ingresar una arista"""
 
-    def __init__(self, max_vertices, parent=None):
+class DialogoArista(QDialog):
+    """Diálogo para ingresar una arista (no dirigida)"""
+
+    def __init__(self, max_vertices, parent=None, etiquetas=None):
         super().__init__(parent)
         self.setWindowTitle("Agregar Arista")
         self.setModal(True)
+        self.etiquetas = etiquetas if etiquetas else {}
 
         # Estilo general del diálogo
         self.setStyleSheet("""
@@ -21,7 +23,7 @@ class DialogoArista(QDialog):
                 font-weight: bold;
                 margin-top: 10px;
             }
-            QSpinBox {
+            QComboBox {
                 background-color: white;
                 border: 2px solid #bf8f62;
                 border-radius: 5px;
@@ -29,12 +31,15 @@ class DialogoArista(QDialog):
                 font-size: 14px;
                 color: #2d1f15;
             }
-            QSpinBox::up-button, QSpinBox::down-button {
+            QComboBox::drop-down {
                 background-color: #9c724a;
                 border: none;
             }
-            QSpinBox::up-button:hover, QSpinBox::down-button:hover {
-                background-color: #6C4E31;
+            QComboBox::down-arrow {
+                image: none;
+                border-left: 5px solid transparent;
+                border-right: 5px solid transparent;
+                border-top: 5px solid #FFEAC5;
             }
             QDialogButtonBox QPushButton {
                 background-color: #6C4E31;
@@ -60,15 +65,21 @@ class DialogoArista(QDialog):
 
         # Vértice origen
         layout.addWidget(QLabel("Vértice Origen:"))
-        self.origen = QSpinBox()
-        self.origen.setRange(1, max_vertices)
+        self.origen = QComboBox()
+        self.origen.setEditable(False)  # Solo selección, no editable
+        for i in range(max_vertices):
+            etiqueta = self.etiquetas.get(i, str(i + 1))
+            self.origen.addItem(f"{etiqueta}", i)  # Mostrar solo la etiqueta
         self.origen.setFixedHeight(35)
         layout.addWidget(self.origen)
 
         # Vértice destino
         layout.addWidget(QLabel("Vértice Destino:"))
-        self.destino = QSpinBox()
-        self.destino.setRange(1, max_vertices)
+        self.destino = QComboBox()
+        self.destino.setEditable(False)  # Solo selección, no editable
+        for i in range(max_vertices):
+            etiqueta = self.etiquetas.get(i, str(i + 1))
+            self.destino.addItem(f"{etiqueta}", i)  # Mostrar solo la etiqueta
         self.destino.setFixedHeight(35)
         layout.addWidget(self.destino)
 
@@ -79,4 +90,9 @@ class DialogoArista(QDialog):
         layout.addWidget(buttons)
 
     def get_arista(self):
-        return (self.origen.value() - 1, self.destino.value() - 1)
+        """Retorna la arista normalizada (el menor índice primero)
+        para que (1,2) sea igual a (2,1) en grafos no dirigidos"""
+        origen = self.origen.currentData()
+        destino = self.destino.currentData()
+        # Normalizar: siempre el menor índice primero
+        return tuple(sorted([origen, destino]))
