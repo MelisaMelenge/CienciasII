@@ -1,6 +1,6 @@
 from PySide6.QtWidgets import (
     QMainWindow, QWidget, QVBoxLayout, QLabel, QFrame, QDialog, QFileDialog,
-    QMessageBox, QSpinBox, QComboBox, QPushButton, QGridLayout, QHBoxLayout, QScrollArea
+    QSpinBox, QComboBox, QPushButton, QGridLayout, QHBoxLayout, QScrollArea
 )
 from PySide6.QtCore import Qt
 from Vista.dialogo_clave import DialogoClave
@@ -13,7 +13,7 @@ class CubetaParcial(QMainWindow):
         super().__init__()
         self.cambiar_ventana = cambiar_ventana
 
-        self.setWindowTitle("Ciencias de la Computación II - Cubetas (Expansión y Reducción Parcial)")
+        self.setWindowTitle("Ciencias de la Computación II - Estructuras Dinámicas (Expansión y Reducción Parcial)")
 
         # Inicializar variables
         self.cubetas = []
@@ -27,24 +27,27 @@ class CubetaParcial(QMainWindow):
 
         # --- Widget central ---
         central = QWidget()
+        central.setStyleSheet("background-color: #FFEAC5;")
         self.setCentralWidget(central)
         layout = QVBoxLayout(central)
         layout.setSpacing(8)
+        layout.setContentsMargins(20, 20, 20, 20)
 
         # --- Encabezado ---
         header = QFrame()
         header.setStyleSheet("""
             background: qlineargradient(
                 spread:pad, x1:0, y1:0, x2:1, y2:0,
-                stop:0 #D8B4FE, stop:1 #A78BFA
+                stop:0 #9c724a, stop:1 #bf8f62
             );
             border-radius: 12px;
         """)
         header_layout = QVBoxLayout(header)
+        header_layout.setContentsMargins(10, 10, 10, 10)
 
         titulo = QLabel("Ciencias de la Computación II - Cubetas (Expansión y Reducción Parcial)")
         titulo.setAlignment(Qt.AlignCenter)
-        titulo.setStyleSheet("font-size: 26px; font-weight: bold; color: white; margin: 10px;")
+        titulo.setStyleSheet("font-size: 26px; font-weight: bold; color: #2d1f15; margin: 10px;")
         header_layout.addWidget(titulo)
 
         # --- Menú de navegación ---
@@ -59,14 +62,15 @@ class CubetaParcial(QMainWindow):
             btn.setStyleSheet("""
                 QPushButton {
                     background-color: transparent;
-                    color: #2E1065;
+                    color: #2d1f15;
                     font-size: 16px;
                     font-weight: bold;
                     border: none;
                 }
                 QPushButton:hover {
-                    color: #6D28D9;
-                    text-decoration: underline;
+                    color: #FFEAC5;
+                    background-color: #6C4E31;
+                    border-radius: 8px;
                 }
             """)
             menu_layout.addWidget(btn)
@@ -97,7 +101,14 @@ class CubetaParcial(QMainWindow):
         self.combo_accion.setFixedWidth(150)
 
         # Estilo para los controles
-        estilo_control = "font-size: 16px; padding: 5px;"
+        estilo_control = """
+            font-size: 16px; 
+            padding: 5px;
+            background-color: white;
+            border: 2px solid #bf8f62;
+            border-radius: 5px;
+            color: #2d1f15;
+        """
         self.spin_cubetas.setStyleSheet(estilo_control)
         self.spin_registros.setStyleSheet(estilo_control)
         self.spin_digitos.setStyleSheet(estilo_control)
@@ -116,15 +127,16 @@ class CubetaParcial(QMainWindow):
 
         estilo_boton = """
             QPushButton {
-                background-color: #7C3AED;
-                color: white;
+                background-color: #9c724a;
+                color: #2d1f15;
                 padding: 6px 14px;
                 font-size: 14px;
+                font-weight: bold;
                 border-radius: 8px;
                 min-width: 150px;
             }
             QPushButton:hover {
-                background-color: #6D28D9;
+                background-color: #bf8f62;
             }
         """
 
@@ -144,16 +156,16 @@ class CubetaParcial(QMainWindow):
         fila_controles.setAlignment(Qt.AlignCenter)
 
         lbl_cubetas = QLabel("Número de cubetas:")
-        lbl_cubetas.setStyleSheet("font-size: 14px; font-weight: bold;")
+        lbl_cubetas.setStyleSheet("font-size: 14px; font-weight: bold; color: #2d1f15;")
 
         lbl_registros = QLabel("Registros por cubeta:")
-        lbl_registros.setStyleSheet("font-size: 14px; font-weight: bold;")
+        lbl_registros.setStyleSheet("font-size: 14px; font-weight: bold; color: #2d1f15;")
 
         lbl_digitos = QLabel("Tamaño de claves:")
-        lbl_digitos.setStyleSheet("font-size: 14px; font-weight: bold;")
+        lbl_digitos.setStyleSheet("font-size: 14px; font-weight: bold; color: #2d1f15;")
 
         lbl_accion = QLabel("Acción:")
-        lbl_accion.setStyleSheet("font-size: 14px; font-weight: bold;")
+        lbl_accion.setStyleSheet("font-size: 14px; font-weight: bold; color: #2d1f15;")
 
         fila_controles.addWidget(lbl_cubetas)
         fila_controles.addWidget(self.spin_cubetas)
@@ -193,7 +205,9 @@ class CubetaParcial(QMainWindow):
         # --- Área de visualización (scroll) ---
         self.scroll = QScrollArea()
         self.scroll.setWidgetResizable(True)
+        self.scroll.setStyleSheet("QScrollArea { background-color: transparent; border: none; }")
         self.contenedor = QWidget()
+        self.contenedor.setStyleSheet("background-color: transparent;")
         self.contenedor_layout = QVBoxLayout(self.contenedor)
         self.contenedor_layout.setSpacing(10)
         self.contenedor_layout.setContentsMargins(20, 20, 20, 20)
@@ -204,7 +218,7 @@ class CubetaParcial(QMainWindow):
         # --- Mensaje inicial ---
         self.lbl_info = QLabel("Aquí se mostrará la simulación de la expansión o reducción parcial de cubetas.")
         self.lbl_info.setAlignment(Qt.AlignCenter)
-        self.lbl_info.setStyleSheet("font-size: 18px; color: #2c3e50; margin: 20px;")
+        self.lbl_info.setStyleSheet("font-size: 18px; color: #6C4E31; margin: 20px;")
         self.contenedor_layout.addWidget(self.lbl_info)
 
         # --- Conectar eventos ---
@@ -261,10 +275,8 @@ class CubetaParcial(QMainWindow):
         # Validar que esté en la secuencia
         secuencia = self.obtener_secuencia_expansion()
         if n not in secuencia and n < 100:
-            QMessageBox.warning(
-                self, "Error",
-                f"El número de cubetas debe estar en la secuencia: {', '.join(map(str, secuencia[:8]))}..."
-            )
+            DialogoClave(0, "Error", "mensaje", self,
+                         f"El número de cubetas debe estar en la secuencia: {', '.join(map(str, secuencia[:8]))}...").exec()
             return
 
         self.n = n
@@ -278,8 +290,8 @@ class CubetaParcial(QMainWindow):
         self.nivel_expansion = 0
 
         self.actualizar_visualizacion()
-        QMessageBox.information(self, "Éxito",
-                                f"Estructura creada: {self.n} cubetas x {self.R} registros")
+        DialogoClave(0, "Éxito", "mensaje", self,
+                     f"Estructura creada: {self.n} cubetas x {self.R} registros").exec()
 
     def calcular_posicion(self, clave):
         """Calcular posición: clave mod n"""
@@ -298,7 +310,7 @@ class CubetaParcial(QMainWindow):
     def insertar_clave(self):
         """Insertar una nueva clave con desbordamiento visible antes de expandir"""
         if not self.estructura_creada:
-            QMessageBox.warning(self, "Error", "Primero debe crear la estructura.")
+            DialogoClave(0, "Error", "mensaje", self, "Primero debe crear la estructura.").exec()
             return
 
         dialogo = DialogoClave(self.num_digitos, "Insertar Clave", "insertar", self)
@@ -307,14 +319,14 @@ class CubetaParcial(QMainWindow):
 
             # Validar clave
             if len(clave) != self.num_digitos or not clave.isdigit():
-                QMessageBox.warning(self, "Error",
-                                    f"La clave debe tener exactamente {self.num_digitos} dígitos.")
+                DialogoClave(0, "Error", "mensaje", self,
+                             f"La clave debe tener exactamente {self.num_digitos} dígitos.").exec()
                 return
 
             # Verificar duplicados
             for cubeta in self.cubetas:
                 if clave in cubeta:
-                    QMessageBox.warning(self, "Error", "La clave ya existe.")
+                    DialogoClave(0, "Error", "mensaje", self, "La clave ya existe.").exec()
                     return
 
             # Guardar estado para deshacer
@@ -336,12 +348,10 @@ class CubetaParcial(QMainWindow):
 
             # Si la cubeta desbordó o la ocupación >= 75%, expandir
             if len(self.cubetas[posicion]) > self.R or ocupacion_real >= 0.75:
-                QMessageBox.information(
-                    self, "Desbordamiento detectado",
-                    f"La clave {clave} fue insertada en la cubeta {posicion}.\n"
-                    f"Ocupación real: {ocupacion_real * 100:.1f}%\n"
-                    f"Se procederá a expandir la estructura."
-                )
+                DialogoClave(0, "Desbordamiento detectado", "mensaje", self,
+                             f"La clave {clave} fue insertada en la cubeta {posicion}.\n"
+                             f"Ocupación real: {ocupacion_real * 100:.1f}%\n"
+                             f"Se procederá a expandir la estructura.").exec()
                 self.expandir_parcial()
 
     def expandir_parcial(self):
@@ -375,17 +385,15 @@ class CubetaParcial(QMainWindow):
         if self.nivel_expansion % 2 == 0:
             mensaje_extra = f"\n¡Se completó una expansión TOTAL! (Nivel {self.nivel_expansion // 2})"
 
-        QMessageBox.information(
-            self, "Expansión parcial",
-            f"Ocupación: {ocupacion * 100:.1f}%\n"
-            f"Estructura expandida de {antiguo_n} a {nuevo_n} cubetas."
-            f"{mensaje_extra}"
-        )
+        DialogoClave(0, "Expansión parcial", "mensaje", self,
+                     f"Ocupación: {ocupacion * 100:.1f}%\n"
+                     f"Estructura expandida de {antiguo_n} a {nuevo_n} cubetas."
+                     f"{mensaje_extra}").exec()
 
     def buscar_clave(self):
         """Buscar una clave"""
         if not self.estructura_creada:
-            QMessageBox.warning(self, "Error", "Primero debe crear la estructura.")
+            DialogoClave(0, "Error", "mensaje", self, "Primero debe crear la estructura.").exec()
             return
 
         dialogo = DialogoClave(self.num_digitos, "Buscar Clave", "buscar", self)
@@ -396,16 +404,16 @@ class CubetaParcial(QMainWindow):
 
             if clave in self.cubetas[posicion]:
                 registro = self.cubetas[posicion].index(clave) + 1
-                QMessageBox.information(self, "Encontrada",
-                                        f"Clave {clave} encontrada en:\nCubeta {posicion}, Registro {registro}")
+                DialogoClave(0, "Encontrada", "mensaje", self,
+                             f"Clave {clave} encontrada en:\nCubeta {posicion}, Registro {registro}").exec()
             else:
-                QMessageBox.information(self, "No encontrada",
-                                        f"La clave {clave} no existe en la estructura.")
+                DialogoClave(0, "No encontrada", "mensaje", self,
+                             f"La clave {clave} no existe en la estructura.").exec()
 
     def eliminar_clave(self):
         """Eliminar una clave con reducción automática"""
         if not self.estructura_creada:
-            QMessageBox.warning(self, "Error", "Primero debe crear la estructura.")
+            DialogoClave(0, "Error", "mensaje", self, "Primero debe crear la estructura.").exec()
             return
 
         dialogo = DialogoClave(self.num_digitos, "Eliminar Clave", "eliminar", self)
@@ -426,19 +434,17 @@ class CubetaParcial(QMainWindow):
 
                 # Verificar si se puede reducir (ocupación <= 80% y n > 2)
                 if ocupacion_reduccion <= 0.80 and self.n > 2:
-                    QMessageBox.information(
-                        self, "Reducción detectada",
-                        f"La clave {clave} fue eliminada de la cubeta {posicion}.\n"
-                        f"Espacios ocupados / cubetas: {ocupacion_reduccion * 100:.1f}%\n"
-                        f"Se procederá a reducir la estructura."
-                    )
+                    DialogoClave(0, "Reducción detectada", "mensaje", self,
+                                 f"La clave {clave} fue eliminada de la cubeta {posicion}.\n"
+                                 f"Espacios ocupados / cubetas: {ocupacion_reduccion * 100:.1f}%\n"
+                                 f"Se procederá a reducir la estructura.").exec()
                     self.reducir_parcial()
                 else:
-                    QMessageBox.information(self, "Éxito",
-                                            f"Clave {clave} eliminada de la cubeta {posicion}")
+                    DialogoClave(0, "Éxito", "mensaje", self,
+                                 f"Clave {clave} eliminada de la cubeta {posicion}").exec()
             else:
-                QMessageBox.warning(self, "Error",
-                                    f"La clave {clave} no existe.")
+                DialogoClave(0, "Error", "mensaje", self,
+                             f"La clave {clave} no existe.").exec()
 
     def guardar_estado(self):
         """Guardar estado actual para deshacer"""
@@ -452,11 +458,9 @@ class CubetaParcial(QMainWindow):
 
     def eliminar_estructura(self):
         """Eliminar la estructura completa"""
-        respuesta = QMessageBox.question(self, "Confirmar",
-                                         "¿Está seguro de eliminar la estructura?",
-                                         QMessageBox.Yes | QMessageBox.No)
-
-        if respuesta == QMessageBox.Yes:
+        dlg = DialogoClave(0, "Confirmar", "confirmar", self,
+                           "¿Está seguro de eliminar la estructura?")
+        if dlg.exec():
             self.cubetas = []
             self.n = 0
             self.R = 0
@@ -472,7 +476,7 @@ class CubetaParcial(QMainWindow):
 
             self.lbl_info = QLabel("Estructura eliminada. Cree una nueva estructura.")
             self.lbl_info.setAlignment(Qt.AlignCenter)
-            self.lbl_info.setStyleSheet("font-size: 18px; color: #2c3e50; margin: 20px;")
+            self.lbl_info.setStyleSheet("font-size: 18px; color: #6C4E31; margin: 20px;")
             self.contenedor_layout.addWidget(self.lbl_info)
 
     def actualizar_visualizacion(self):
@@ -490,10 +494,10 @@ class CubetaParcial(QMainWindow):
         lbl_info = QLabel(
             f"<b>Estructura:</b> {self.n} cubetas x {self.R} registros "
             f"<span style='color:{color}; font-weight:bold;'>| Ocupación: {ocupacion * 100:.1f}%</span> "
-            f"<span style='color:#7C3AED; font-weight:bold;'>| Nivel: {self.nivel_expansion}</span>"
+            f"<span style='color:#9c724a; font-weight:bold;'>| Nivel: {self.nivel_expansion}</span>"
         )
         lbl_info.setAlignment(Qt.AlignCenter)
-        lbl_info.setStyleSheet("font-size: 14px; margin-bottom: 10px;")
+        lbl_info.setStyleSheet("font-size: 14px; margin-bottom: 10px; color: #2d1f15;")
         self.contenedor_layout.addWidget(lbl_info)
 
         # Crear tabla usando QGridLayout
@@ -505,8 +509,8 @@ class CubetaParcial(QMainWindow):
         # Encabezado (cubetas)
         lbl_esquina = QLabel("")
         lbl_esquina.setStyleSheet("""
-            background-color: #7C3AED;
-            border: 1px solid #6D28D9;
+            background-color: #9c724a;
+            border: 1px solid #6C4E31;
         """)
         lbl_esquina.setFixedWidth(55)
         lbl_esquina.setFixedHeight(28)
@@ -517,12 +521,12 @@ class CubetaParcial(QMainWindow):
             lbl_cubeta = QLabel(f"C{i}")
             lbl_cubeta.setAlignment(Qt.AlignCenter)
             lbl_cubeta.setStyleSheet("""
-                background-color: #7C3AED;
-                color: white;
+                background-color: #9c724a;
+                color: #FFEAC5;
                 font-size: 12px;
                 font-weight: bold;
                 padding: 6px 8px;
-                border: 1px solid #6D28D9;
+                border: 1px solid #6C4E31;
             """)
             lbl_cubeta.setMinimumWidth(60)
             lbl_cubeta.setMaximumWidth(80)
@@ -535,12 +539,12 @@ class CubetaParcial(QMainWindow):
             lbl_registro = QLabel(f"R{j + 1}")
             lbl_registro.setAlignment(Qt.AlignCenter)
             lbl_registro.setStyleSheet("""
-                background-color: #7C3AED;
-                color: white;
+                background-color: #9c724a;
+                color: #FFEAC5;
                 font-size: 12px;
                 font-weight: bold;
                 padding: 6px 8px;
-                border: 1px solid #6D28D9;
+                border: 1px solid #6C4E31;
             """)
             lbl_registro.setFixedWidth(55)
             lbl_registro.setFixedHeight(30)
@@ -549,17 +553,17 @@ class CubetaParcial(QMainWindow):
             # Celdas de datos
             for i in range(self.n):
                 cubeta = self.cubetas[i]
-                bg_color = "#F3F4F6" if i % 2 == 0 else "#FFFFFF"
+                bg_color = "#FFDBB5" if i % 2 == 0 else "#FFF3E0"
 
                 if j < len(cubeta):
                     lbl_val = QLabel(cubeta[j])
                     lbl_val.setStyleSheet(f"""
                         background-color: {bg_color};
-                        color: #1F2937;
+                        color: #2d1f15;
                         font-size: 12px;
                         font-weight: 500;
                         padding: 6px 8px;
-                        border: 1px solid #E5E7EB;
+                        border: 1px solid #bf8f62;
                     """)
                 else:
                     lbl_val = QLabel("---")
@@ -568,7 +572,7 @@ class CubetaParcial(QMainWindow):
                         color: #9CA3AF;
                         font-size: 11px;
                         padding: 6px 8px;
-                        border: 1px solid #E5E7EB;
+                        border: 1px solid #bf8f62;
                     """)
 
                 lbl_val.setAlignment(Qt.AlignCenter)
@@ -635,10 +639,8 @@ class CubetaParcial(QMainWindow):
             if self.hubo_expansion:
                 self.btn_eliminar_clave.show()
             else:
-                QMessageBox.warning(
-                    self, "Aviso",
-                    "No puede reducir porque no ha habido ninguna expansión todavía."
-                )
+                DialogoClave(0, "Aviso", "mensaje", self,
+                             "No puede reducir porque no ha habido ninguna expansión todavía.").exec()
                 self.combo_accion.setCurrentText("Expandir")
                 self.actualizar_botones_accion()
                 return
@@ -657,20 +659,16 @@ class CubetaParcial(QMainWindow):
     def reducir_parcial(self):
         """Reducción parcial: reduce según la secuencia inversa"""
         if self.n <= 2:
-            QMessageBox.warning(
-                self, "No se puede reducir",
-                "La estructura tiene 2 cubetas (mínimo). No se puede reducir más."
-            )
+            DialogoClave(0, "No se puede reducir", "mensaje", self,
+                         "La estructura tiene 2 cubetas (mínimo). No se puede reducir más.").exec()
             return
 
         ocupacion_reduccion = self.calcular_ocupacion_reduccion()
 
         if ocupacion_reduccion > 0.80:
-            QMessageBox.warning(
-                self, "No se puede reducir",
-                f"La ocupación ({ocupacion_reduccion * 100:.1f}%) es mayor a 80%.\n"
-                "No se puede reducir la estructura."
-            )
+            DialogoClave(0, "No se puede reducir", "mensaje", self,
+                         f"La ocupación ({ocupacion_reduccion * 100:.1f}%) es mayor a 80%.\n"
+                         "No se puede reducir la estructura.").exec()
             return
 
         antiguo_n = self.n
@@ -696,17 +694,15 @@ class CubetaParcial(QMainWindow):
         if self.nivel_expansion % 2 == 0 and self.nivel_expansion >= 0:
             mensaje_extra = f"\n¡Se completó una reducción TOTAL!"
 
-        QMessageBox.information(
-            self, "Reducción parcial",
-            f"Ocupación: {ocupacion_reduccion * 100:.1f}%\n"
-            f"Estructura reducida de {antiguo_n} a {nuevo_n} cubetas."
-            f"{mensaje_extra}"
-        )
+        DialogoClave(0, "Reducción parcial", "mensaje", self,
+                     f"Ocupación: {ocupacion_reduccion * 100:.1f}%\n"
+                     f"Estructura reducida de {antiguo_n} a {nuevo_n} cubetas."
+                     f"{mensaje_extra}").exec()
 
     def guardar_estructura(self):
         """Guardar la estructura actual en un archivo JSON"""
         if not self.estructura_creada:
-            QMessageBox.warning(self, "Error", "No hay estructura para guardar.")
+            DialogoClave(0, "Error", "mensaje", self, "No hay estructura para guardar.").exec()
             return
 
         archivo, _ = QFileDialog.getSaveFileName(
@@ -735,16 +731,12 @@ class CubetaParcial(QMainWindow):
             with open(archivo, 'w', encoding='utf-8') as f:
                 json.dump(datos, f, indent=4, ensure_ascii=False)
 
-            QMessageBox.information(
-                self, "Éxito",
-                f"Estructura guardada correctamente en:\n{archivo}"
-            )
+            DialogoClave(0, "Éxito", "mensaje", self,
+                         f"Estructura guardada correctamente en:\n{archivo}").exec()
 
         except Exception as e:
-            QMessageBox.critical(
-                self, "Error",
-                f"Error al guardar la estructura:\n{str(e)}"
-            )
+            DialogoClave(0, "Error", "mensaje", self,
+                         f"Error al guardar la estructura:\n{str(e)}").exec()
 
     def cargar_estructura(self):
         """Cargar una estructura desde un archivo JSON"""
@@ -759,7 +751,7 @@ class CubetaParcial(QMainWindow):
             return
 
         if not os.path.exists(archivo):
-            QMessageBox.warning(self, "Error", f"El archivo no existe:\n{archivo}")
+            DialogoClave(0, "Error", "mensaje", self, f"El archivo no existe:\n{archivo}").exec()
             return
 
         try:
@@ -767,10 +759,8 @@ class CubetaParcial(QMainWindow):
                 datos = json.load(f)
 
             if not all(k in datos for k in ["n", "R", "num_digitos", "cubetas"]):
-                QMessageBox.warning(
-                    self, "Error",
-                    "El archivo no contiene una estructura válida."
-                )
+                DialogoClave(0, "Error", "mensaje", self,
+                             "El archivo no contiene una estructura válida.").exec()
                 return
 
             self.n = datos["n"]
@@ -788,20 +778,14 @@ class CubetaParcial(QMainWindow):
 
             self.actualizar_visualizacion()
 
-            QMessageBox.information(
-                self, "Éxito",
-                f"Estructura cargada correctamente desde:\n{archivo}\n\n"
-                f"{self.n} cubetas x {self.R} registros\n"
-                f"Nivel de expansión: {self.nivel_expansion}"
-            )
+            DialogoClave(0, "Éxito", "mensaje", self,
+                         f"Estructura cargada correctamente desde:\n{archivo}\n\n"
+                         f"{self.n} cubetas x {self.R} registros\n"
+                         f"Nivel de expansión: {self.nivel_expansion}").exec()
 
         except json.JSONDecodeError:
-            QMessageBox.critical(
-                self, "Error",
-                "El archivo no es un JSON válido."
-            )
+            DialogoClave(0, "Error", "mensaje", self,
+                         "El archivo no es un JSON válido.").exec()
         except Exception as e:
-            QMessageBox.critical(
-                self, "Error",
-                f"Error al cargar la estructura:\n{str(e)}"
-            )
+            DialogoClave(0, "Error", "mensaje", self,
+                         f"Error al cargar la estructura:\n{str(e)}").exec()

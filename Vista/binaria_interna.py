@@ -17,6 +17,7 @@ class BinariaInterna(QMainWindow):
 
         # --- Layout principal ---
         central = QWidget()
+        central.setStyleSheet("background-color: #FFEAC5;")
         layout = QVBoxLayout(central)
         layout.setSpacing(20)
         layout.setContentsMargins(20, 20, 20, 20)
@@ -26,7 +27,7 @@ class BinariaInterna(QMainWindow):
         header.setStyleSheet("""
             background: qlineargradient(
                 spread:pad, x1:0, y1:0, x2:1, y2:0,
-                stop:0 #D8B4FE, stop:1 #A78BFA
+                stop:0 #9c724a, stop:1 #bf8f62
             );
             border-radius: 12px;
         """)
@@ -35,7 +36,7 @@ class BinariaInterna(QMainWindow):
 
         titulo = QLabel("Ciencias de la Computación II - Búsqueda Binaria")
         titulo.setAlignment(Qt.AlignCenter)
-        titulo.setStyleSheet("font-size: 26px; font-weight: bold; color: white; margin: 10px;")
+        titulo.setStyleSheet("font-size: 26px; font-weight: bold; color: #2d1f15; margin: 10px;")
         header_layout.addWidget(titulo)
 
         menu_layout = QHBoxLayout()
@@ -49,14 +50,15 @@ class BinariaInterna(QMainWindow):
             btn.setStyleSheet("""
                 QPushButton {
                     background-color: transparent;
-                    color: #2E1065;
+                    color: #2d1f15;
                     font-size: 16px;
                     font-weight: bold;
                     border: none;
                 }
                 QPushButton:hover {
-                    color: #6D28D9;
-                    text-decoration: underline;
+                    color: #FFEAC5;
+                    background-color: #6C4E31;
+                    border-radius: 8px;
                 }
             """)
             menu_layout.addWidget(btn)
@@ -73,19 +75,43 @@ class BinariaInterna(QMainWindow):
         controles_layout.setSpacing(20)
 
         lbl_rango = QLabel("Rango (10^n):")
-        lbl_rango.setStyleSheet("font-weight: bold; font-size: 14px;")
+        lbl_rango.setStyleSheet("font-weight: bold; font-size: 14px; color: #2d1f15;")
 
         self.rango = QComboBox()
         self.rango.addItems([str(i) for i in range(1, 6)])
         self.rango.setFixedWidth(80)
+        self.rango.setStyleSheet("""
+            QComboBox {
+                background-color: white;
+                border: 2px solid #bf8f62;
+                border-radius: 5px;
+                padding: 5px;
+                color: #2d1f15;
+            }
+            QComboBox:hover {
+                border: 2px solid #6C4E31;
+            }
+        """)
 
         lbl_digitos = QLabel("Número de dígitos:")
-        lbl_digitos.setStyleSheet("font-weight: bold; font-size: 14px;")
+        lbl_digitos.setStyleSheet("font-weight: bold; font-size: 14px; color: #2d1f15;")
 
         self.digitos = QSpinBox()
         self.digitos.setRange(1, 10)
         self.digitos.setValue(4)
         self.digitos.setFixedWidth(80)
+        self.digitos.setStyleSheet("""
+            QSpinBox {
+                background-color: white;
+                border: 2px solid #bf8f62;
+                border-radius: 5px;
+                padding: 5px;
+                color: #2d1f15;
+            }
+            QSpinBox:hover {
+                border: 2px solid #6C4E31;
+            }
+        """)
 
         controles_layout.addWidget(lbl_rango)
         controles_layout.addWidget(self.rango)
@@ -110,14 +136,15 @@ class BinariaInterna(QMainWindow):
         ):
             btn.setStyleSheet("""
                 QPushButton {
-                    background-color: #7C3AED;
-                    color: white;
+                    background-color: #9c724a;
+                    color: #2d1f15;
                     padding: 10px 20px;
                     font-size: 16px;
+                    font-weight: bold;
                     border-radius: 10px;
                 }
                 QPushButton:hover {
-                    background-color: #6D28D9;
+                    background-color: #bf8f62;
                 }
             """)
 
@@ -137,7 +164,9 @@ class BinariaInterna(QMainWindow):
         # --- Contenedor con scroll ---
         self.scroll = QScrollArea()
         self.scroll.setWidgetResizable(True)
+        self.scroll.setStyleSheet("QScrollArea { background-color: transparent; border: none; }")
         self.contenedor = QWidget()
+        self.contenedor.setStyleSheet("background-color: transparent;")
         self.grid = QGridLayout(self.contenedor)
         self.grid.setAlignment(Qt.AlignCenter)
         self.scroll.setWidget(self.contenedor)
@@ -184,7 +213,7 @@ class BinariaInterna(QMainWindow):
                 self._agregar_cuadro(i, i)
 
             puntos = QLabel("...")
-            puntos.setStyleSheet("font-size: 18px; color: gray;")
+            puntos.setStyleSheet("font-size: 18px; color: #6C4E31;")
             self.grid.addWidget(
                 puntos, (mostrar // 10) * 2, mostrar % 10, 2, 1, alignment=Qt.AlignCenter
             )
@@ -210,17 +239,18 @@ class BinariaInterna(QMainWindow):
         cuadro.setFixedSize(60, 60)
         cuadro.setStyleSheet("""
             QLabel {
-                background-color: #EDE9FE;
-                border: 2px solid #7C3AED;
+                background-color: #FFDBB5;
+                border: 2px solid #9c724a;
                 border-radius: 12px;
                 font-size: 16px;
+                color: #2d1f15;
             }
         """)
         self.grid.addWidget(cuadro, fila, col, alignment=Qt.AlignCenter)
 
         numero = QLabel(str(idx_real + 1))
         numero.setAlignment(Qt.AlignCenter)
-        numero.setStyleSheet("font-size: 14px; color: gray; margin-top: 5px;")
+        numero.setStyleSheet("font-size: 14px; color: #6C4E31; margin-top: 5px;")
         self.grid.addWidget(numero, fila + 1, col, alignment=Qt.AlignCenter)
 
         self.labels.append(cuadro)
@@ -269,10 +299,11 @@ class BinariaInterna(QMainWindow):
             for lbl in self.labels:
                 lbl.setStyleSheet("""
                     QLabel {
-                        background-color: #EDE9FE;
-                        border: 2px solid #7C3AED;
+                        background-color: #FFDBB5;
+                        border: 2px solid #9c724a;
                         border-radius: 12px;
                         font-size: 16px;
+                        color: #2d1f15;
                     }
                 """)
 
@@ -281,21 +312,23 @@ class BinariaInterna(QMainWindow):
                 if self.cuadro_resaltado:
                     self.cuadro_resaltado.setStyleSheet("""
                         QLabel {
-                            background-color: #EDE9FE;
-                            border: 2px solid #7C3AED;
+                            background-color: #FFDBB5;
+                            border: 2px solid #9c724a;
                             border-radius: 12px;
                             font-size: 16px;
+                            color: #2d1f15;
                         }
                     """)
 
                 # Pintar nuevo cuadro
                 self.labels[pos].setStyleSheet("""
                     QLabel {
-                        background-color: #C084FC;
-                        border: 2px solid #6D28D9;
+                        background-color: #9c724a;
+                        border: 3px solid #603F26;
                         border-radius: 12px;
                         font-size: 18px;
                         font-weight: bold;
+                        color: #FFEAC5;
                     }
                 """)
                 self.cuadro_resaltado = self.labels[pos]
@@ -333,10 +366,11 @@ class BinariaInterna(QMainWindow):
                 if self.cuadro_resaltado:
                     self.cuadro_resaltado.setStyleSheet("""
                         QLabel {
-                            background-color: #EDE9FE;
-                            border: 2px solid #7C3AED;
+                            background-color: #FFDBB5;
+                            border: 2px solid #9c724a;
                             border-radius: 12px;
                             font-size: 16px;
+                            color: #2d1f15;
                         }
                     """)
                     self.cuadro_resaltado = None
@@ -463,7 +497,7 @@ class BinariaInterna(QMainWindow):
                     self._agregar_cuadro(i, i)
 
                 puntos = QLabel("...")
-                puntos.setStyleSheet("font-size: 18px; color: gray;")
+                puntos.setStyleSheet("font-size: 18px; color: #6C4E31;")
                 self.grid.addWidget(
                     puntos, (mostrar // 10) * 2, mostrar % 10, 2, 1, alignment=Qt.AlignCenter
                 )
@@ -492,9 +526,10 @@ class BinariaInterna(QMainWindow):
         for lbl in self.labels:
             lbl.setStyleSheet("""
                 QLabel {
-                    background-color: #EDE9FE;
-                    border: 2px solid #7C3AED;
+                    background-color: #FFDBB5;
+                    border: 2px solid #9c724a;
                     border-radius: 12px;
                     font-size: 16px;
+                    color: #2d1f15;
                 }
             """)

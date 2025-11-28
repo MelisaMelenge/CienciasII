@@ -1,7 +1,10 @@
 {
     "capacidad": 10,
     "digitos": 4,
-    "posiciones": [],
+    "posiciones": [
+        1,
+        2
+    ],
     "estructura": {
         "1": "",
         "2": "",

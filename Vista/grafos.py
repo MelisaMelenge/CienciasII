@@ -14,6 +14,7 @@ class Grafos(QMainWindow):
 
         # --- Widget central ---
         central = QWidget()
+        central.setStyleSheet("background-color: #FFEAC5;")
         self.setCentralWidget(central)
         main_layout = QVBoxLayout(central)
         main_layout.setContentsMargins(0, 0, 0, 0)
@@ -23,13 +24,15 @@ class Grafos(QMainWindow):
         header = QFrame()
         header.setStyleSheet("""
             background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
-                stop:0 #D8B4FE, stop:1 #A78BFA);
+                stop:0 #9c724a, stop:1 #bf8f62);
+            border-radius: 12px;
         """)
         header_layout = QVBoxLayout(header)
+        header_layout.setContentsMargins(10, 10, 10, 10)
 
         titulo = QLabel("Ciencias de la Computación II - Grafos")
         titulo.setAlignment(Qt.AlignCenter)
-        titulo.setStyleSheet("font-size: 28px; font-weight: bold; color: white; margin: 15px;")
+        titulo.setStyleSheet("font-size: 28px; font-weight: bold; color: #2d1f15; margin: 15px;")
         header_layout.addWidget(titulo)
 
         # --- Menú ---
@@ -37,10 +40,10 @@ class Grafos(QMainWindow):
         menu_bar.setStyleSheet("""
             QMenuBar {
                 background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
-                    stop:0 #E9D5FF, stop:1 #C4B5FD);
+                    stop:0 #FFDBB5, stop:1 #FFF3E0);
                 font-weight: bold;
                 font-size: 16px;
-                color: #4C1D95;
+                color: #2d1f15;
             }
             QMenuBar::item {
                 spacing: 20px;
@@ -48,22 +51,22 @@ class Grafos(QMainWindow):
                 border-radius: 8px;
             }
             QMenuBar::item:selected {
-                background: #7e22ce;
-                color: white;
+                background: #6C4E31;
+                color: #FFEAC5;
             }
             QMenu {
                 background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
-                    stop:0 #F8F4FF, stop:1 #E9D5FF);
-                border: 1px solid #C4B5FD;
+                    stop:0 #FFF3E0, stop:1 #FFDBB5);
+                border: 1px solid #bf8f62;
                 font-size: 15px;
-                color: #4C1D95;
+                color: #2d1f15;
                 padding: 6px;
                 border-radius: 8px;
             }
             QMenu::item:selected {
                 background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
-                    stop:0 #7e22ce, stop:1 #5a2ea6);
-                color: white;
+                    stop:0 #6C4E31, stop:1 #9c724a);
+                color: #FFEAC5;
                 border-radius: 6px;
             }
         """)
@@ -87,7 +90,7 @@ class Grafos(QMainWindow):
         # --- Contenido principal ---
         self.label = QLabel("Selecciona una opción del menú de Grafos")
         self.label.setAlignment(Qt.AlignCenter)
-        self.label.setStyleSheet("font-size: 20px; color: #2c3e50; font-weight: bold; margin-top: 40px;")
+        self.label.setStyleSheet("font-size: 20px; color: #6C4E31; font-weight: bold; margin-top: 40px;")
 
         main_layout.addWidget(header)
         main_layout.addWidget(self.label, stretch=1)

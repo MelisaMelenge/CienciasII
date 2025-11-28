@@ -16,6 +16,9 @@ class DialogoClave(QDialog):
         self.setFixedSize(420, 230)
         self.setModal(True)
 
+        # Estilo del diálogo
+        self.setStyleSheet("QDialog { background-color: #FFEAC5; }")
+
         layout = QVBoxLayout(self)
         layout.setSpacing(12)
         layout.setAlignment(Qt.AlignCenter)
@@ -29,7 +32,7 @@ class DialogoClave(QDialog):
             }
             lbl = QLabel(textos[modo])
             lbl.setAlignment(Qt.AlignCenter)
-            lbl.setStyleSheet("font-size: 18px; font-weight: bold; color: #4C1D95;")
+            lbl.setStyleSheet("font-size: 18px; font-weight: bold; color: #2d1f15;")
             layout.addWidget(lbl)
 
             self.input = QLineEdit()
@@ -39,16 +42,16 @@ class DialogoClave(QDialog):
             self.input.setValidator(QIntValidator(0, 10**longitud - 1, self))
             self.input.setStyleSheet("""
                 QLineEdit {
-                    border: 2px solid #7C3AED;
+                    border: 2px solid #9c724a;
                     border-radius: 10px;
                     padding: 10px;
                     font-size: 18px;
-                    background-color: #F3E8FF;
-                    color: #4C1D95;
+                    background-color: #FFDBB5;
+                    color: #2d1f15;
                 }
                 QLineEdit:focus {
-                    border: 2px solid #6D28D9;
-                    background-color: #EDE9FE;
+                    border: 2px solid #6C4E31;
+                    background-color: white;
                 }
             """)
             layout.addWidget(self.input)
@@ -57,16 +60,17 @@ class DialogoClave(QDialog):
             btn_ok = QPushButton("Aceptar")
             btn_cancel = QPushButton("Cancelar")
 
-            for b, color in [(btn_ok, "#7C3AED"), (btn_cancel, "#A78BFA")]:
+            for b, color in [(btn_ok, "#9c724a"), (btn_cancel, "#bf8f62")]:
                 b.setStyleSheet(f"""
                     QPushButton {{
                         background-color: {color};
-                        color: white;
+                        color: #2d1f15;
                         padding: 8px 20px;
                         font-size: 16px;
+                        font-weight: bold;
                         border-radius: 10px;
                     }}
-                    QPushButton:hover {{ background-color: #6D28D9; }}
+                    QPushButton:hover {{ background-color: #6C4E31; color: #FFEAC5; }}
                 """)
 
             btn_ok.clicked.connect(self.validar_y_aceptar)
@@ -83,19 +87,20 @@ class DialogoClave(QDialog):
             lbl = QLabel(mensaje)
             lbl.setAlignment(Qt.AlignCenter)
             lbl.setWordWrap(True)
-            lbl.setStyleSheet("font-size: 16px; color: #4C1D95;")
+            lbl.setStyleSheet("font-size: 16px; color: #2d1f15;")
             layout.addWidget(lbl)
 
             btn_ok = QPushButton("Aceptar")
             btn_ok.setStyleSheet("""
                 QPushButton {
-                    background-color: #7C3AED;
-                    color: white;
+                    background-color: #9c724a;
+                    color: #2d1f15;
                     padding: 8px 22px;
                     font-size: 16px;
+                    font-weight: bold;
                     border-radius: 10px;
                 }
-                QPushButton:hover { background-color: #6D28D9; }
+                QPushButton:hover { background-color: #6C4E31; color: #FFEAC5; }
             """)
             btn_ok.clicked.connect(self.accept)
             layout.addWidget(btn_ok, alignment=Qt.AlignCenter)
@@ -106,23 +111,24 @@ class DialogoClave(QDialog):
             lbl = QLabel(mensaje)
             lbl.setAlignment(Qt.AlignCenter)
             lbl.setWordWrap(True)
-            lbl.setStyleSheet("font-size: 16px; color: #4C1D95;")
+            lbl.setStyleSheet("font-size: 16px; color: #2d1f15;")
             layout.addWidget(lbl)
 
             botones = QHBoxLayout()
             btn_si = QPushButton("Sí")
             btn_no = QPushButton("No")
 
-            for b, color in [(btn_si, "#7C3AED"), (btn_no, "#A78BFA")]:
+            for b, color in [(btn_si, "#9c724a"), (btn_no, "#bf8f62")]:
                 b.setStyleSheet(f"""
                     QPushButton {{
                         background-color: {color};
-                        color: white;
+                        color: #2d1f15;
                         padding: 8px 18px;
                         font-size: 16px;
+                        font-weight: bold;
                         border-radius: 10px;
                     }}
-                    QPushButton:hover {{ background-color: #6D28D9; }}
+                    QPushButton:hover {{ background-color: #6C4E31; color: #FFEAC5; }}
                 """)
 
             btn_si.clicked.connect(self.accept)
@@ -138,6 +144,7 @@ class DialogoClave(QDialog):
         else:
             lbl = QLabel("Modo no reconocido.")
             lbl.setAlignment(Qt.AlignCenter)
+            lbl.setStyleSheet("color: #2d1f15;")
             layout.addWidget(lbl)
             self.input = None
 

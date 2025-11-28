@@ -23,11 +23,11 @@ class Inicio(QMainWindow):
         header.setFont(QFont("Arial", 26, QFont.Bold))
         header.setStyleSheet("""
             QLabel {
-                color: white;
+                color: #473627;
                 padding: 25px;
                 background: qlineargradient(
                     x1:0, y1:0, x2:1, y2:0,
-                    stop:0 #D8B4FE, stop:1 #A78BFA
+                    stop:0 #9c724a, stop:1 #bf8f62
                 );
             }
         """)
@@ -43,20 +43,20 @@ class Inicio(QMainWindow):
             QWidget {
                 background: qlineargradient(
                     x1:0, y1:0, x2:1, y2:0,
-                    stop:0 #E9D5FF, stop:1 #C4B5FD
+                    stop:0 #bf8f62, stop:1 #9c724a
                 );
             }
             QPushButton {
                 background: transparent;
                 border: none;
-                color: #4C1D95;
+                color: #473627;
                 font-weight: bold;
                 font-size: 16px;
                 padding: 12px 20px;
             }
             QPushButton:hover {
-                color: white;
-                background: #7C3AED;
+                color: #FFEAC5;
+                background: #473627;
                 border-radius: 8px;
             }
         """)
@@ -77,5 +77,5 @@ class Inicio(QMainWindow):
 
         # ----------- ESPACIO EN BLANCO PRINCIPAL -----------
         content = QWidget()
-        content.setStyleSheet("background-color: white;")
+        content.setStyleSheet("background-color: #FFEAC5;")
         layout.addWidget(content, stretch=1)

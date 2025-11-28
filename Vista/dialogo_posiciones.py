@@ -14,45 +14,45 @@ class DialogoPosiciones(QDialog):
         # --- Fondo con estilo ---
         self.setStyleSheet("""
             QDialog {
-                background-color: #F5F3FF;
+                background-color: #FFEAC5;
                 border-radius: 12px;
             }
             QLabel {
-                color: #2E1065;
+                color: #2d1f15;
                 font-size: 16px;
                 font-weight: bold;
                 margin-bottom: 8px;
             }
             QCheckBox {
                 font-size: 15px;
-                color: #4C1D95;
+                color: #473627;
                 padding: 6px;
             }
             QCheckBox::indicator {
                 width: 20px;
                 height: 20px;
                 border-radius: 6px;
-                border: 2px solid #7C3AED;
+                border: 2px solid #9c724a;
                 background-color: white;
             }
             QCheckBox::indicator:checked {
-                background-color: #7C3AED;
-                border: 2px solid #5B21B6;
+                background-color: #9c724a;
+                border: 2px solid #6C4E31;
             }
             QDialogButtonBox QPushButton {
-                background-color: #7C3AED;
-                color: white;
+                background-color: #9c724a;
+                color: #2d1f15;
                 font-weight: bold;
                 border-radius: 10px;
                 padding: 8px 16px;
                 font-size: 14px;
             }
             QDialogButtonBox QPushButton:hover {
-                background-color: #6D28D9;
+                background-color: #bf8f62;
             }
             QDialogButtonBox QPushButton:disabled {
-                background-color: #C4B5FD;
-                color: #F5F3FF;
+                background-color: #FFDBB5;
+                color: #9c724a;
             }
         """)
 
@@ -74,7 +74,7 @@ class DialogoPosiciones(QDialog):
         frame.setStyleSheet("""
             QFrame {
                 background-color: white;
-                border: 2px solid #C4B5FD;
+                border: 2px solid #bf8f62;
                 border-radius: 10px;
                 padding: 8px;
             }

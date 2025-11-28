@@ -18,30 +18,35 @@ class ModInterna(QMainWindow):
 
         # --- Layout principal ---
         central = QWidget()
+        central.setStyleSheet("background-color: #FFEAC5;")
         layout = QVBoxLayout(central)
-        layout.setSpacing(15)
+        layout.setSpacing(20)
+        layout.setContentsMargins(20, 20, 20, 20)
 
-        # --- Encabezado idéntico al de búsqueda lineal ---
+        # --- Encabezado con gradiente café ---
         header = QFrame()
         header.setStyleSheet("""
-            background: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:0,
-            stop:0 #D8B4FE, stop:1 #A78BFA);
+            background: qlineargradient(
+                spread:pad, x1:0, y1:0, x2:1, y2:0,
+                stop:0 #9c724a, stop:1 #bf8f62
+            );
             border-radius: 12px;
         """)
         header_layout = QVBoxLayout(header)
         header_layout.setSpacing(5)
+        header_layout.setContentsMargins(10, 10, 10, 10)
 
         titulo = QLabel("Ciencias de la Computación II - Función Hash (Módulo)")
         titulo.setAlignment(Qt.AlignCenter)
         titulo.setStyleSheet("""
             font-size: 26px;
             font-weight: bold;
-            color: white;
+            color: #2d1f15;
             margin-top: 10px;
         """)
         header_layout.addWidget(titulo)
 
-        # Menú igual al de búsqueda lineal
+        # Menú con colores café
         menu_layout = QHBoxLayout()
         menu_layout.setSpacing(40)
         menu_layout.setAlignment(Qt.AlignCenter)
@@ -53,14 +58,15 @@ class ModInterna(QMainWindow):
             btn.setStyleSheet("""
                 QPushButton {
                     background-color: transparent;
-                    color: #2E1065;
+                    color: #2d1f15;
                     font-size: 16px;
                     font-weight: bold;
                     border: none;
                 }
                 QPushButton:hover {
-                    color: #6D28D9;
-                    text-decoration: underline;
+                    color: #FFEAC5;
+                    background-color: #6C4E31;
+                    border-radius: 8px;
                 }
             """)
             menu_layout.addWidget(btn)
@@ -78,17 +84,41 @@ class ModInterna(QMainWindow):
         controles_superiores.setAlignment(Qt.AlignCenter)
 
         lbl_rango = QLabel("Rango (10^n):")
-        lbl_rango.setStyleSheet("font-weight: bold; font-size: 14px;")
+        lbl_rango.setStyleSheet("font-weight: bold; font-size: 14px; color: #2d1f15;")
         self.rango = QComboBox()
         self.rango.addItems([f"10^{i}" for i in range(1, 6)])
         self.rango.setFixedWidth(100)
+        self.rango.setStyleSheet("""
+            QComboBox {
+                background-color: white;
+                border: 2px solid #bf8f62;
+                border-radius: 5px;
+                padding: 5px;
+                color: #2d1f15;
+            }
+            QComboBox:hover {
+                border: 2px solid #6C4E31;
+            }
+        """)
 
         lbl_digitos = QLabel("Número de dígitos:")
-        lbl_digitos.setStyleSheet("font-weight: bold; font-size: 14px;")
+        lbl_digitos.setStyleSheet("font-weight: bold; font-size: 14px; color: #2d1f15;")
         self.digitos = QSpinBox()
         self.digitos.setRange(1, 10)
         self.digitos.setValue(4)
         self.digitos.setFixedWidth(60)
+        self.digitos.setStyleSheet("""
+            QSpinBox {
+                background-color: white;
+                border: 2px solid #bf8f62;
+                border-radius: 5px;
+                padding: 5px;
+                color: #2d1f15;
+            }
+            QSpinBox:hover {
+                border: 2px solid #6C4E31;
+            }
+        """)
 
         controles_superiores.addWidget(lbl_rango)
         controles_superiores.addWidget(self.rango)
@@ -97,7 +127,7 @@ class ModInterna(QMainWindow):
 
         layout.addLayout(controles_superiores)
 
-        # --- Botones principales (misma distribución visual que búsqueda lineal) ---
+        # --- Botones principales con colores café ---
         botones_layout = QGridLayout()
         botones_layout.setSpacing(12)
         botones_layout.setAlignment(Qt.AlignCenter)
@@ -122,14 +152,15 @@ class ModInterna(QMainWindow):
 
             btn.setStyleSheet("""
                 QPushButton {
-                    background-color: #7C3AED;
-                    color: white;
+                    background-color: #9c724a;
+                    color: #2d1f15;
                     font-size: 15px;
+                    font-weight: bold;
                     border-radius: 10px;
                     padding: 8px 20px;
                 }
                 QPushButton:hover {
-                    background-color: #6D28D9;
+                    background-color: #bf8f62;
                 }
             """)
             fila = i // 4
@@ -141,7 +172,9 @@ class ModInterna(QMainWindow):
         # --- Contenedor con scroll para la estructura ---
         self.scroll = QScrollArea()
         self.scroll.setWidgetResizable(True)
+        self.scroll.setStyleSheet("QScrollArea { background-color: transparent; border: none; }")
         self.contenedor = QWidget()
+        self.contenedor.setStyleSheet("background-color: transparent;")
         self.grid = QGridLayout(self.contenedor)
         self.grid.setAlignment(Qt.AlignCenter)
         self.scroll.setWidget(self.contenedor)
@@ -198,7 +231,7 @@ class ModInterna(QMainWindow):
                 self._agregar_cuadro(i + 1, i + 1)
 
             puntos = QLabel("...")
-            puntos.setStyleSheet("font-size: 18px; color: gray;")
+            puntos.setStyleSheet("font-size: 18px; color: #6C4E31;")
             self.grid.addWidget(
                 puntos, (mostrar // 10) * 2, mostrar % 10, 2, 1, alignment=Qt.AlignCenter
             )
@@ -221,10 +254,11 @@ class ModInterna(QMainWindow):
         cuadro.setFixedSize(60, 60)
         cuadro.setStyleSheet("""
             QLabel {
-                background-color: #EDE9FE;
-                border: 2px solid #7C3AED;
+                background-color: #FFDBB5;
+                border: 2px solid #9c724a;
                 border-radius: 12px;
                 font-size: 16px;
+                color: #2d1f15;
             }
         """)
         self.grid.addWidget(cuadro, fila, col, alignment=Qt.AlignCenter)
@@ -232,7 +266,7 @@ class ModInterna(QMainWindow):
         # debajo se muestra el índice real
         numero = QLabel(str(idx_real))
         numero.setAlignment(Qt.AlignCenter)
-        numero.setStyleSheet("font-size: 14px; color: gray; margin-top: 5px;")
+        numero.setStyleSheet("font-size: 14px; color: #6C4E31; margin-top: 5px;")
         self.grid.addWidget(numero, fila + 1, col, alignment=Qt.AlignCenter)
 
         self.labels.append(cuadro)
@@ -550,59 +584,6 @@ class ModInterna(QMainWindow):
                 mensaje=f"Clave {clave} no encontrada en la estructura."
             )
             dialogo_resultado.exec()
-        estructura = self.controller.estructura
-        anidados = self.controller.estructura_anidada
-
-        encontrado = None
-        detalle = ""
-
-        # 🔹 Buscar en el arreglo principal
-        for pos, valor in estructura.items():
-            if str(valor).strip() == clave:
-                encontrado = pos
-                detalle = f"en el arreglo principal (posición {pos})"
-                break
-
-        # 🔹 Buscar en los arreglos/listas anidadas si no está en el principal
-        if not encontrado and isinstance(anidados, list):
-            for i, sublista in enumerate(anidados):
-                if not sublista:
-                    continue
-
-                # Convertir todos los elementos a str para comparar
-                sublista_str = [str(x).strip() for x in sublista if x is not None]
-
-                if clave in sublista_str:
-                    encontrado = i + 1  # posición principal (1-based)
-                    indice_anidado = sublista_str.index(clave)
-
-                    # Diferenciar el mensaje según la estrategia
-                    estrategia_actual = getattr(self.controller, "ultima_estrategia", "")
-                    if estrategia_actual == "Lista encadenada":
-                        detalle = f"en la lista encadenada de la posición {i + 1}, nodo #{indice_anidado + 1}"
-                    else:
-                        detalle = f"en el arreglo anidado de la posición {i + 1}, índice interno {indice_anidado + 1}"
-                    break
-
-        # 🔹 Resultado final
-        if encontrado:
-            dialogo = DialogoClave(
-                longitud=0,
-                titulo="Resultado",
-                modo="mensaje",
-                parent=self,
-                mensaje=f"Clave {clave} encontrada {detalle}."
-            )
-            dialogo.exec()
-        else:
-            dialogo = DialogoClave(
-                longitud=0,
-                titulo="Resultado",
-                modo="mensaje",
-                parent=self,
-                mensaje=f"Clave {clave} no encontrada en la estructura."
-            )
-            dialogo.exec()
 
     def eliminar_clave(self):
         """Elimina una clave de la estructura (principal o anidada)."""
@@ -813,6 +794,15 @@ class ModInterna(QMainWindow):
         except Exception as e:
             dialogo = DialogoClave(
                 longitud=0,
+                titulo="Éxito",
+                modo="mensaje",
+                parent=self,
+                mensaje=f"Estructura guardada en:\n{ruta}"
+            )
+            dialogo.exec()
+        except Exception as e:
+            dialogo = DialogoClave(
+                longitud=0,
                 titulo="Error",
                 modo="mensaje",
                 parent=self,
@@ -844,11 +834,11 @@ class ModInterna(QMainWindow):
 
         # --- Calcular el máximo global de colisiones (para dibujar estructura completa) ---
         max_colisiones_global = max((len(sublista) for sublista in anidados), default=0)
-        # --- Título ---
+
         # --- Título ---
         titulo = QLabel("Arreglo principal  |  Arreglos anidados (colisiones)")
         titulo.setAlignment(Qt.AlignCenter)
-        titulo.setStyleSheet("font-size: 18px; font-weight: bold; color: #4C1D95; margin-bottom: 15px;")
+        titulo.setStyleSheet("font-size: 18px; font-weight: bold; color: #6C4E31; margin-bottom: 15px;")
         self.grid.addWidget(titulo, 0, 0, alignment=Qt.AlignCenter)
 
         # --- Construcción visual fila por fila ---
@@ -865,11 +855,12 @@ class ModInterna(QMainWindow):
             celda.setFixedSize(70, 70)
             celda.setAlignment(Qt.AlignCenter)
             celda.setStyleSheet("""
-                        background-color: #EDE9FE;
-                        border: 2px solid #7C3AED;
-                        border-radius: 10px;
-                        font-size: 16px;
-                    """)
+                background-color: #FFDBB5;
+                border: 2px solid #9c724a;
+                border-radius: 10px;
+                font-size: 16px;
+                color: #2d1f15;
+            """)
             fila_layout.addWidget(celda)
 
             # ---------------- Arreglos anidados ----------------
@@ -879,20 +870,21 @@ class ModInterna(QMainWindow):
                 if j < len(sublista):
                     texto = str(sublista[j]).zfill(self.controller.digitos)
                     estilo = """
-                                background-color: #DDD6FE;
-                                border: 2px solid #7C3AED;
-                                border-left: none;
-                                border-radius: 10px;
-                                font-size: 16px;
-                            """
+                        background-color: #EDCCAA;
+                        border: 2px solid #9c724a;
+                        border-left: none;
+                        border-radius: 10px;
+                        font-size: 16px;
+                        color: #2d1f15;
+                    """
                 else:
                     texto = ""
                     estilo = """
-                                border: 2px dashed #C4B5FD;
-                                border-left: none;
-                                background-color: #F5F3FF;
-                                border-radius: 10px;
-                            """
+                        border: 2px dashed #bf8f62;
+                        border-left: none;
+                        background-color: #FFF5EB;
+                        border-radius: 10px;
+                    """
 
                 lbl = QLabel(texto)
                 lbl.setFixedSize(70, 70)
@@ -910,10 +902,10 @@ class ModInterna(QMainWindow):
             idx.setAlignment(Qt.AlignCenter)
             idx.setFixedWidth(30)
             idx.setStyleSheet("""
-                        color: #7C3AED;
-                        font-size: 13px;
-                        font-weight: bold;
-                    """)
+                color: #9c724a;
+                font-size: 13px;
+                font-weight: bold;
+            """)
             fila_layout_con_indice.addWidget(idx)
 
             # Agregar el layout original de la fila (principal + anidados)
@@ -940,7 +932,7 @@ class ModInterna(QMainWindow):
         # caso: arreglo anidado (colisiones)
         if isinstance(estructura, dict) and all(isinstance(v, list) for v in estructura.values()):
             titulo = QLabel("Arreglo principal     Arreglo anidado (colisiones)")
-            titulo.setStyleSheet("font-weight: bold; font-size: 16px; color: #4B0082;")
+            titulo.setStyleSheet("font-weight: bold; font-size: 16px; color: #6C4E31;")
             self.grid.addWidget(titulo, 0, 0, 1, 10, alignment=Qt.AlignCenter)
 
             # columnas separadas para el principal y cada subarreglo
@@ -953,7 +945,12 @@ class ModInterna(QMainWindow):
                 cuadro = QLabel()
                 cuadro.setAlignment(Qt.AlignCenter)
                 cuadro.setFixedSize(70, 70)
-                cuadro.setStyleSheet("background-color: #f3e8ff; border: 2px solid #7c3aed; border-radius: 10px;")
+                cuadro.setStyleSheet("""
+                    background-color: #FFDBB5;
+                    border: 2px solid #9c724a;
+                    border-radius: 10px;
+                    color: #2d1f15;
+                """)
                 val = ""
                 if isinstance(estructura.get(idx, None), list) and estructura[idx]:
                     val = estructura[idx][0] if estructura[idx] else ""
@@ -964,7 +961,7 @@ class ModInterna(QMainWindow):
 
                 # etiqueta con número de posición debajo
                 etiqueta = QLabel(str(idx))
-                etiqueta.setStyleSheet("color: #7c3aed; font-size: 12px;")
+                etiqueta.setStyleSheet("color: #9c724a; font-size: 12px;")
                 self.grid.addWidget(etiqueta, idx + 1, col_principal, alignment=Qt.AlignCenter)
 
                 # ahora el subarreglo completo
@@ -976,11 +973,18 @@ class ModInterna(QMainWindow):
                     sub_label.setFixedSize(70, 70)
 
                     if valor:
-                        sub_label.setStyleSheet(
-                            "background-color: #ddd6fe; border: 2px solid #7c3aed; border-radius: 10px;")
+                        sub_label.setStyleSheet("""
+                            background-color: #EDCCAA;
+                            border: 2px solid #9c724a;
+                            border-radius: 10px;
+                            color: #2d1f15;
+                        """)
                     else:
-                        sub_label.setStyleSheet(
-                            "border: 2px dashed #c084fc; background-color: #faf5ff; border-radius: 10px;")
+                        sub_label.setStyleSheet("""
+                            border: 2px dashed #bf8f62;
+                            background-color: #FFF5EB;
+                            border-radius: 10px;
+                        """)
 
                     # dibujar el subarreglo en la misma fila del principal, pero más a la derecha
                     self.grid.addWidget(sub_label, j, col_sub, alignment=Qt.AlignCenter)
@@ -993,7 +997,7 @@ class ModInterna(QMainWindow):
             for i in range(mostrar):
                 self._agregar_cuadro(i + 1, i + 1)
             puntos = QLabel("...")
-            puntos.setStyleSheet("font-size: 18px; color: gray;")
+            puntos.setStyleSheet("font-size: 18px; color: #6C4E31;")
             self.grid.addWidget(puntos, (mostrar // 10) * 2, mostrar % 10, 2, 1, alignment=Qt.AlignCenter)
             for i in range(mostrar):
                 idx_real = self.capacidad - mostrar + i + 1
@@ -1020,11 +1024,11 @@ class ModInterna(QMainWindow):
         titulo = QLabel("Visualización: Lista Encadenada (colisiones con punteros)")
         titulo.setAlignment(Qt.AlignCenter)
         titulo.setStyleSheet("""
-                    font-size: 18px;
-                    font-weight: bold;
-                    color: #4C1D95;
-                    margin-bottom: 15px;
-                """)
+            font-size: 18px;
+            font-weight: bold;
+            color: #6C4E31;
+            margin-bottom: 15px;
+        """)
         self.grid.addWidget(titulo, 0, 0, alignment=Qt.AlignCenter)
 
         fila_actual = 1
@@ -1052,36 +1056,38 @@ class ModInterna(QMainWindow):
             nodo.setFixedSize(70, 70)
             nodo.setAlignment(Qt.AlignCenter)
             nodo.setStyleSheet("""
-                        background-color: #EDE9FE;
-                        border: 2px solid #7C3AED;
-                        border-radius: 10px;
-                        font-size: 16px;
-                    """)
+                background-color: #FFDBB5;
+                border: 2px solid #9c724a;
+                border-radius: 10px;
+                font-size: 16px;
+                color: #2d1f15;
+            """)
             fila_layout.addWidget(nodo)
 
             # Dibujar flechas y nodos encadenados
             for clave in sublista:
                 flecha = QLabel("→")
                 flecha.setAlignment(Qt.AlignCenter)
-                flecha.setStyleSheet("font-size: 20px; color: #7C3AED;")
+                flecha.setStyleSheet("font-size: 20px; color: #9c724a;")
                 fila_layout.addWidget(flecha)
 
                 nodo_col = QLabel(str(clave).zfill(self.controller.digitos))
                 nodo_col.setFixedSize(70, 70)
                 nodo_col.setAlignment(Qt.AlignCenter)
                 nodo_col.setStyleSheet("""
-                            background-color: #DDD6FE;
-                            border: 2px solid #7C3AED;
-                            border-radius: 10px;
-                            font-size: 16px;
-                        """)
+                    background-color: #EDCCAA;
+                    border: 2px solid #9c724a;
+                    border-radius: 10px;
+                    font-size: 16px;
+                    color: #2d1f15;
+                """)
                 fila_layout.addWidget(nodo_col)
 
             # Índice a la izquierda
             idx = QLabel(str(fila))
             idx.setAlignment(Qt.AlignCenter)
             idx.setFixedWidth(30)
-            idx.setStyleSheet("color: #7C3AED; font-size: 13px; font-weight: bold;")
+            idx.setStyleSheet("color: #9c724a; font-size: 13px; font-weight: bold;")
 
             fila_layout_final = QHBoxLayout()
             fila_layout_final.addWidget(idx)

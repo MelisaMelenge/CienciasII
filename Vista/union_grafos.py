@@ -24,6 +24,7 @@ class UnionGrafos(QMainWindow):
         self.setWindowTitle("Ciencias de la Computación II - Unión de Grafos")
 
         central = QWidget()
+        central.setStyleSheet("background-color: #FFEAC5;")
         layout = QVBoxLayout(central)
         layout.setSpacing(15)
         layout.setContentsMargins(10, 10, 10, 10)
@@ -32,13 +33,15 @@ class UnionGrafos(QMainWindow):
         header = QFrame()
         header.setStyleSheet("""
             background: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:0,
-                stop:0 #C4B5FD, stop:1 #7C3AED);
+                stop:0 #9c724a, stop:1 #bf8f62);
             border-radius: 12px;
         """)
         header_layout = QVBoxLayout(header)
+        header_layout.setContentsMargins(10, 10, 10, 10)
+
         titulo = QLabel("Ciencias de la Computación II - Unión de Grafos")
         titulo.setAlignment(Qt.AlignCenter)
-        titulo.setStyleSheet("font-size: 26px; font-weight: bold; color: white; margin: 10px;")
+        titulo.setStyleSheet("font-size: 26px; font-weight: bold; color: #2d1f15; margin: 10px;")
         header_layout.addWidget(titulo)
 
         menu_layout = QHBoxLayout()
@@ -50,12 +53,16 @@ class UnionGrafos(QMainWindow):
             btn.setStyleSheet("""
                 QPushButton {
                     background-color: transparent;
-                    color: white;
+                    color: #2d1f15;
                     font-size: 16px;
                     font-weight: bold;
                     border: none;
                 }
-                QPushButton:hover { color: #EDE9FF; text-decoration: underline; }
+                QPushButton:hover { 
+                    color: #FFEAC5; 
+                    background-color: #6C4E31;
+                    border-radius: 8px;
+                }
             """)
             menu_layout.addWidget(btn)
         header_layout.addLayout(menu_layout)
@@ -67,7 +74,7 @@ class UnionGrafos(QMainWindow):
         controles_frame = QFrame()
         controles_frame.setStyleSheet("""
             QFrame {
-                background-color: #F3E8FF;
+                background-color: #FFDBB5;
                 border-radius: 10px;
             }
         """)
@@ -82,10 +89,10 @@ class UnionGrafos(QMainWindow):
         grafo1_layout.setContentsMargins(0, 0, 0, 0)
 
         label_grafo1 = QLabel("Grafo 1")
-        label_grafo1.setStyleSheet("font-size: 14px; font-weight: bold; color: #7C3AED;")
+        label_grafo1.setStyleSheet("font-size: 14px; font-weight: bold; color: #6C4E31;")
 
         lbl_v1 = QLabel("Vértices:")
-        lbl_v1.setStyleSheet("font-size: 13px; color: #4C1D95;")
+        lbl_v1.setStyleSheet("font-size: 13px; color: #2d1f15;")
         self.vertices_g1 = QSpinBox()
         self.vertices_g1.setRange(1, 20)
         self.vertices_g1.setValue(4)
@@ -93,7 +100,7 @@ class UnionGrafos(QMainWindow):
         self.vertices_g1.setStyleSheet("""
             QSpinBox {
                 padding: 4px;
-                border: 2px solid #A78BFA;
+                border: 2px solid #bf8f62;
                 border-radius: 5px;
                 background: white;
             }
@@ -109,18 +116,18 @@ class UnionGrafos(QMainWindow):
         grafo1_layout.addWidget(self.btn_agregar_arista_g1)
 
         # --- BOTÓN CALCULAR ---
-        self.btn_calcular = QPushButton("🔀 Calcular\nUnión")
+        self.btn_calcular = QPushButton("∪ Calcular\nUnión")
         self.btn_calcular.setFixedHeight(50)
         self.btn_calcular.setStyleSheet("""
             QPushButton {
-                background-color: #8B5CF6;
-                color: white;
+                background-color: #9c724a;
+                color: #FFEAC5;
                 padding: 5px 20px;
                 font-size: 13px;
                 font-weight: bold;
                 border-radius: 8px;
             }
-            QPushButton:hover { background-color: #7C3AED; }
+            QPushButton:hover { background-color: #6C4E31; }
         """)
 
         # --- GRAFO 2 ---
@@ -130,10 +137,10 @@ class UnionGrafos(QMainWindow):
         grafo2_layout.setContentsMargins(0, 0, 0, 0)
 
         label_grafo2 = QLabel("Grafo 2")
-        label_grafo2.setStyleSheet("font-size: 14px; font-weight: bold; color: #7C3AED;")
+        label_grafo2.setStyleSheet("font-size: 14px; font-weight: bold; color: #6C4E31;")
 
         lbl_v2 = QLabel("Vértices:")
-        lbl_v2.setStyleSheet("font-size: 13px; color: #4C1D95;")
+        lbl_v2.setStyleSheet("font-size: 13px; color: #2d1f15;")
         self.vertices_g2 = QSpinBox()
         self.vertices_g2.setRange(1, 20)
         self.vertices_g2.setValue(4)
@@ -141,7 +148,7 @@ class UnionGrafos(QMainWindow):
         self.vertices_g2.setStyleSheet("""
             QSpinBox {
                 padding: 4px;
-                border: 2px solid #A78BFA;
+                border: 2px solid #bf8f62;
                 border-radius: 5px;
                 background: white;
             }
@@ -161,14 +168,14 @@ class UnionGrafos(QMainWindow):
                     self.btn_crear_g2, self.btn_agregar_arista_g2):
             btn.setStyleSheet("""
                 QPushButton {
-                    background-color: #7C3AED;
-                    color: white;
+                    background-color: #6C4E31;
+                    color: #FFEAC5;
                     padding: 6px 12px;
                     font-size: 13px;
                     border-radius: 6px;
                     min-width: 70px;
                 }
-                QPushButton:hover { background-color: #6D28D9; }
+                QPushButton:hover { background-color: #9c724a; }
             """)
 
         # Agregar todo al layout principal
@@ -181,7 +188,9 @@ class UnionGrafos(QMainWindow):
         # ======= AREA DE VISUALIZACION =======
         self.scroll = QScrollArea()
         self.scroll.setWidgetResizable(True)
+        self.scroll.setStyleSheet("QScrollArea { background-color: transparent; border: none; }")
         self.contenedor = QWidget()
+        self.contenedor.setStyleSheet("background-color: transparent;")
         self.contenedor_layout = QVBoxLayout(self.contenedor)
         self.contenedor_layout.setSpacing(20)
         self.contenedor_layout.setContentsMargins(20, 20, 20, 20)
@@ -201,7 +210,7 @@ class UnionGrafos(QMainWindow):
         for visual in (self.visual_g1, self.visual_g2, self.visual_union):
             visual.setStyleSheet("""
                 background-color: white;
-                border: 2px solid #A78BFA;
+                border: 2px solid #bf8f62;
                 border-radius: 8px;
             """)
 

@@ -10,7 +10,7 @@ class Cubetas(QMainWindow):
     def __init__(self, cambiar_ventana):
         super().__init__()
         self.cambiar_ventana = cambiar_ventana
-        self.setWindowTitle("Cubetas")
+        self.setWindowTitle("Estructuras Dinámicas")
         self.setGeometry(300, 200, 900, 600)
 
         # Datos / contadores de expansión
@@ -40,7 +40,7 @@ class Cubetas(QMainWindow):
                 stop:0 #C084FC, stop:1 #7C3AED);
             padding: 20px;
         """)
-        titulo = QLabel("🪣 Cubetas (Hash con expansión dinámica)")
+        titulo = QLabel("Estructuras Dinámicas (Hash con expansión dinámica)")
         titulo.setAlignment(Qt.AlignCenter)
         titulo.setStyleSheet("font-size: 26px; font-weight: bold; color: white;")
         header_layout = QVBoxLayout(header)

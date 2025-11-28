@@ -14,24 +14,27 @@ class Indices(QMainWindow):
 
         # --- Widget central ---
         central = QWidget()
+        central.setStyleSheet("background-color: #FFEAC5;")
         self.setCentralWidget(central)
         layout = QVBoxLayout(central)
         layout.setSpacing(20)
+        layout.setContentsMargins(20, 20, 20, 20)
 
         # --- Encabezado ---
         header = QFrame()
         header.setStyleSheet("""
             background: qlineargradient(
                 spread:pad, x1:0, y1:0, x2:1, y2:0,
-                stop:0 #D8B4FE, stop:1 #A78BFA
+                stop:0 #9c724a, stop:1 #bf8f62
             );
             border-radius: 12px;
         """)
         header_layout = QVBoxLayout(header)
+        header_layout.setContentsMargins(10, 10, 10, 10)
 
         titulo = QLabel("Ciencias de la Computación II - Índices")
         titulo.setAlignment(Qt.AlignCenter)
-        titulo.setStyleSheet("font-size: 26px; font-weight: bold; color: white; margin: 10px;")
+        titulo.setStyleSheet("font-size: 26px; font-weight: bold; color: #2d1f15; margin: 10px;")
         header_layout.addWidget(titulo)
 
         # --- Menú de navegación ---
@@ -46,14 +49,15 @@ class Indices(QMainWindow):
             btn.setStyleSheet("""
                 QPushButton {
                     background-color: transparent;
-                    color: #2E1065;
+                    color: #2d1f15;
                     font-size: 16px;
                     font-weight: bold;
                     border: none;
                 }
                 QPushButton:hover {
-                    color: #6D28D9;
-                    text-decoration: underline;
+                    color: #FFEAC5;
+                    background-color: #6C4E31;
+                    border-radius: 8px;
                 }
             """)
             menu_layout.addWidget(btn)

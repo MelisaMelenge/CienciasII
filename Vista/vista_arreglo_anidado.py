@@ -19,7 +19,7 @@ class VistaArregloAnidado:
 
         titulo = QLabel("Arreglo principal  |  Arreglos anidados (colisiones)")
         titulo.setAlignment(Qt.AlignCenter)
-        titulo.setStyleSheet("font-size: 18px; font-weight: bold; color: #4C1D95; margin-bottom: 15px;")
+        titulo.setStyleSheet("font-size: 18px; font-weight: bold; color: #6C4E31; margin-bottom: 15px;")
         self.grid.addWidget(titulo, 0, 0, alignment=Qt.AlignCenter)
 
         # Extraer información de resaltado si existe
@@ -49,7 +49,7 @@ class VistaArregloAnidado:
             idx.setAlignment(Qt.AlignCenter)
             idx.setFixedWidth(30)
             idx.setStyleSheet("""
-                color: #7C3AED;
+                color: #6C4E31;
                 font-size: 13px;
                 font-weight: bold;
             """)
@@ -73,8 +73,8 @@ class VistaArregloAnidado:
                 """)
             else:
                 celda.setStyleSheet("""
-                    background-color: #EDE9FE;
-                    border: 2px solid #7C3AED;
+                    background-color: #FFF3E0;
+                    border: 2px solid #bf8f62;
                     border-radius: 10px;
                     font-size: 16px;
                 """)
@@ -89,17 +89,18 @@ class VistaArregloAnidado:
                     # Aplicar resaltado si corresponde
                     if posicion_resaltar == fila and es_anidado and indice_anidado == j:
                         estilo = """
-                            background-color: #ad47ed;
-                            border: 3px solid #b13cfa;
+                            background-color: #9c724a;
+                            border: 3px solid #6C4E31;
                             border-left: none;
                             border-radius: 10px;
                             font-size: 16px;
                             font-weight: bold;
+                            color: #FFEAC5;
                         """
                     else:
                         estilo = """
-                            background-color: #DDD6FE;
-                            border: 2px solid #7C3AED;
+                            background-color: #FFDBB5;
+                            border: 2px solid #bf8f62;
                             border-left: none;
                             border-radius: 10px;
                             font-size: 16px;
@@ -107,9 +108,9 @@ class VistaArregloAnidado:
                 else:
                     texto = ""
                     estilo = """
-                        border: 2px dashed #C4B5FD;
+                        border: 2px dashed #bf8f62;
                         border-left: none;
-                        background-color: #F5F3FF;
+                        background-color: #FFEAC5;
                         border-radius: 10px;
                     """
 

@@ -1,7 +1,7 @@
 from PySide6.QtWidgets import (
     QMainWindow, QWidget, QVBoxLayout, QLabel, QFrame,
     QComboBox, QSpinBox, QPushButton, QGridLayout, QScrollArea,
-    QInputDialog, QHBoxLayout, QDialog, QFileDialog, QMessageBox
+    QHBoxLayout, QDialog, QFileDialog
 )
 from PySide6.QtCore import Qt
 
@@ -19,27 +19,26 @@ class TruncamientoInterna(QMainWindow):
 
         # --- Layout principal ---
         central = QWidget()
+        central.setStyleSheet("background-color: #FFEAC5;")
         layout = QVBoxLayout(central)
-        layout.setSpacing(15)
+        layout.setSpacing(20)
+        layout.setContentsMargins(20, 20, 20, 20)
 
-        # --- Encabezado ---
+        # --- Encabezado con colores café ---
         header = QFrame()
         header.setStyleSheet("""
-            background: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:0,
-            stop:0 #D8B4FE, stop:1 #A78BFA);
+            background: qlineargradient(
+                spread:pad, x1:0, y1:0, x2:1, y2:0,
+                stop:0 #9c724a, stop:1 #bf8f62
+            );
             border-radius: 12px;
         """)
         header_layout = QVBoxLayout(header)
-        header_layout.setSpacing(5)
+        header_layout.setContentsMargins(10, 10, 10, 10)
 
         titulo = QLabel("Ciencias de la Computación II - Función Hash (Truncamiento)")
         titulo.setAlignment(Qt.AlignCenter)
-        titulo.setStyleSheet("""
-            font-size: 26px;
-            font-weight: bold;
-            color: white;
-            margin-top: 10px;
-        """)
+        titulo.setStyleSheet("font-size: 26px; font-weight: bold; color: #2d1f15; margin: 10px;")
         header_layout.addWidget(titulo)
 
         # --- Menú superior ---
@@ -54,41 +53,65 @@ class TruncamientoInterna(QMainWindow):
             btn.setStyleSheet("""
                 QPushButton {
                     background-color: transparent;
-                    color: #2E1065;
+                    color: #2d1f15;
                     font-size: 16px;
                     font-weight: bold;
                     border: none;
                 }
                 QPushButton:hover {
-                    color: #6D28D9;
-                    text-decoration: underline;
+                    color: #FFEAC5;
+                    background-color: #6C4E31;
+                    border-radius: 8px;
                 }
             """)
             menu_layout.addWidget(btn)
 
+        btn_inicio.clicked.connect(lambda: self.cambiar_ventana("inicio"))
+        btn_busqueda.clicked.connect(lambda: self.cambiar_ventana("busqueda"))
         header_layout.addLayout(menu_layout)
         layout.addWidget(header)
 
-        btn_inicio.clicked.connect(lambda: self.cambiar_ventana("inicio"))
-        btn_busqueda.clicked.connect(lambda: self.cambiar_ventana("busqueda"))
-
         # --- Controles superiores ---
         controles_superiores = QHBoxLayout()
-        controles_superiores.setSpacing(15)
+        controles_superiores.setSpacing(20)
         controles_superiores.setAlignment(Qt.AlignCenter)
 
         lbl_rango = QLabel("Rango (10^n):")
-        lbl_rango.setStyleSheet("font-weight: bold; font-size: 14px;")
+        lbl_rango.setStyleSheet("font-weight: bold; color: #2d1f15;")
         self.rango = QComboBox()
         self.rango.addItems([f"10^{i}" for i in range(1, 6)])
-        self.rango.setFixedWidth(100)
+        self.rango.setFixedWidth(80)
+        self.rango.setStyleSheet("""
+            QComboBox {
+                background-color: white;
+                border: 2px solid #bf8f62;
+                border-radius: 5px;
+                padding: 5px;
+                color: #2d1f15;
+            }
+            QComboBox:hover {
+                border: 2px solid #6C4E31;
+            }
+        """)
 
         lbl_digitos = QLabel("Número de dígitos:")
-        lbl_digitos.setStyleSheet("font-weight: bold; font-size: 14px;")
+        lbl_digitos.setStyleSheet("font-weight: bold; color: #2d1f15;")
         self.digitos = QSpinBox()
         self.digitos.setRange(1, 10)
         self.digitos.setValue(4)
         self.digitos.setFixedWidth(60)
+        self.digitos.setStyleSheet("""
+            QSpinBox {
+                background-color: white;
+                border: 2px solid #bf8f62;
+                border-radius: 5px;
+                padding: 5px;
+                color: #2d1f15;
+            }
+            QSpinBox:hover {
+                border: 2px solid #6C4E31;
+            }
+        """)
 
         controles_superiores.addWidget(lbl_rango)
         controles_superiores.addWidget(self.rango)
@@ -96,10 +119,9 @@ class TruncamientoInterna(QMainWindow):
         controles_superiores.addWidget(self.digitos)
         layout.addLayout(controles_superiores)
 
-        # --- Botones principales ---
+        # --- Botones principales con colores café ---
         botones_layout = QGridLayout()
-        botones_layout.setSpacing(12)
-        botones_layout.setAlignment(Qt.AlignCenter)
+        botones_layout.setSpacing(15)
 
         self.btn_crear = QPushButton("Crear estructura")
         self.btn_agregar = QPushButton("Adicionar claves")
@@ -115,31 +137,39 @@ class TruncamientoInterna(QMainWindow):
             self.btn_deshacer, self.btn_guardar, self.btn_eliminar, self.btn_cargar
         ]
 
-        for i, btn in enumerate(botones):
-            btn.setFixedHeight(45)
-            btn.setFixedWidth(240)
+        for btn in botones:
+            btn.setFixedHeight(50)
             btn.setStyleSheet("""
                 QPushButton {
-                    background-color: #7C3AED;
-                    color: white;
-                    font-size: 15px;
+                    background-color: #9c724a;
+                    color: #2d1f15;
+                    font-size: 16px;
+                    font-weight: bold;
                     border-radius: 10px;
                     padding: 8px 20px;
                 }
                 QPushButton:hover {
-                    background-color: #6D28D9;
+                    background-color: #bf8f62;
                 }
             """)
-            fila = i // 4
-            col = i % 4
-            botones_layout.addWidget(btn, fila, col, alignment=Qt.AlignCenter)
+
+        botones_layout.addWidget(self.btn_crear, 0, 0)
+        botones_layout.addWidget(self.btn_agregar, 0, 1)
+        botones_layout.addWidget(self.btn_buscar, 0, 2)
+        botones_layout.addWidget(self.btn_eliminar_clave, 0, 3)
+        botones_layout.addWidget(self.btn_deshacer, 1, 0)
+        botones_layout.addWidget(self.btn_guardar, 1, 1)
+        botones_layout.addWidget(self.btn_eliminar, 1, 2)
+        botones_layout.addWidget(self.btn_cargar, 1, 3)
 
         layout.addLayout(botones_layout)
 
         # --- Contenedor con scroll ---
         self.scroll = QScrollArea()
         self.scroll.setWidgetResizable(True)
+        self.scroll.setStyleSheet("QScrollArea { background-color: transparent; border: none; }")
         self.contenedor = QWidget()
+        self.contenedor.setStyleSheet("background-color: transparent;")
         self.grid = QGridLayout(self.contenedor)
         self.grid.setAlignment(Qt.AlignCenter)
         self.scroll.setWidget(self.contenedor)
@@ -181,7 +211,7 @@ class TruncamientoInterna(QMainWindow):
         try:
             digitos_req = self.controller._digitos_necesarios()
         except AttributeError:
-            QMessageBox.warning(self, "Error", "El controlador no tiene el método '_digitos_necesarios'.")
+            DialogoClave(0, titulo="Error", modo="mensaje", mensaje="El controlador no tiene el método '_digitos_necesarios'.", parent=self).exec()
             return
 
         dlg = DialogoPosiciones(dig, digitos_req, parent=self)
@@ -189,11 +219,11 @@ class TruncamientoInterna(QMainWindow):
             posiciones = dlg.get_posiciones(digitos_req)
             if posiciones and len(posiciones) == digitos_req:
                 self.controller.posiciones = posiciones
-                QMessageBox.information(self, "OK", f"Posiciones seleccionadas: {posiciones}")
+                DialogoClave(0, titulo="OK", modo="mensaje", mensaje=f"Posiciones seleccionadas: {posiciones}", parent=self).exec()
             else:
-                QMessageBox.warning(self, "Error", "Número incorrecto de posiciones.")
+                DialogoClave(0, titulo="Error", modo="mensaje", mensaje="Número incorrecto de posiciones.", parent=self).exec()
         else:
-            QMessageBox.warning(self, "Cancelado", "Debes seleccionar posiciones.")
+            DialogoClave(0, titulo="Cancelado", modo="mensaje", mensaje="Debes seleccionar posiciones.", parent=self).exec()
 
         # Dibujar estructura visual
         for i in range(min(self.capacidad, 100)):
@@ -208,27 +238,28 @@ class TruncamientoInterna(QMainWindow):
         cuadro.setFixedSize(60, 60)
         cuadro.setStyleSheet("""
             QLabel {
-                background-color: #EDE9FE;
-                border: 2px solid #7C3AED;
+                background-color: #FFDBB5;
+                border: 2px solid #9c724a;
                 border-radius: 12px;
                 font-size: 16px;
+                color: #2d1f15;
             }
         """)
         self.grid.addWidget(cuadro, fila, col, alignment=Qt.AlignCenter)
 
         numero = QLabel(str(idx_real))
         numero.setAlignment(Qt.AlignCenter)
-        numero.setStyleSheet("font-size: 14px; color: gray; margin-top: 5px;")
+        numero.setStyleSheet("font-size: 14px; color: #6C4E31; margin-top: 5px;")
         self.grid.addWidget(numero, fila + 1, col, alignment=Qt.AlignCenter)
         self.labels.append(cuadro)
 
     def adicionar_claves(self):
         if self.capacidad == 0:
-            QMessageBox.warning(self, "Error", "Primero cree la estructura.")
+            DialogoClave(0, titulo="Error", modo="mensaje", mensaje="Primero cree la estructura.", parent=self).exec()
             return
 
         if not self.controller.posiciones:
-            QMessageBox.warning(self, "Error", "Seleccione las posiciones primero.")
+            DialogoClave(0, titulo="Error", modo="mensaje", mensaje="Seleccione las posiciones primero.", parent=self).exec()
             return
 
         dialogo = DialogoClave(
@@ -244,23 +275,41 @@ class TruncamientoInterna(QMainWindow):
         resultado = self.controller.agregar_clave(clave)
 
         if resultado == "OK":
-            QMessageBox.information(self, "Éxito", f"Clave {clave} insertada correctamente.")
+            DialogoClave(0, titulo="Éxito", modo="mensaje", mensaje=f"Clave {clave} insertada correctamente.", parent=self).exec()
             self.actualizar_tabla()
         else:
-            QMessageBox.warning(self, "Error", f"Resultado: {resultado}")
+            DialogoClave(0, titulo="Error", modo="mensaje", mensaje=f"Resultado: {resultado}", parent=self).exec()
 
     def eliminar_clave(self):
-        clave, ok = QInputDialog.getText(self, "Eliminar Clave", "Ingrese la clave a eliminar:")
-        if not ok or not clave.strip():
+        dialogo = DialogoClave(
+            longitud=self.digitos.value(),
+            titulo="Eliminar clave",
+            modo="eliminar",
+            parent=self
+        )
+        if dialogo.exec() != QDialog.Accepted:
             return
 
-        resultado = self.controller.eliminar_clave(clave.strip())
-        QMessageBox.information(self, "Resultado", resultado)
+        clave = dialogo.get_clave()
+        if not clave:
+            return
+
+        resultado = self.controller.eliminar_clave(clave)
+        DialogoClave(0, titulo="Resultado", modo="mensaje", mensaje=resultado, parent=self).exec()
         self.actualizar_tabla()
 
     def buscar_clave(self):
-        clave, ok = QInputDialog.getText(self, "Buscar Clave", "Ingrese la clave:")
-        if not ok or not clave.strip():
+        dialogo = DialogoClave(
+            longitud=self.digitos.value(),
+            titulo="Buscar clave",
+            modo="buscar",
+            parent=self
+        )
+        if dialogo.exec() != QDialog.Accepted:
+            return
+
+        clave = dialogo.get_clave()
+        if not clave:
             return
 
         encontrado = None
@@ -270,42 +319,45 @@ class TruncamientoInterna(QMainWindow):
                 break
 
         if encontrado:
-            QMessageBox.information(self, "Resultado", f"Clave {clave} encontrada en posición {encontrado}")
+            DialogoClave(0, titulo="Resultado", modo="mensaje", mensaje=f"Clave {clave} encontrada en posición {encontrado}", parent=self).exec()
         else:
-            QMessageBox.warning(self, "Resultado", "Clave no encontrada.")
+            DialogoClave(0, titulo="Resultado", modo="mensaje", mensaje="Clave no encontrada.", parent=self).exec()
 
     def deshacer(self):
         res = self.controller.deshacer()
-        QMessageBox.information(self, "Deshacer", res)
+        DialogoClave(0, titulo="Deshacer", modo="mensaje", mensaje=res, parent=self).exec()
         self.actualizar_tabla()
 
     def eliminar_estructura(self):
-        resp = QMessageBox.question(
-            self, "Eliminar estructura", "¿Desea eliminar la estructura actual?",
-            QMessageBox.Yes | QMessageBox.No, QMessageBox.No
+        dialogo_confirmar = DialogoClave(
+            0,
+            titulo="Eliminar estructura",
+            modo="confirmar",
+            mensaje="¿Desea eliminar la estructura actual?",
+            parent=self
         )
-        if resp == QMessageBox.Yes:
+        if dialogo_confirmar.exec() == QDialog.Accepted:
             self.controller.estructura = {}
             self.controller.posiciones = []
             self.actualizar_tabla()
-            QMessageBox.information(self, "Éxito", "Estructura eliminada correctamente.")
+            DialogoClave(0, titulo="Éxito", modo="mensaje", mensaje="Estructura eliminada correctamente.", parent=self).exec()
 
     def guardar_estructura(self):
         ruta, _ = QFileDialog.getSaveFileName(self, "Guardar estructura", "truncamiento_interna.json", "Archivos JSON (*.json)")
         if ruta:
             self.controller.ruta_archivo = ruta
             self.controller.guardar()
-            QMessageBox.information(self, "Éxito", f"Estructura guardada en:\n{ruta}")
+            DialogoClave(0, titulo="Éxito", modo="mensaje", mensaje=f"Estructura guardada en:\n{ruta}", parent=self).exec()
 
     def cargar_estructura(self):
         ruta, _ = QFileDialog.getOpenFileName(self, "Cargar estructura", "", "Archivos JSON (*.json)")
         if ruta:
             self.controller.ruta_archivo = ruta
             if self.controller.cargar():
-                QMessageBox.information(self, "Éxito", "Estructura cargada correctamente.")
+                DialogoClave(0, titulo="Éxito", modo="mensaje", mensaje="Estructura cargada correctamente.", parent=self).exec()
                 self.actualizar_tabla()
             else:
-                QMessageBox.warning(self, "Error", "No se pudo cargar el archivo.")
+                DialogoClave(0, titulo="Error", modo="mensaje", mensaje="No se pudo cargar el archivo.", parent=self).exec()
 
     def actualizar_tabla(self):
         for i, lbl in enumerate(self.labels, start=1):

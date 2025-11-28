@@ -20,24 +20,25 @@ class ArbolesDigitales(QMainWindow):
 
         # --- Widget central con layout vertical (encabezado arriba, resto abajo)
         central = QWidget()
+        central.setStyleSheet("background-color: #FFEAC5;")
         main_layout = QVBoxLayout(central)
 
         # ================= ENCABEZADO (ARRIBA) =================
         header_frame = QFrame()
         header_layout = QVBoxLayout(header_frame)
-        header_layout.setContentsMargins(0, 0, 0, 0)
+        header_layout.setContentsMargins(10, 10, 10, 10)
 
         # Fondo degradado y bordes redondeados
         header_frame.setStyleSheet("""
             QFrame {
                 background: qlineargradient(
                     x1:0, y1:0, x2:1, y2:0,
-                    stop:0 #d8b4fe, stop:1 #a78bfa
+                    stop:0 #9c724a, stop:1 #bf8f62
                 );
                 border-radius: 12px;
             }
             QLabel {
-                color: white;
+                color: #2d1f15;
             }
         """)
 
@@ -59,13 +60,15 @@ class ArbolesDigitales(QMainWindow):
             btn.setStyleSheet("""
                 QPushButton {
                     background-color: transparent;
-                    color: #2E1065;
+                    color: #2d1f15;
                     font-size: 14px;
                     font-weight: bold;
                     border: none;
                 }
                 QPushButton:hover {
-                    text-decoration: underline;
+                    color: #FFEAC5;
+                    background-color: #6C4E31;
+                    border-radius: 8px;
                 }
             """)
         btn_inicio.clicked.connect(lambda: self.cambiar_ventana("inicio"))
@@ -89,14 +92,14 @@ class ArbolesDigitales(QMainWindow):
         self.scene = QGraphicsScene()
         self.view = QGraphicsView(self.scene)
         self.view.setRenderHints(self.view.renderHints())
-        self.view.setStyleSheet("background-color: #F3E8FF; border-radius: 8px;")
+        self.view.setStyleSheet("background-color: #FFF3E0; border-radius: 8px;")
         body_layout.addWidget(self.view, stretch=2)
 
         # --- Panel derecho: Controles ---
         controls_frame = QFrame()
         controls_frame.setStyleSheet("""
             QFrame {
-                background-color: #F5F3FF;
+                background-color: #FFDBB5;
                 border-radius: 12px;
             }
         """)
@@ -106,15 +109,33 @@ class ArbolesDigitales(QMainWindow):
 
         # Insertar clave
         lbl_insertar = QLabel("Insertar Clave:")
-        lbl_insertar.setStyleSheet("font-size: 14px; color: #4C1D95; font-weight: bold;")
+        lbl_insertar.setStyleSheet("font-size: 14px; color: #2d1f15; font-weight: bold;")
         self.input_insertar = QLineEdit()
         self.input_insertar.setPlaceholderText("Ingrese clave (una palabra)")
+        self.input_insertar.setStyleSheet("""
+            QLineEdit {
+                background-color: white;
+                border: 2px solid #bf8f62;
+                border-radius: 5px;
+                padding: 5px;
+                color: #2d1f15;
+            }
+        """)
 
         # Buscar clave
         lbl_buscar = QLabel("Buscar Clave (una letra):")
-        lbl_buscar.setStyleSheet("font-size: 14px; color: #4C1D95; font-weight: bold;")
+        lbl_buscar.setStyleSheet("font-size: 14px; color: #2d1f15; font-weight: bold;")
         self.input_buscar = QLineEdit()
         self.input_buscar.setPlaceholderText("Ingrese una letra para buscar")
+        self.input_buscar.setStyleSheet("""
+            QLineEdit {
+                background-color: white;
+                border: 2px solid #bf8f62;
+                border-radius: 5px;
+                padding: 5px;
+                color: #2d1f15;
+            }
+        """)
 
         btn_buscar = QPushButton("Buscar")
         btn_buscar.clicked.connect(self.buscar_palabra)
@@ -123,24 +144,19 @@ class ArbolesDigitales(QMainWindow):
         btn_insertar = QPushButton("Insertar")
         btn_insertar.clicked.connect(self.insertar_palabra)
 
-        # Botón buscar
-        btn_buscar = QPushButton("Buscar")
-        btn_buscar.clicked.connect(self.buscar_palabra)
-
-
-        # Estilos botones morados
+        # Estilos botones café
         for btn in (btn_insertar, btn_buscar):
             btn.setStyleSheet("""
                 QPushButton {
-                    background-color: #7C3AED;
-                    color: white;
+                    background-color: #6C4E31;
+                    color: #FFEAC5;
                     font-size: 14px;
                     font-weight: bold;
                     border-radius: 8px;
                     padding: 8px 14px;
                 }
                 QPushButton:hover {
-                    background-color: #6D28D9;
+                    background-color: #9c724a;
                 }
             """)
 
@@ -151,12 +167,20 @@ class ArbolesDigitales(QMainWindow):
         controls_layout.addWidget(self.input_buscar)
         controls_layout.addWidget(btn_buscar)
 
-        body_layout.addWidget(controls_frame, stretch=1)
         # Eliminar clave
         lbl_eliminar = QLabel("Eliminar Clave:")
-        lbl_eliminar.setStyleSheet("font-size: 14px; color: #4C1D95; font-weight: bold;")
+        lbl_eliminar.setStyleSheet("font-size: 14px; color: #2d1f15; font-weight: bold;")
         self.input_eliminar = QLineEdit()
         self.input_eliminar.setPlaceholderText("Ingrese clave a eliminar")
+        self.input_eliminar.setStyleSheet("""
+            QLineEdit {
+                background-color: white;
+                border: 2px solid #bf8f62;
+                border-radius: 5px;
+                padding: 5px;
+                color: #2d1f15;
+            }
+        """)
 
         btn_eliminar = QPushButton("Eliminar")
         btn_eliminar.clicked.connect(self.eliminar_palabra)
@@ -164,15 +188,15 @@ class ArbolesDigitales(QMainWindow):
         # Estilo botón eliminar
         btn_eliminar.setStyleSheet("""
             QPushButton {
-                    background-color: #7C3AED;
-                    color: white;
-                    font-size: 14px;
-                    font-weight: bold;
-                    border-radius: 8px;
-                    padding: 8px 14px;
-                }
-                QPushButton:hover {
-                    background-color: #6D28D9;
+                background-color: #6C4E31;
+                color: #FFEAC5;
+                font-size: 14px;
+                font-weight: bold;
+                border-radius: 8px;
+                padding: 8px 14px;
+            }
+            QPushButton:hover {
+                background-color: #9c724a;
             }
         """)
 
@@ -183,30 +207,25 @@ class ArbolesDigitales(QMainWindow):
         # --- Botón eliminar árbol completo ---
         btn_eliminar_arbol = QPushButton("Eliminar Árbol")
         btn_eliminar_arbol.setStyleSheet("""
-           QPushButton {
-                    background-color: #7C3AED;
-                    color: white;
-                    font-size: 14px;
-                    font-weight: bold;
-                    border-radius: 8px;
-                    padding: 8px 14px;
-                }
-                QPushButton:hover {
-                    background-color: #6D28D9;
+            QPushButton {
+                background-color: #6C4E31;
+                color: #FFEAC5;
+                font-size: 14px;
+                font-weight: bold;
+                border-radius: 8px;
+                padding: 8px 14px;
+            }
+            QPushButton:hover {
+                background-color: #9c724a;
             }
         """)
         btn_eliminar_arbol.clicked.connect(self.eliminar_arbol)
 
         controls_layout.addWidget(btn_eliminar_arbol)
 
-        # Agregar el cuerpo al layout principal
-        main_layout.addLayout(body_layout)
-
-        self.setCentralWidget(central)
-
         # ================= ALFABETO Y CÓDIGOS =================
         lbl_abecedario = QLabel("Abecedario y Códigos Binarios:")
-        lbl_abecedario.setStyleSheet("font-size: 14px; color: #4C1D95; font-weight: bold;")
+        lbl_abecedario.setStyleSheet("font-size: 14px; color: #2d1f15; font-weight: bold;")
 
         # Layout horizontal para dividir en 2 columnas
         alphabet_layout = QHBoxLayout()
@@ -216,10 +235,11 @@ class ArbolesDigitales(QMainWindow):
         col1.setStyleSheet("""
             font-family: Consolas, monospace;
             font-size: 13px;
-            background-color: #EDE9FE;
-            border: 1px solid #C4B5FD;
+            background-color: #FFF3E0;
+            border: 1px solid #bf8f62;
             border-radius: 8px;
             padding: 6px;
+            color: #2d1f15;
         """)
         col1.setAlignment(Qt.AlignLeft | Qt.AlignTop)
 
@@ -244,6 +264,12 @@ class ArbolesDigitales(QMainWindow):
         controls_layout.addWidget(lbl_abecedario)
         controls_layout.addLayout(alphabet_layout)
 
+        body_layout.addWidget(controls_frame, stretch=1)
+
+        # Agregar el cuerpo al layout principal
+        main_layout.addLayout(body_layout)
+
+        self.setCentralWidget(central)
 
     # --- Lógica ---
     def insertar_palabra(self):
@@ -252,7 +278,7 @@ class ArbolesDigitales(QMainWindow):
             estado = self.controller.insertar(palabra)
             if estado == "OK":
                 self.input_insertar.setReadOnly(True)  # 🔒 Bloquea el campo
-                self.input_insertar.setStyleSheet("background-color: #E9D5FF; color: #4C1D95; font-weight: bold;")
+                self.input_insertar.setStyleSheet("background-color: #FFDBB5; color: #2d1f15; font-weight: bold; border: 2px solid #bf8f62; border-radius: 5px; padding: 5px;")
                 self.dibujar_arbol()
             else:
                 QMessageBox.warning(self, "Error", f"No se pudo insertar: {estado}")
@@ -291,7 +317,7 @@ class ArbolesDigitales(QMainWindow):
         if not root or (not root.letters and not any(root.children.values())):
             # Si el árbol está vacío, mostrar mensaje
             text_item = QGraphicsTextItem("Árbol vacío")
-            text_item.setDefaultTextColor(QColor("#4C1D95"))
+            text_item.setDefaultTextColor(QColor("#6C4E31"))
             text_item.setScale(1.5)
             text_item.setPos(-60, -20)
             self.scene.addItem(text_item)
@@ -301,10 +327,10 @@ class ArbolesDigitales(QMainWindow):
         level_gap = 90
         start_offset = 280
 
-        pen_line = QPen(QColor("#4C1D95"), 2)
-        brush_node = QBrush(QColor("#7C3AED"))
-        brush_end = QBrush(QColor("#C4B5FD"))
-        text_color = Qt.white
+        pen_line = QPen(QColor("#6C4E31"), 2)
+        brush_node = QBrush(QColor("#6C4E31"))
+        brush_end = QBrush(QColor("#bf8f62"))
+        text_color = QColor("#FFEAC5")
 
         def draw(node, x, y, offset, depth):
             radio = 22
@@ -313,7 +339,7 @@ class ArbolesDigitales(QMainWindow):
                 circle.setBrush(brush_end)
             else:
                 circle.setBrush(brush_node)
-            circle.setPen(QPen(QColor("#3b0764"), 2))
+            circle.setPen(QPen(QColor("#2d1f15"), 2))
             self.scene.addItem(circle)
 
             # texto del nodo
@@ -338,7 +364,7 @@ class ArbolesDigitales(QMainWindow):
                     mid_x = (x + child_x) / 2
                     mid_y = (y + child_y) / 2 - 10
                     bit_label = QGraphicsTextItem(bit)
-                    bit_label.setDefaultTextColor(QColor("#4C1D95"))
+                    bit_label.setDefaultTextColor(QColor("#6C4E31"))
                     bit_label.setPos(mid_x, mid_y)
                     self.scene.addItem(bit_label)
 
@@ -401,7 +427,15 @@ class ArbolesDigitales(QMainWindow):
             # 🧹 Limpiar campo y desbloquearlo
             self.input_insertar.clear()
             self.input_insertar.setReadOnly(False)
-            self.input_insertar.setStyleSheet("")
+            self.input_insertar.setStyleSheet("""
+                QLineEdit {
+                    background-color: white;
+                    border: 2px solid #bf8f62;
+                    border-radius: 5px;
+                    padding: 5px;
+                    color: #2d1f15;
+                }
+            """)
 
             # 🧽 Limpiar también los campos de búsqueda y eliminación
             self.input_buscar.clear()
@@ -412,7 +446,7 @@ class ArbolesDigitales(QMainWindow):
 
             # 📝 Mostrar mensaje visual
             text_item = QGraphicsTextItem("Árbol vacío")
-            text_item.setDefaultTextColor(QColor("#4C1D95"))
+            text_item.setDefaultTextColor(QColor("#6C4E31"))
             text_item.setScale(1.5)
             text_item.setPos(-60, -20)
             self.scene.addItem(text_item)

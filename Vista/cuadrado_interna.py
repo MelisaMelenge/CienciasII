@@ -23,23 +23,26 @@ class CuadradoInterna(QMainWindow):
 
         # --- Layout principal ---
         central = QWidget()
+        central.setStyleSheet("background-color: #FFEAC5;")
         layout = QVBoxLayout(central)
         layout.setSpacing(20)
+        layout.setContentsMargins(20, 20, 20, 20)
 
-        # --- Encabezado ---
+        # --- Encabezado con colores café ---
         header = QFrame()
         header.setStyleSheet("""
             background: qlineargradient(
                 spread:pad, x1:0, y1:0, x2:1, y2:0,
-                stop:0 #D8B4FE, stop:1 #A78BFA
+                stop:0 #9c724a, stop:1 #bf8f62
             );
             border-radius: 12px;
         """)
         header_layout = QVBoxLayout(header)
+        header_layout.setContentsMargins(10, 10, 10, 10)
 
-        titulo = QLabel("Ciencias de la Computación II - Función Hash (Cuadrado Medio)")
+        titulo = QLabel("Ciencias de la Computación II - Función Hash (Cuadrado)")
         titulo.setAlignment(Qt.AlignCenter)
-        titulo.setStyleSheet("font-size: 26px; font-weight: bold; color: white; margin: 10px;")
+        titulo.setStyleSheet("font-size: 26px; font-weight: bold; color: #2d1f15; margin: 10px;")
         header_layout.addWidget(titulo)
 
         menu_layout = QHBoxLayout()
@@ -53,14 +56,15 @@ class CuadradoInterna(QMainWindow):
             btn.setStyleSheet("""
                 QPushButton {
                     background-color: transparent;
-                    color: #2E1065;
+                    color: #2d1f15;
                     font-size: 16px;
                     font-weight: bold;
                     border: none;
                 }
                 QPushButton:hover {
-                    color: #6D28D9;
-                    text-decoration: underline;
+                    color: #FFEAC5;
+                    background-color: #6C4E31;
+                    border-radius: 8px;
                 }
             """)
             menu_layout.addWidget(btn)
@@ -75,17 +79,41 @@ class CuadradoInterna(QMainWindow):
         controles_layout.setAlignment(Qt.AlignCenter)
 
         lbl_rango = QLabel("Rango (10^n):")
-        lbl_rango.setStyleSheet("font-weight: bold;")
+        lbl_rango.setStyleSheet("font-weight: bold; color: #2d1f15;")
         self.rango = QComboBox()
         self.rango.addItems([f"10^{i}" for i in range(1, 6)])
         self.rango.setFixedWidth(80)
+        self.rango.setStyleSheet("""
+            QComboBox {
+                background-color: white;
+                border: 2px solid #bf8f62;
+                border-radius: 5px;
+                padding: 5px;
+                color: #2d1f15;
+            }
+            QComboBox:hover {
+                border: 2px solid #6C4E31;
+            }
+        """)
 
         lbl_digitos = QLabel("Número de dígitos:")
-        lbl_digitos.setStyleSheet("font-weight: bold;")
+        lbl_digitos.setStyleSheet("font-weight: bold; color: #2d1f15;")
         self.digitos = QSpinBox()
         self.digitos.setRange(1, 10)
         self.digitos.setValue(4)
         self.digitos.setFixedWidth(60)
+        self.digitos.setStyleSheet("""
+            QSpinBox {
+                background-color: white;
+                border: 2px solid #bf8f62;
+                border-radius: 5px;
+                padding: 5px;
+                color: #2d1f15;
+            }
+            QSpinBox:hover {
+                border: 2px solid #6C4E31;
+            }
+        """)
 
         controles_layout.addWidget(lbl_rango)
         controles_layout.addWidget(self.rango)
@@ -94,7 +122,7 @@ class CuadradoInterna(QMainWindow):
         controles_layout.addWidget(self.digitos)
         layout.addLayout(controles_layout)
 
-        # --- Botones (mismo diseño y tamaño que Mod) ---
+        # --- Botones con colores café ---
         botones_layout = QGridLayout()
         botones_layout.setSpacing(15)
 
@@ -116,13 +144,15 @@ class CuadradoInterna(QMainWindow):
             btn.setFixedHeight(50)
             btn.setStyleSheet("""
                 QPushButton {
-                    background-color: #7C3AED;
-                    color: white;
+                    background-color: #9c724a;
+                    color: #2d1f15;
                     font-size: 16px;
+                    font-weight: bold;
                     border-radius: 10px;
+                    padding: 8px 20px;
                 }
                 QPushButton:hover {
-                    background-color: #6D28D9;
+                    background-color: #bf8f62;
                 }
             """)
 
@@ -141,7 +171,9 @@ class CuadradoInterna(QMainWindow):
         # --- Área de scroll (visualización de estructura) ---
         self.scroll = QScrollArea()
         self.scroll.setWidgetResizable(True)
+        self.scroll.setStyleSheet("QScrollArea { background-color: transparent; border: none; }")
         self.contenedor = QWidget()
+        self.contenedor.setStyleSheet("background-color: transparent;")
         self.grid = QGridLayout(self.contenedor)
         self.grid.setAlignment(Qt.AlignCenter)
         self.scroll.setWidget(self.contenedor)
@@ -187,17 +219,18 @@ class CuadradoInterna(QMainWindow):
         cuadro.setFixedSize(60, 60)
         cuadro.setStyleSheet("""
             QLabel {
-                background-color: #EDE9FE;
-                border: 2px solid #7C3AED;
+                background-color: #FFDBB5;
+                border: 2px solid #9c724a;
                 border-radius: 12px;
                 font-size: 16px;
+                color: #2d1f15;
             }
         """)
         self.grid.addWidget(cuadro, fila, col, alignment=Qt.AlignCenter)
 
         numero = QLabel(str(idx_real))
         numero.setAlignment(Qt.AlignCenter)
-        numero.setStyleSheet("font-size: 14px; color: gray; margin-top: 5px;")
+        numero.setStyleSheet("font-size: 14px; color: #6C4E31; margin-top: 5px;")
         self.grid.addWidget(numero, fila + 1, col, alignment=Qt.AlignCenter)
 
         self.labels.append(cuadro)
@@ -266,7 +299,6 @@ class CuadradoInterna(QMainWindow):
         else:
             QMessageBox.warning(self, "Error", f"Resultado inesperado: {resultado}")
 
-
     def actualizar_vista_segun_estrategia(self):
         """Actualiza la vista según la estrategia de colisión seleccionada"""
         if self.estrategia_actual == "arreglo anidado":
@@ -305,6 +337,7 @@ class CuadradoInterna(QMainWindow):
                 self.actualizar_vista_segun_estrategia()
             else:
                 QMessageBox.warning(self, "Error", "No se pudo cargar el archivo.")
+
     def eliminar_estructura(self):
         resp = QMessageBox.question(
             self, "Eliminar estructura", "¿Desea eliminar la estructura actual?",
@@ -322,8 +355,17 @@ class CuadradoInterna(QMainWindow):
             QMessageBox.information(self, "Éxito", "Estructura eliminada correctamente.")
 
     def buscar_clave(self):
-        clave, ok = QInputDialog.getText(self, "Buscar Clave", "Ingrese la clave a buscar:")
-        if ok and clave:
+        dialogo = DialogoClave(
+            longitud=self.digitos.value(),
+            titulo="Buscar clave",
+            modo="buscar",
+            parent=self
+        )
+        if dialogo.exec() != QDialog.Accepted:
+            return
+
+        clave = dialogo.get_clave()
+        if clave:
             datos = self.controller.obtener_datos_vista()
             encontrado = None
             posicion_detallada = None
@@ -371,8 +413,17 @@ class CuadradoInterna(QMainWindow):
                 vista_encadenada.dibujar()
 
     def eliminar_clave(self):
-        clave, ok = QInputDialog.getText(self, "Eliminar clave", "Ingrese la clave a eliminar:")
-        if not ok or not clave.strip():
+        dialogo = DialogoClave(
+            longitud=self.digitos.value(),
+            titulo="Eliminar clave",
+            modo="eliminar",
+            parent=self
+        )
+        if dialogo.exec() != QDialog.Accepted:
+            return
+
+        clave = dialogo.get_clave()
+        if not clave.strip():
             return
 
         resultado = self.controller.eliminar_clave(clave.strip())
@@ -423,17 +474,18 @@ class CuadradoInterna(QMainWindow):
             celda.setFixedSize(60, 60)
             celda.setStyleSheet("""
                 QLabel {
-                    background-color: #EDE9FE;
-                    border: 2px solid #7C3AED;
+                    background-color: #FFDBB5;
+                    border: 2px solid #9c724a;
                     border-radius: 12px;
                     font-size: 16px;
+                    color: #2d1f15;
                 }
             """)
             self.grid.addWidget(celda, fila, col, alignment=Qt.AlignCenter)
 
             numero = QLabel(str(i + 1))
             numero.setAlignment(Qt.AlignCenter)
-            numero.setStyleSheet("font-size: 14px; color: gray; margin-top: 5px;")
+            numero.setStyleSheet("font-size: 14px; color: #6C4E31; margin-top: 5px;")
             self.grid.addWidget(numero, fila + 1, col, alignment=Qt.AlignCenter)
 
         self.labels = [

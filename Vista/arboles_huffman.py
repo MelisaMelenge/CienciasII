@@ -21,24 +21,25 @@ class ArbolesHuffman(QMainWindow):
 
         # --- Widget central con layout vertical (encabezado arriba, resto abajo)
         central = QWidget()
+        central.setStyleSheet("background-color: #FFEAC5;")
         main_layout = QVBoxLayout(central)
 
         # ================= ENCABEZADO (ARRIBA) =================
         header_frame = QFrame()
         header_layout = QVBoxLayout(header_frame)
-        header_layout.setContentsMargins(0, 0, 0, 0)
+        header_layout.setContentsMargins(10, 10, 10, 10)
 
         # Fondo degradado y bordes redondeados
         header_frame.setStyleSheet("""
             QFrame {
                 background: qlineargradient(
                     x1:0, y1:0, x2:1, y2:0,
-                    stop:0 #d8b4fe, stop:1 #a78bfa
+                    stop:0 #9c724a, stop:1 #bf8f62
                 );
                 border-radius: 12px;
             }
             QLabel {
-                color: white;
+                color: #2d1f15;
             }
         """)
 
@@ -60,13 +61,15 @@ class ArbolesHuffman(QMainWindow):
             btn.setStyleSheet("""
                 QPushButton {
                     background-color: transparent;
-                    color: #2E1065;
+                    color: #2d1f15;
                     font-size: 14px;
                     font-weight: bold;
                     border: none;
                 }
                 QPushButton:hover {
-                    text-decoration: underline;
+                    color: #FFEAC5;
+                    background-color: #6C4E31;
+                    border-radius: 8px;
                 }
             """)
         btn_inicio.clicked.connect(lambda: self.cambiar_ventana("inicio"))
@@ -90,14 +93,14 @@ class ArbolesHuffman(QMainWindow):
         self.scene = QGraphicsScene()
         self.view = QGraphicsView(self.scene)
         self.view.setRenderHints(self.view.renderHints())
-        self.view.setStyleSheet("background-color: #F3E8FF; border-radius: 8px;")
+        self.view.setStyleSheet("background-color: #FFF3E0; border-radius: 8px;")
         body_layout.addWidget(self.view, stretch=2)
 
         # --- Panel derecho: Controles ---
         controls_frame = QFrame()
         controls_frame.setStyleSheet("""
             QFrame {
-                background-color: #F5F3FF;
+                background-color: #FFDBB5;
                 border-radius: 12px;
             }
         """)
@@ -107,16 +110,17 @@ class ArbolesHuffman(QMainWindow):
 
         # Insertar texto
         lbl_insertar = QLabel("Insertar Texto:")
-        lbl_insertar.setStyleSheet("font-size: 14px; color: #4C1D95; font-weight: bold;")
+        lbl_insertar.setStyleSheet("font-size: 14px; color: #2d1f15; font-weight: bold;")
         self.input_insertar = QTextEdit()
         self.input_insertar.setPlaceholderText("Ingrese el texto a comprimir")
         self.input_insertar.setMaximumHeight(100)
         self.input_insertar.setStyleSheet("""
             QTextEdit {
-                border: 2px solid #C4B5FD;
+                border: 2px solid #bf8f62;
                 border-radius: 6px;
                 padding: 5px;
                 background-color: white;
+                color: #2d1f15;
             }
         """)
 
@@ -128,19 +132,19 @@ class ArbolesHuffman(QMainWindow):
         btn_limpiar = QPushButton("Limpiar Todo")
         btn_limpiar.clicked.connect(self.limpiar_todo)
 
-        # Estilos botones morados
+        # Estilos botones café
         for btn in (btn_insertar, btn_limpiar):
             btn.setStyleSheet("""
                 QPushButton {
-                    background-color: #7C3AED;
-                    color: white;
+                    background-color: #6C4E31;
+                    color: #FFEAC5;
                     font-size: 14px;
                     font-weight: bold;
                     border-radius: 8px;
                     padding: 8px 14px;
                 }
                 QPushButton:hover {
-                    background-color: #6D28D9;
+                    background-color: #9c724a;
                 }
             """)
 
@@ -151,7 +155,7 @@ class ArbolesHuffman(QMainWindow):
 
         # ================= TABLA DE FRECUENCIAS Y CÓDIGOS =================
         lbl_tabla = QLabel("Frecuencias y Códigos:")
-        lbl_tabla.setStyleSheet("font-size: 14px; color: #4C1D95; font-weight: bold;")
+        lbl_tabla.setStyleSheet("font-size: 14px; color: #2d1f15; font-weight: bold;")
 
         self.tabla_codigos = QTextEdit()
         self.tabla_codigos.setReadOnly(True)
@@ -160,10 +164,11 @@ class ArbolesHuffman(QMainWindow):
             QTextEdit {
                 font-family: Consolas, monospace;
                 font-size: 12px;
-                background-color: #EDE9FE;
-                border: 1px solid #C4B5FD;
+                background-color: #FFF3E0;
+                border: 1px solid #bf8f62;
                 border-radius: 8px;
                 padding: 6px;
+                color: #2d1f15;
             }
         """)
 
@@ -186,10 +191,10 @@ class ArbolesHuffman(QMainWindow):
                 self.input_insertar.setReadOnly(True)
                 self.input_insertar.setStyleSheet("""
                     QTextEdit {
-                        background-color: #E9D5FF;
-                        color: #4C1D95;
+                        background-color: #FFDBB5;
+                        color: #2d1f15;
                         font-weight: bold;
-                        border: 2px solid #C4B5FD;
+                        border: 2px solid #bf8f62;
                         border-radius: 6px;
                         padding: 5px;
                     }
@@ -214,7 +219,7 @@ class ArbolesHuffman(QMainWindow):
 
         if not root:
             text_item = QGraphicsTextItem("Árbol vacío")
-            text_item.setDefaultTextColor(QColor("#4C1D95"))
+            text_item.setDefaultTextColor(QColor("#6C4E31"))
             text_item.setScale(1.5)
             text_item.setPos(-60, -20)
             self.scene.addItem(text_item)
@@ -224,10 +229,10 @@ class ArbolesHuffman(QMainWindow):
         level_gap = 90
         start_offset = 280
 
-        pen_line = QPen(QColor("#4C1D95"), 2)
-        brush_node = QBrush(QColor("#7C3AED"))
-        brush_leaf = QBrush(QColor("#C4B5FD"))
-        text_color = Qt.white
+        pen_line = QPen(QColor("#6C4E31"), 2)
+        brush_node = QBrush(QColor("#6C4E31"))
+        brush_leaf = QBrush(QColor("#bf8f62"))
+        text_color = QColor("#FFEAC5")
 
         def draw(node, x, y, offset, depth):
             radio = 22
@@ -239,7 +244,7 @@ class ArbolesHuffman(QMainWindow):
             else:
                 circle.setBrush(brush_node)
 
-            circle.setPen(QPen(QColor("#3b0764"), 2))
+            circle.setPen(QPen(QColor("#2d1f15"), 2))
             self.scene.addItem(circle)
 
             # Texto del nodo (carácter y frecuencia)
@@ -273,7 +278,7 @@ class ArbolesHuffman(QMainWindow):
                 mid_x = (x + child_x) / 2
                 mid_y = (y + child_y) / 2 - 10
                 bit_label = QGraphicsTextItem("0")
-                bit_label.setDefaultTextColor(QColor("#4C1D95"))
+                bit_label.setDefaultTextColor(QColor("#6C4E31"))
                 bit_label.setPos(mid_x, mid_y)
                 self.scene.addItem(bit_label)
 
@@ -289,7 +294,7 @@ class ArbolesHuffman(QMainWindow):
                 mid_x = (x + child_x) / 2
                 mid_y = (y + child_y) / 2 - 10
                 bit_label = QGraphicsTextItem("1")
-                bit_label.setDefaultTextColor(QColor("#4C1D95"))
+                bit_label.setDefaultTextColor(QColor("#6C4E31"))
                 bit_label.setPos(mid_x, mid_y)
                 self.scene.addItem(bit_label)
 
@@ -339,10 +344,11 @@ class ArbolesHuffman(QMainWindow):
             self.input_insertar.setReadOnly(False)
             self.input_insertar.setStyleSheet("""
                 QTextEdit {
-                    border: 2px solid #C4B5FD;
+                    border: 2px solid #bf8f62;
                     border-radius: 6px;
                     padding: 5px;
                     background-color: white;
+                    color: #2d1f15;
                 }
             """)
 
@@ -354,7 +360,7 @@ class ArbolesHuffman(QMainWindow):
 
             # Mostrar mensaje visual
             text_item = QGraphicsTextItem("Árbol vacío")
-            text_item.setDefaultTextColor(QColor("#4C1D95"))
+            text_item.setDefaultTextColor(QColor("#6C4E31"))
             text_item.setScale(1.5)
             text_item.setPos(-60, -20)
             self.scene.addItem(text_item)

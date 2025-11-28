@@ -10,6 +10,9 @@ class DialogoColisiones(QDialog):
         self.setFixedSize(450, 250)
         self.setModal(True)
 
+        # Estilo del diálogo
+        self.setStyleSheet("QDialog { background-color: #FFEAC5; }")
+
         # Layout principal
         layout = QVBoxLayout(self)
         layout.setSpacing(15)
@@ -21,7 +24,7 @@ class DialogoColisiones(QDialog):
         etiqueta.setStyleSheet("""
             font-size: 18px;
             font-weight: bold;
-            color: #4C1D95;
+            color: #2d1f15;
             margin-bottom: 10px;
         """)
         layout.addWidget(etiqueta)
@@ -37,17 +40,17 @@ class DialogoColisiones(QDialog):
         ])
         self.combo.setStyleSheet("""
             QComboBox {
-                border: 2px solid #7C3AED;
+                border: 2px solid #bf8f62;
                 border-radius: 10px;
                 padding: 10px;
                 font-size: 16px;
-                background-color: #F3E8FF;
-                color: #4C1D95;
+                background-color: #FFF3E0;
+                color: #2d1f15;
                 min-height: 40px;
             }
             QComboBox:hover {
-                border: 2px solid #6D28D9;
-                background-color: #EDE9FE;
+                border: 2px solid #9c724a;
+                background-color: #FFDBB5;
             }
             QComboBox::drop-down {
                 border: none;
@@ -57,15 +60,15 @@ class DialogoColisiones(QDialog):
                 image: none;
                 border-left: 5px solid transparent;
                 border-right: 5px solid transparent;
-                border-top: 8px solid #7C3AED;
+                border-top: 8px solid #6C4E31;
                 margin-right: 10px;
             }
             QComboBox QAbstractItemView {
-                border: 2px solid #7C3AED;
+                border: 2px solid #bf8f62;
                 border-radius: 8px;
-                background-color: #F3E8FF;
-                selection-background-color: #7C3AED;
-                selection-color: white;
+                background-color: #FFF3E0;
+                selection-background-color: #6C4E31;
+                selection-color: #FFEAC5;
                 padding: 5px;
             }
         """)
@@ -75,8 +78,8 @@ class DialogoColisiones(QDialog):
         btn_aceptar = QPushButton("Aceptar")
         btn_aceptar.setStyleSheet("""
             QPushButton {
-                background-color: #7C3AED;
-                color: white;
+                background-color: #6C4E31;
+                color: #FFEAC5;
                 padding: 10px 30px;
                 font-size: 16px;
                 border-radius: 10px;
@@ -84,10 +87,10 @@ class DialogoColisiones(QDialog):
                 min-width: 120px;
             }
             QPushButton:hover {
-                background-color: #6D28D9;
+                background-color: #9c724a;
             }
             QPushButton:pressed {
-                background-color: #5B21B6;
+                background-color: #2d1f15;
             }
         """)
         btn_aceptar.clicked.connect(self.accept)

@@ -21,23 +21,24 @@ class TriesResiduos(QMainWindow):
 
         # =================== WIDGET CENTRAL ===================
         central = QWidget()
+        central.setStyleSheet("background-color: #FFEAC5;")
         main_layout = QVBoxLayout(central)
 
         # ================= ENCABEZADO =================
         header_frame = QFrame()
         header_layout = QVBoxLayout(header_frame)
-        header_layout.setContentsMargins(0, 0, 0, 0)
+        header_layout.setContentsMargins(10, 10, 10, 10)
 
         header_frame.setStyleSheet("""
             QFrame {
                 background: qlineargradient(
                     x1:0, y1:0, x2:1, y2:0,
-                    stop:0 #d8b4fe, stop:1 #a78bfa
+                    stop:0 #9c724a, stop:1 #bf8f62
                 );
                 border-radius: 12px;
             }
             QLabel {
-                color: white;
+                color: #2d1f15;
             }
         """)
 
@@ -56,13 +57,15 @@ class TriesResiduos(QMainWindow):
             btn.setStyleSheet("""
                 QPushButton {
                     background-color: transparent;
-                    color: #2E1065;
+                    color: #2d1f15;
                     font-size: 14px;
                     font-weight: bold;
                     border: none;
                 }
                 QPushButton:hover {
-                    text-decoration: underline;
+                    color: #FFEAC5;
+                    background-color: #6C4E31;
+                    border-radius: 8px;
                 }
             """)
         btn_inicio.clicked.connect(lambda: self.cambiar_ventana("inicio"))
@@ -86,7 +89,7 @@ class TriesResiduos(QMainWindow):
         self.scene = QGraphicsScene()
         self.view = QGraphicsView(self.scene)
         self.view.setRenderHints(self.view.renderHints())
-        self.view.setStyleSheet("background-color: #F3E8FF; border-radius: 8px;")
+        self.view.setStyleSheet("background-color: #FFF3E0; border-radius: 8px;")
 
         self.view.resetTransform()
         self.view.scale(1.5, 1.5)
@@ -96,7 +99,7 @@ class TriesResiduos(QMainWindow):
         controls_frame = QFrame()
         controls_frame.setStyleSheet("""
             QFrame {
-                background-color: #F5F3FF;
+                background-color: #FFDBB5;
                 border-radius: 12px;
             }
         """)
@@ -106,32 +109,59 @@ class TriesResiduos(QMainWindow):
 
         # === INSERTAR ===
         lbl_insertar = QLabel("Insertar Palabra:")
-        lbl_insertar.setStyleSheet("font-size: 14px; color: #4C1D95; font-weight: bold;")
+        lbl_insertar.setStyleSheet("font-size: 14px; color: #2d1f15; font-weight: bold;")
 
         self.input_insertar = QLineEdit()
         self.input_insertar.setPlaceholderText("Ingrese palabra (A-Z)")
+        self.input_insertar.setStyleSheet("""
+            QLineEdit {
+                border: 2px solid #bf8f62;
+                border-radius: 6px;
+                padding: 5px;
+                background-color: white;
+                color: #2d1f15;
+            }
+        """)
 
         btn_insertar = QPushButton("Insertar")
         btn_insertar.clicked.connect(self.insertar_palabra)
 
         # === BUSCAR ===
         lbl_buscar = QLabel("Buscar Letra:")
-        lbl_buscar.setStyleSheet("font-size: 14px; color: #4C1D95; font-weight: bold;")
+        lbl_buscar.setStyleSheet("font-size: 14px; color: #2d1f15; font-weight: bold;")
 
         self.input_buscar = QLineEdit()
         self.input_buscar.setPlaceholderText("Ingrese letra (A-Z)")
         self.input_buscar.setMaxLength(1)
+        self.input_buscar.setStyleSheet("""
+            QLineEdit {
+                border: 2px solid #bf8f62;
+                border-radius: 6px;
+                padding: 5px;
+                background-color: white;
+                color: #2d1f15;
+            }
+        """)
 
         btn_buscar = QPushButton("Buscar")
         btn_buscar.clicked.connect(self.buscar_letra)
 
         # === ELIMINAR ===
         lbl_eliminar = QLabel("Eliminar Letra:")
-        lbl_eliminar.setStyleSheet("font-size: 14px; color: #4C1D95; font-weight: bold;")
+        lbl_eliminar.setStyleSheet("font-size: 14px; color: #2d1f15; font-weight: bold;")
 
         self.input_eliminar = QLineEdit()
         self.input_eliminar.setPlaceholderText("Ingrese letra (A-Z)")
         self.input_eliminar.setMaxLength(1)
+        self.input_eliminar.setStyleSheet("""
+            QLineEdit {
+                border: 2px solid #bf8f62;
+                border-radius: 6px;
+                padding: 5px;
+                background-color: white;
+                color: #2d1f15;
+            }
+        """)
 
         btn_eliminar = QPushButton("Eliminar")
         btn_eliminar.clicked.connect(self.eliminar_letra)
@@ -141,34 +171,20 @@ class TriesResiduos(QMainWindow):
         btn_limpiar.clicked.connect(self.limpiar_trie)
 
         # Estilos para botones
-        for btn in (btn_insertar, btn_buscar, btn_eliminar):
+        for btn in (btn_insertar, btn_buscar, btn_eliminar, btn_limpiar):
             btn.setStyleSheet("""
                 QPushButton {
-                    background-color: #7C3AED;
-                    color: white;
+                    background-color: #6C4E31;
+                    color: #FFEAC5;
                     font-size: 14px;
                     font-weight: bold;
                     border-radius: 8px;
                     padding: 8px 14px;
                 }
                 QPushButton:hover {
-                    background-color: #6D28D9;
+                    background-color: #9c724a;
                 }
             """)
-
-        btn_limpiar.setStyleSheet("""
-            QPushButton {
-                    background-color: #7C3AED;
-                    color: white;
-                    font-size: 14px;
-                    font-weight: bold;
-                    border-radius: 8px;
-                    padding: 8px 14px;
-                }
-                QPushButton:hover {
-                    background-color: #6D28D9;
-            }
-        """)
 
         # Agregar widgets al layout
         controls_layout.addWidget(lbl_insertar)
@@ -250,6 +266,7 @@ class TriesResiduos(QMainWindow):
         """Reinicia el trie"""
         self.controller = TriesController()
         self.scene.clear()
+        self.dibujar_trie()
 
     def dibujar_trie(self):
         self.scene.clear()
@@ -258,11 +275,11 @@ class TriesResiduos(QMainWindow):
         level_gap = 110
         start_offset = 380
 
-        pen_line = QPen(QColor("#4C1D95"), 2)
-        brush_link = QBrush(QColor("#9F7AEA"))  # morado medio para '*'
-        brush_other = QBrush(QColor("#C4B5FD"))  # morado claro para letras/raíz
-        pen_node = QPen(QColor("#3b0764"), 2)
-        edge_color = QColor("#4C1D95")
+        pen_line = QPen(QColor("#6C4E31"), 2)
+        brush_link = QBrush(QColor("#9c724a"))  # café medio para '*'
+        brush_other = QBrush(QColor("#bf8f62"))  # café claro para letras/raíz
+        pen_node = QPen(QColor("#2d1f15"), 2)
+        edge_color = QColor("#6C4E31")
 
         def sort_key(item):
             key, _ = item
@@ -295,7 +312,7 @@ class TriesResiduos(QMainWindow):
                 text = "root"
 
             text_item = QGraphicsTextItem(text)
-            text_item.setDefaultTextColor(Qt.white)
+            text_item.setDefaultTextColor(QColor("#FFEAC5"))
             text_item.setPos(x - radio / 1.7, y - 10)
             self.scene.addItem(text_item)
 
@@ -339,4 +356,3 @@ class TriesResiduos(QMainWindow):
         self.view.resetTransform()
         self.view.fitInView(brect, Qt.KeepAspectRatio)
         self.view.scale(1.25, 1.25)
-

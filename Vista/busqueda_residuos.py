@@ -6,23 +6,30 @@ class BusquedaResiduos(QWidget):
         super().__init__()
         self.cambiar_pagina_callback = cambiar_pagina_callback
 
+        # Widget principal con fondo café claro
+        self.setStyleSheet("background-color: #FFEAC5;")
+
         layout = QVBoxLayout(self)
         layout.setSpacing(20)
+        layout.setContentsMargins(10, 10, 10, 10)
 
         # --- Encabezado ---
         header = QFrame()
         header.setStyleSheet("""
-            background: qlineargradient(
-                spread:pad, x1:0, y1:0, x2:1, y2:0,
-                stop:0 #D8B4FE, stop:1 #A78BFA
-            );
-            border-radius: 12px;
+            QFrame {
+                background: qlineargradient(
+                    x1:0, y1:0, x2:1, y2:0,
+                    stop:0 #9c724a, stop:1 #bf8f62
+                );
+                border-radius: 12px;
+            }
         """)
         header_layout = QVBoxLayout(header)
+        header_layout.setContentsMargins(10, 10, 10, 10)
 
         titulo = QLabel("Ciencias de la Computación II - Búsqueda por Residuos")
         titulo.setAlignment(Qt.AlignCenter)
-        titulo.setStyleSheet("font-size: 26px; font-weight: bold; color: white; margin: 10px;")
+        titulo.setStyleSheet("font-size: 26px; font-weight: bold; color: #2d1f15; margin: 10px;")
         header_layout.addWidget(titulo)
 
         # --- Menú debajo del título ---
@@ -37,14 +44,15 @@ class BusquedaResiduos(QWidget):
             btn.setStyleSheet("""
                 QPushButton {
                     background-color: transparent;
-                    color: #2E1065;
+                    color: #2d1f15;
                     font-size: 16px;
                     font-weight: bold;
                     border: none;
                 }
                 QPushButton:hover {
-                    color: #6D28D9;
-                    text-decoration: underline;
+                    color: #FFEAC5;
+                    background-color: #6C4E31;
+                    border-radius: 8px;
                 }
             """)
             menu_layout.addWidget(btn)
@@ -59,5 +67,5 @@ class BusquedaResiduos(QWidget):
         # --- Contenido central ---
         label = QLabel("Página: Búsqueda por Residuos")
         label.setAlignment(Qt.AlignCenter)
-        label.setStyleSheet("font-size: 20px; color: #4B5563; margin-top: 30px;")
+        label.setStyleSheet("font-size: 20px; color: #6C4E31; margin-top: 30px; font-weight: bold;")
         layout.addWidget(label)

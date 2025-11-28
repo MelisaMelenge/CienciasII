@@ -18,7 +18,7 @@ class VistaListaEncadenada:
 
         titulo = QLabel("Visualización: Lista Encadenada (colisiones con punteros)")
         titulo.setAlignment(Qt.AlignCenter)
-        titulo.setStyleSheet("font-size: 18px; font-weight: bold; color: #4C1D95; margin-bottom: 15px;")
+        titulo.setStyleSheet("font-size: 18px; font-weight: bold; color: #6C4E31; margin-bottom: 15px;")
         self.grid.addWidget(titulo, 0, 0, alignment=Qt.AlignCenter)
 
         # Extraer información de resaltado
@@ -55,16 +55,16 @@ class VistaListaEncadenada:
             # Resaltar solo si es el nodo principal y NO es un nodo anidado
             if posicion_resaltar == i and not es_anidado and val:
                 nodo.setStyleSheet("""
-                    background-color: #C4B5FD;
-                    border: 2px solid #8B5CF6;
+                    background-color: #FCD34D;
+                    border: 2px solid #F59E0B;
                     border-radius: 10px;
                     font-size: 16px;
                     font-weight: bold;
                 """)
             else:
                 nodo.setStyleSheet("""
-                    background-color: #EDE9FE;
-                    border: 2px solid #7C3AED;
+                    background-color: #FFF3E0;
+                    border: 2px solid #bf8f62;
                     border-radius: 10px;
                     font-size: 16px;
                 """)
@@ -74,7 +74,7 @@ class VistaListaEncadenada:
             for idx, clave in enumerate(sublista):
                 flecha = QLabel("→")
                 flecha.setAlignment(Qt.AlignCenter)
-                flecha.setStyleSheet("font-size: 20px; color: #7C3AED;")
+                flecha.setStyleSheet("font-size: 20px; color: #6C4E31;")
                 fila_layout.addWidget(flecha)
 
                 nodo_col = QLabel(str(clave).zfill(self.controller.controller.digitos))
@@ -84,16 +84,17 @@ class VistaListaEncadenada:
                 # Resaltar solo si coincide la posición Y es el nodo anidado correcto
                 if posicion_resaltar == i and es_anidado and indice_anidado == idx:
                     nodo_col.setStyleSheet("""
-                        background-color: #C4B5FD;
-                        border: 2px solid #8B5CF6;
+                        background-color: #9c724a;
+                        border: 2px solid #6C4E31;
                         border-radius: 10px;
                         font-size: 16px;
                         font-weight: bold;
+                        color: #FFEAC5;
                     """)
                 else:
                     nodo_col.setStyleSheet("""
-                        background-color: #DDD6FE;
-                        border: 2px solid #7C3AED;
+                        background-color: #FFDBB5;
+                        border: 2px solid #bf8f62;
                         border-radius: 10px;
                         font-size: 16px;
                     """)

@@ -20,6 +20,7 @@ class LinealInterna(QMainWindow):
         self.setWindowTitle("Ciencias de la Computación II - Búsqueda Lineal")
 
         central = QWidget()
+        central.setStyleSheet("background-color: #FFEAC5;")
         layout = QVBoxLayout(central)
         layout.setSpacing(20)
 
@@ -27,7 +28,7 @@ class LinealInterna(QMainWindow):
         header.setStyleSheet("""
             background: qlineargradient(
                 spread:pad, x1:0, y1:0, x2:1, y2:0,
-                stop:0 #D8B4FE, stop:1 #A78BFA
+                stop:0 #9c724a, stop:1 #bf8f62
             );
             border-radius: 12px;
         """)
@@ -35,7 +36,7 @@ class LinealInterna(QMainWindow):
 
         titulo = QLabel("Ciencias de la Computación II - Búsqueda Lineal")
         titulo.setAlignment(Qt.AlignCenter)
-        titulo.setStyleSheet("font-size: 26px; font-weight: bold; color: white; margin: 10px;")
+        titulo.setStyleSheet("font-size: 26px; font-weight: bold; color: #2d1f15; margin: 10px;")
         header_layout.addWidget(titulo)
 
         menu_layout = QHBoxLayout()
@@ -49,14 +50,16 @@ class LinealInterna(QMainWindow):
             btn.setStyleSheet("""
                 QPushButton {
                     background-color: transparent;
-                    color: #2E1065;
+                    color: #2d1f15;
                     font-size: 16px;
                     font-weight: bold;
                     border: none;
+                    padding: 5px 10px;
                 }
                 QPushButton:hover {
-                    color: #6D28D9;
-                    text-decoration: underline;
+                    color: #FFEAC5;
+                    background-color: #6C4E31;
+                    border-radius: 8px;
                 }
             """)
             menu_layout.addWidget(btn)
@@ -91,14 +94,15 @@ class LinealInterna(QMainWindow):
         for btn in botones:
             btn.setStyleSheet("""
                 QPushButton {
-                    background-color: #7C3AED;
-                    color: white;
+                    background-color: #9c724a;
+                    color: #2d1f15;
                     padding: 10px 20px;
                     font-size: 16px;
                     border-radius: 10px;
+                    font-weight: bold;
                 }
                 QPushButton:hover {
-                    background-color: #6D28D9;
+                    background-color: #bf8f62;
                 }
             """)
 
@@ -110,13 +114,40 @@ class LinealInterna(QMainWindow):
         fila_controles.setAlignment(Qt.AlignCenter)
 
         lbl_rango = QLabel("Rango (10^n):")
-        lbl_rango.setStyleSheet("font-size: 16px; font-weight: bold;")
-        self.rango.setStyleSheet("font-size: 16px; padding: 5px;")
+        lbl_rango.setStyleSheet("font-size: 16px; font-weight: bold; color: #2d1f15;")
+        self.rango.setStyleSheet("""
+            QComboBox {
+                font-size: 16px; 
+                padding: 5px;
+                background-color: white;
+                border: 2px solid #bf8f62;
+                border-radius: 5px;
+                color: #2d1f15;
+            }
+            QComboBox:hover {
+                border: 2px solid #6C4E31;
+            }
+            QComboBox::drop-down {
+                border: none;
+            }
+        """)
 
         lbl_digitos = QLabel("Número de dígitos:")
-        lbl_digitos.setStyleSheet("font-size: 16px; font-weight: bold;")
+        lbl_digitos.setStyleSheet("font-size: 16px; font-weight: bold; color: #2d1f15;")
         self.digitos.setFixedWidth(100)
-        self.digitos.setStyleSheet("font-size: 16px; padding: 5px;")
+        self.digitos.setStyleSheet("""
+            QSpinBox {
+                font-size: 16px; 
+                padding: 5px;
+                background-color: white;
+                border: 2px solid #bf8f62;
+                border-radius: 5px;
+                color: #2d1f15;
+            }
+            QSpinBox:hover {
+                border: 2px solid #6C4E31;
+            }
+        """)
 
         fila_controles.addWidget(lbl_rango)
         fila_controles.addWidget(self.rango)
@@ -140,7 +171,14 @@ class LinealInterna(QMainWindow):
 
         self.scroll = QScrollArea()
         self.scroll.setWidgetResizable(True)
+        self.scroll.setStyleSheet("""
+            QScrollArea {
+                background-color: transparent;
+                border: none;
+            }
+        """)
         self.contenedor = QWidget()
+        self.contenedor.setStyleSheet("background-color: transparent;")
         self.contenedor_layout = QVBoxLayout(self.contenedor)
         self.contenedor_layout.setSpacing(10)
         self.contenedor_layout.setContentsMargins(20, 20, 20, 20)
@@ -279,16 +317,17 @@ class LinealInterna(QMainWindow):
         cuadro.setFixedSize(80, 80)
         cuadro.setStyleSheet("""
             QLabel {
-                background-color: #EDE9FE;
-                border: 2px solid #7C3AED;
+                background-color: #FFDBB5;
+                border: 2px solid #9c724a;
                 font-size: 16px;
+                color: #2d1f15;
             }
         """)
 
         numero = QLabel(str(idx_real + 1))
         numero.setAlignment(Qt.AlignCenter)
         numero.setFixedHeight(20)
-        numero.setStyleSheet("font-size: 12px; color: gray; background: transparent;")
+        numero.setStyleSheet("font-size: 12px; color: #6C4E31; background: transparent;")
 
         layout_vert.addWidget(cuadro)
         layout_vert.addWidget(numero)
@@ -310,17 +349,17 @@ class LinealInterna(QMainWindow):
         cuadro.setFixedSize(80, 80)
         cuadro.setStyleSheet("""
             QLabel {
-                background-color: #F3F4F6;
-                border: 2px solid #9CA3AF;
+                background-color: #FFEAC5;
+                border: 2px solid #bf8f62;
                 font-size: 24px;
-                color: #6B7280;
+                color: #6C4E31;
             }
         """)
 
         numero = QLabel(texto_indice)
         numero.setAlignment(Qt.AlignCenter)
         numero.setFixedHeight(20)
-        numero.setStyleSheet("font-size: 12px; color: gray; background: transparent;")
+        numero.setStyleSheet("font-size: 12px; color: #6C4E31; background: transparent;")
 
         layout_vert.addWidget(cuadro)
         layout_vert.addWidget(numero)
@@ -335,7 +374,7 @@ class LinealInterna(QMainWindow):
             self._mostrar_mensaje("Error", "Primero debe crear la estructura.")
             return
 
-        # 👉 Usar el diálogo morado
+        # 👉 Usar el diálogo
         dlg = DialogoClave(
             self.digitos.value(),
             titulo="Insertar clave",
@@ -382,19 +421,21 @@ class LinealInterna(QMainWindow):
                 lbl.setText(val)
                 lbl.setStyleSheet("""
                     QLabel {
-                        background-color: #C4B5FD;
-                        border: 2px solid #6D28D9;
+                        background-color: #bf8f62;
+                        border: 2px solid #6C4E31;
                         font-size: 16px;
                         font-weight: bold;
+                        color: #2d1f15;
                     }
                 """)
             else:
                 lbl.setText("")
                 lbl.setStyleSheet("""
                     QLabel {
-                        background-color: #EDE9FE;
-                        border: 2px solid #7C3AED;
+                        background-color: #FFDBB5;
+                        border: 2px solid #9c724a;
                         font-size: 16px;
+                        color: #2d1f15;
                     }
                 """)
 
@@ -428,10 +469,11 @@ class LinealInterna(QMainWindow):
             self._reset_label_styles()
             self.labels[pos_label].setStyleSheet("""
                 QLabel {
-                    background-color: #D8B4FE;
-                    border: 3px solid #7C3AED;
+                    background-color: #9c724a;
+                    border: 3px solid #603F26;
                     font-size: 18px;
                     font-weight: bold;
+                    color: #FFEAC5;
                 }
             """)
             self._mostrar_mensaje("Resultado", f"La clave {clave} está en la posición {idx + 1}.")
@@ -462,7 +504,6 @@ class LinealInterna(QMainWindow):
         eliminado = self.controller.eliminar_clave(clave)
         if eliminado:
             self.historial.append(("eliminar", clave))  # ✅ registrar eliminación
-
 
             # 🔹 Primero mensaje de éxito
             self._mostrar_mensaje("Éxito", f"Clave {clave} eliminada.")
@@ -617,18 +658,20 @@ class LinealInterna(QMainWindow):
             if text:
                 lbl.setStyleSheet("""
                     QLabel {
-                        background-color: #C4B5FD;
-                        border: 2px solid #6D28D9;
+                        background-color: #bf8f62;
+                        border: 2px solid #6C4E31;
                         font-size: 16px;
                         font-weight: bold;
+                        color: #2d1f15;
                     }
                 """)
             else:
                 lbl.setStyleSheet("""
                     QLabel {
-                        background-color: #EDE9FE;
-                        border: 2px solid #7C3AED;
+                        background-color: #FFDBB5;
+                        border: 2px solid #9c724a;
                         font-size: 16px;
+                        color: #2d1f15;
                     }
                 """)
 
@@ -645,4 +688,3 @@ class LinealInterna(QMainWindow):
     def _mostrar_confirmacion(self, titulo, texto):
         dlg = DialogoClave(0, titulo, modo="confirmar", parent=self, mensaje=texto)
         return dlg.exec() == QDialog.Accepted
-

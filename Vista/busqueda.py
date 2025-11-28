@@ -5,6 +5,10 @@ from Vista.mod_interna import ModInterna
 from Vista.cuadrado_interna import CuadradoInterna
 from Vista.truncamiento_interna import TruncamientoInterna
 from Vista.plegamiento_interna import PlegamientoInterna
+from Vista.arboles_digitales import ArbolesDigitales
+from Vista.tries_residuos import TriesResiduos
+from Vista.multiples_residuos import MultiplesResiduos
+from Vista.arboles_huffman import ArbolesHuffman
 
 # --- Importar vistas externas ---
 from Vista.lineal_externa import LinealExterna
@@ -40,17 +44,20 @@ class Busqueda(QMainWindow):
         main_layout.setContentsMargins(0, 0, 0, 0)
         main_layout.setSpacing(0)
 
+        # Aplicar estilo de fondo
+        central.setStyleSheet("background-color: #FFEAC5;")
+
         # --- Encabezado ---
         header = QFrame()
         header.setStyleSheet("""
             background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
-                stop:0 #D8B4FE, stop:1 #A78BFA);
+                stop:0 #9c724a, stop:1 #bf8f62);
         """)
         header_layout = QVBoxLayout(header)
 
         titulo = QLabel("Ciencias de la Computación II")
         titulo.setAlignment(Qt.AlignCenter)
-        titulo.setStyleSheet("font-size: 28px; font-weight: bold; color: white; margin: 15px;")
+        titulo.setStyleSheet("font-size: 28px; font-weight: bold; color: #2d1f15; margin: 15px;")
         header_layout.addWidget(titulo)
 
         # --- Menú ---
@@ -58,10 +65,10 @@ class Busqueda(QMainWindow):
         menu_bar.setStyleSheet("""
             QMenuBar {
                 background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
-                    stop:0 #E9D5FF, stop:1 #C4B5FD);
+                    stop:0 #FFDBB5, stop:1 #FFF3E0);
                 font-weight: bold;
                 font-size: 16px;
-                color: #4C1D95;
+                color: #2d1f15;
             }
             QMenuBar::item {
                 spacing: 20px;
@@ -69,22 +76,22 @@ class Busqueda(QMainWindow):
                 border-radius: 8px;
             }
             QMenuBar::item:selected {
-                background: #7e22ce;
-                color: white;
+                background: #6C4E31;
+                color: #FFEAC5;
             }
             QMenu {
                 background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
-                    stop:0 #F8F4FF, stop:1 #E9D5FF);
-                border: 1px solid #C4B5FD;
+                    stop:0 #FFF3E0, stop:1 #FFDBB5);
+                border: 1px solid #bf8f62;
                 font-size: 15px;
-                color: #4C1D95;
+                color: #2d1f15;
                 padding: 6px;
                 border-radius: 8px;
             }
             QMenu::item:selected {
                 background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
-                    stop:0 #7e22ce, stop:1 #5a2ea6);
-                color: white;
+                    stop:0 #6C4E31, stop:1 #9c724a);
+                color: #FFEAC5;
                 border-radius: 6px;
             }
         """)
@@ -105,6 +112,14 @@ class Busqueda(QMainWindow):
         submenu_hash.addAction("Función plegamiento", lambda: self.cambiar_ventana("plegamiento_interna"))
         menu_internas.addMenu(submenu_hash)
 
+        # 🌳 Árboles (dentro de búsquedas internas)
+        submenu_arboles = QMenu("Árboles", self)
+        submenu_arboles.addAction("Árboles Digitales", lambda: self.cambiar_ventana("arboles_digitales"))
+        submenu_arboles.addAction("Tries de Residuos", lambda: self.cambiar_ventana("tries_residuos"))
+        submenu_arboles.addAction("Múltiples Residuos", lambda: self.cambiar_ventana("multiples_residuos"))
+        submenu_arboles.addAction("Árboles de Huffman", lambda: self.cambiar_ventana("arboles_huffman"))
+        menu_internas.addMenu(submenu_arboles)
+
         busquedas_action = menu_bar.addAction("🔎 Búsquedas Internas")
         busquedas_action.setMenu(menu_internas)
 
@@ -122,7 +137,7 @@ class Busqueda(QMainWindow):
         menu_externas.addMenu(submenu_hash_ext)
 
         # 🪣 Cubetas
-        submenu_cubetas = QMenu("Cubetas", self)
+        submenu_cubetas = QMenu("Estructuras Dinámicas", self)
         submenu_cubetas.addAction("Expansión y reducción total", lambda: self.cambiar_ventana("cubeta_total"))
         submenu_cubetas.addAction("Expansión y reducción parcial", lambda: self.cambiar_ventana("cubeta_parcial"))
         menu_externas.addMenu(submenu_cubetas)
@@ -133,13 +148,15 @@ class Busqueda(QMainWindow):
         # --- 📚 Índices ---
         indices_action = menu_bar.addAction("📚 Índices")
         indices_action.triggered.connect(lambda: self.cambiar_ventana("indices"))
+
         # --- Añadir al header ---
         header_layout.addWidget(menu_bar)
 
         # --- Contenido principal ---
         self.label = QLabel("Selecciona una opción del menú")
         self.label.setAlignment(Qt.AlignCenter)
-        self.label.setStyleSheet("font-size: 20px; color: #2c3e50; font-weight: bold; margin-top: 40px;")
+        self.label.setStyleSheet(
+            "font-size: 20px; color: #2d1f15; font-weight: bold; margin-top: 40px; background-color: #FFEAC5;")
 
         main_layout.addWidget(header)
         main_layout.addWidget(self.label, stretch=1)
@@ -150,26 +167,44 @@ class Busqueda(QMainWindow):
 
     # Internas
     def abrir_lineal(self): self.cambiar_ventana("lineal_interna")
+
     def abrir_binaria(self): self.cambiar_ventana("binaria_interna")
+
     def abrir_mod(self): self.cambiar_ventana("mod_interna")
+
     def abrir_cuadrado(self): self.cambiar_ventana("cuadrado_interna")
+
     def abrir_truncamiento(self): self.cambiar_ventana("truncamiento_interna")
+
     def abrir_plegamiento(self): self.cambiar_ventana("plegamiento_interna")
+
     def abrir_arboles_digitales(self): self.cambiar_ventana("arboles_digitales")
+
     def abrir_tries_residuos(self): self.cambiar_ventana("tries_residuos")
+
     def abrir_multiples_residuos(self): self.cambiar_ventana("multiples_residuos")
+
     def abrir_arboles_huffman(self): self.cambiar_ventana("arboles_huffman")
 
     # Externas
     def abrir_lineal_externa(self): self.cambiar_ventana("lineal_externa")
+
     def abrir_binaria_externa(self): self.cambiar_ventana("binaria_externa")
+
     def abrir_mod_externa(self): self.cambiar_ventana("mod_externa")
+
     def abrir_cuadrado_externa(self): self.cambiar_ventana("cuadrado_externa")
+
     def abrir_truncamiento_externa(self): self.cambiar_ventana("truncamiento_externa")
+
     def abrir_plegamiento_externa(self): self.cambiar_ventana("plegamiento_externa")
+
     def abrir_cambio_base(self): self.cambiar_ventana("cambio_base")
 
     # Cubetas (Externas)
     def abrir_cubeta_total(self): self.cambiar_ventana("cubeta_total")
+
     def abrir_cubeta_parcial(self): self.cambiar_ventana("cubeta_parcial")
+
+    # Índices
     def abrir_indices(self): self.cambiar_ventana("indices")

@@ -1,7 +1,7 @@
 from PySide6.QtWidgets import (
     QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton,
-    QComboBox, QSpinBox, QGridLayout, QMessageBox, QScrollArea,
-    QFileDialog, QInputDialog, QFrame, QDialog
+    QComboBox, QSpinBox, QGridLayout, QScrollArea,
+    QFileDialog, QFrame, QDialog
 )
 from PySide6.QtCore import Qt
 from .dialogo_clave import DialogoClave
@@ -23,23 +23,26 @@ class PlegamientoInterna(QMainWindow):
 
         # --- Layout principal ---
         central = QWidget()
+        central.setStyleSheet("background-color: #FFEAC5;")
         layout = QVBoxLayout(central)
         layout.setSpacing(20)
+        layout.setContentsMargins(20, 20, 20, 20)
 
-        # --- Encabezado ---
+        # --- Encabezado con colores café ---
         header = QFrame()
         header.setStyleSheet("""
             background: qlineargradient(
                 spread:pad, x1:0, y1:0, x2:1, y2:0,
-                stop:0 #D8B4FE, stop:1 #A78BFA
+                stop:0 #9c724a, stop:1 #bf8f62
             );
             border-radius: 12px;
         """)
         header_layout = QVBoxLayout(header)
+        header_layout.setContentsMargins(10, 10, 10, 10)
 
         titulo = QLabel("Ciencias de la Computación II - Función Hash (Plegamiento)")
         titulo.setAlignment(Qt.AlignCenter)
-        titulo.setStyleSheet("font-size: 26px; font-weight: bold; color: white; margin: 10px;")
+        titulo.setStyleSheet("font-size: 26px; font-weight: bold; color: #2d1f15; margin: 10px;")
         header_layout.addWidget(titulo)
 
         # --- Menú debajo del título ---
@@ -54,14 +57,15 @@ class PlegamientoInterna(QMainWindow):
             btn.setStyleSheet("""
                 QPushButton {
                     background-color: transparent;
-                    color: #2E1065;
+                    color: #2d1f15;
                     font-size: 16px;
                     font-weight: bold;
                     border: none;
                 }
                 QPushButton:hover {
-                    color: #6D28D9;
-                    text-decoration: underline;
+                    color: #FFEAC5;
+                    background-color: #6C4E31;
+                    border-radius: 8px;
                 }
             """)
             menu_layout.addWidget(btn)
@@ -76,17 +80,41 @@ class PlegamientoInterna(QMainWindow):
         controles_layout.setAlignment(Qt.AlignCenter)
 
         lbl_rango = QLabel("Rango (10^n):")
-        lbl_rango.setStyleSheet("font-weight: bold;")
+        lbl_rango.setStyleSheet("font-weight: bold; color: #2d1f15;")
         self.rango = QComboBox()
         self.rango.addItems([f"10^{i}" for i in range(1, 6)])
         self.rango.setFixedWidth(80)
+        self.rango.setStyleSheet("""
+            QComboBox {
+                background-color: white;
+                border: 2px solid #bf8f62;
+                border-radius: 5px;
+                padding: 5px;
+                color: #2d1f15;
+            }
+            QComboBox:hover {
+                border: 2px solid #6C4E31;
+            }
+        """)
 
         lbl_digitos = QLabel("Número de dígitos:")
-        lbl_digitos.setStyleSheet("font-weight: bold;")
+        lbl_digitos.setStyleSheet("font-weight: bold; color: #2d1f15;")
         self.digitos = QSpinBox()
         self.digitos.setRange(2, 10)
         self.digitos.setValue(4)
         self.digitos.setFixedWidth(60)
+        self.digitos.setStyleSheet("""
+            QSpinBox {
+                background-color: white;
+                border: 2px solid #bf8f62;
+                border-radius: 5px;
+                padding: 5px;
+                color: #2d1f15;
+            }
+            QSpinBox:hover {
+                border: 2px solid #6C4E31;
+            }
+        """)
 
         controles_layout.addWidget(lbl_rango)
         controles_layout.addWidget(self.rango)
@@ -95,7 +123,7 @@ class PlegamientoInterna(QMainWindow):
         controles_layout.addWidget(self.digitos)
         layout.addLayout(controles_layout)
 
-        # --- Botones (mismo diseño y distribución que CuadradoInterna) ---
+        # --- Botones con colores café ---
         botones_layout = QGridLayout()
         botones_layout.setSpacing(15)
 
@@ -117,13 +145,15 @@ class PlegamientoInterna(QMainWindow):
             btn.setFixedHeight(50)
             btn.setStyleSheet("""
                 QPushButton {
-                    background-color: #7C3AED;
-                    color: white;
+                    background-color: #9c724a;
+                    color: #2d1f15;
                     font-size: 16px;
+                    font-weight: bold;
                     border-radius: 10px;
+                    padding: 8px 20px;
                 }
                 QPushButton:hover {
-                    background-color: #6D28D9;
+                    background-color: #bf8f62;
                 }
             """)
 
@@ -141,7 +171,9 @@ class PlegamientoInterna(QMainWindow):
         # --- Área de scroll para la estructura ---
         self.scroll = QScrollArea()
         self.scroll.setWidgetResizable(True)
+        self.scroll.setStyleSheet("QScrollArea { background-color: transparent; border: none; }")
         self.contenedor = QWidget()
+        self.contenedor.setStyleSheet("background-color: transparent;")
         self.grid = QGridLayout(self.contenedor)
         self.grid.setAlignment(Qt.AlignCenter)
         self.scroll.setWidget(self.contenedor)
@@ -186,17 +218,18 @@ class PlegamientoInterna(QMainWindow):
         cuadro.setFixedSize(60, 60)
         cuadro.setStyleSheet("""
             QLabel {
-                background-color: #EDE9FE;
-                border: 2px solid #7C3AED;
+                background-color: #FFDBB5;
+                border: 2px solid #9c724a;
                 border-radius: 12px;
                 font-size: 16px;
+                color: #2d1f15;
             }
         """)
         self.grid.addWidget(cuadro, fila, col, alignment=Qt.AlignCenter)
 
         numero = QLabel(str(idx_real))
         numero.setAlignment(Qt.AlignCenter)
-        numero.setStyleSheet("font-size: 14px; color: gray; margin-top: 5px;")
+        numero.setStyleSheet("font-size: 14px; color: #6C4E31; margin-top: 5px;")
         self.grid.addWidget(numero, fila + 1, col, alignment=Qt.AlignCenter)
         self.labels.append(cuadro)
 
@@ -208,16 +241,16 @@ class PlegamientoInterna(QMainWindow):
 
         clave = dlg_clave.get_clave()
         if not clave:
-            QMessageBox.warning(self, "Error", "Debe ingresar una clave válida.")
+            DialogoClave(0, titulo="Error", modo="mensaje", mensaje="Debe ingresar una clave válida.", parent=self).exec()
             return
 
         # --- Validaciones previas ---
         if len(clave) != self.controller.digitos:
-            QMessageBox.warning(self, "Error", f"La clave debe tener {self.controller.digitos} dígitos.")
+            DialogoClave(0, titulo="Error", modo="mensaje", mensaje=f"La clave debe tener {self.controller.digitos} dígitos.", parent=self).exec()
             return
 
         if self.controller._clave_existe(clave):
-            QMessageBox.warning(self, "Error", f"La clave '{clave}' ya existe en la estructura.")
+            DialogoClave(0, titulo="Error", modo="mensaje", mensaje=f"La clave '{clave}' ya existe en la estructura.", parent=self).exec()
             return
 
         # --- Intentar insertar ---
@@ -225,7 +258,7 @@ class PlegamientoInterna(QMainWindow):
 
         # ✅ Inserción directa sin colisión
         if resultado == "OK":
-            QMessageBox.information(self, "Éxito", f"Clave '{clave}' insertada correctamente.")
+            DialogoClave(0, titulo="Éxito", modo="mensaje", mensaje=f"Clave '{clave}' insertada correctamente.", parent=self).exec()
             self.actualizar_tabla()
             return
 
@@ -235,66 +268,84 @@ class PlegamientoInterna(QMainWindow):
             if dlg_col.exec() == QDialog.Accepted:
                 estrategia = dlg_col.get_estrategia()
                 if not estrategia:
-                    QMessageBox.warning(self, "Error", "Debe seleccionar una estrategia de colisión.")
+                    DialogoClave(0, titulo="Error", modo="mensaje", mensaje="Debe seleccionar una estrategia de colisión.", parent=self).exec()
                     return
 
                 resultado = self.controller.adicionar_clave(clave, estrategia)
                 if resultado == "OK":
-                    QMessageBox.information(self, "Éxito", f"Clave '{clave}' insertada usando {estrategia}.")
+                    DialogoClave(0, titulo="Éxito", modo="mensaje", mensaje=f"Clave '{clave}' insertada usando {estrategia}.", parent=self).exec()
                     self.estrategia_actual = estrategia.lower()
                     self.actualizar_vista_segun_estrategia()
                 elif resultado == "REPETIDA":
-                    QMessageBox.warning(self, "Error", f"La clave '{clave}' ya está registrada.")
+                    DialogoClave(0, titulo="Error", modo="mensaje", mensaje=f"La clave '{clave}' ya está registrada.", parent=self).exec()
                 elif resultado == "LLENO":
-                    QMessageBox.warning(self, "Error", "La estructura está llena.")
+                    DialogoClave(0, titulo="Error", modo="mensaje", mensaje="La estructura está llena.", parent=self).exec()
                 else:
-                    QMessageBox.warning(self, "Error", f"No se pudo insertar: {resultado}")
+                    DialogoClave(0, titulo="Error", modo="mensaje", mensaje=f"No se pudo insertar: {resultado}", parent=self).exec()
             else:
-                QMessageBox.information(self, "Cancelado", "Inserción cancelada por el usuario.")
+                DialogoClave(0, titulo="Cancelado", modo="mensaje", mensaje="Inserción cancelada por el usuario.", parent=self).exec()
             return
 
         # ❌ Otros casos de error
         if resultado == "REPETIDA":
-            QMessageBox.warning(self, "Error", f"La clave '{clave}' ya está registrada.")
+            DialogoClave(0, titulo="Error", modo="mensaje", mensaje=f"La clave '{clave}' ya está registrada.", parent=self).exec()
         elif resultado == "LLENO":
-            QMessageBox.warning(self, "Error", "La estructura está llena.")
+            DialogoClave(0, titulo="Error", modo="mensaje", mensaje="La estructura está llena.", parent=self).exec()
         elif resultado == "LONGITUD":
-            QMessageBox.warning(self, "Error", f"La clave debe tener {self.controller.digitos} dígitos.")
+            DialogoClave(0, titulo="Error", modo="mensaje", mensaje=f"La clave debe tener {self.controller.digitos} dígitos.", parent=self).exec()
         else:
-            QMessageBox.warning(self, "Error", f"Error inesperado: {resultado}")
+            DialogoClave(0, titulo="Error", modo="mensaje", mensaje=f"Error inesperado: {resultado}", parent=self).exec()
 
     def buscar_clave(self):
-        clave, ok = QInputDialog.getText(self, "Buscar Clave", "Ingrese la clave a buscar:")
-        if not ok or not clave:
+        dialogo = DialogoClave(
+            longitud=self.digitos.value(),
+            titulo="Buscar clave",
+            modo="buscar",
+            parent=self
+        )
+        if dialogo.exec() != QDialog.Accepted:
+            return
+
+        clave = dialogo.get_clave()
+        if not clave:
             return
 
         encontrado = self.controller.buscar_clave(clave)
         if encontrado != -1:
-            QMessageBox.information(self, "Resultado", f"Clave {clave} encontrada en posición {encontrado + 1}")
+            DialogoClave(0, titulo="Resultado", modo="mensaje", mensaje=f"Clave {clave} encontrada en posición {encontrado + 1}", parent=self).exec()
         else:
-            QMessageBox.warning(self, "Resultado", "Clave no encontrada.")
+            DialogoClave(0, titulo="Resultado", modo="mensaje", mensaje="Clave no encontrada.", parent=self).exec()
 
     def eliminar_clave(self):
-        clave, ok = QInputDialog.getText(self, "Eliminar Clave", "Ingrese la clave a eliminar:")
-        if not ok or not clave:
+        dialogo = DialogoClave(
+            longitud=self.digitos.value(),
+            titulo="Eliminar clave",
+            modo="eliminar",
+            parent=self
+        )
+        if dialogo.exec() != QDialog.Accepted:
+            return
+
+        clave = dialogo.get_clave()
+        if not clave:
             return
 
         resultado = self.controller.eliminar_clave(clave)
         if resultado == "OK":
-            QMessageBox.information(self, "Éxito", f"Clave {clave} eliminada correctamente.")
+            DialogoClave(0, titulo="Éxito", modo="mensaje", mensaje=f"Clave {clave} eliminada correctamente.", parent=self).exec()
             self.actualizar_tabla()
         elif resultado == "NO_EXISTE":
-            QMessageBox.warning(self, "Error", "La clave no existe.")
+            DialogoClave(0, titulo="Error", modo="mensaje", mensaje="La clave no existe.", parent=self).exec()
         else:
-            QMessageBox.warning(self, "Error", f"Ocurrió un problema: {resultado}")
+            DialogoClave(0, titulo="Error", modo="mensaje", mensaje=f"Ocurrió un problema: {resultado}", parent=self).exec()
 
     def deshacer(self):
         resultado = self.controller.deshacer()
         if resultado == "OK":
-            QMessageBox.information(self, "Éxito", "Se deshizo el último movimiento.")
-            self.actualizar_tabla()
+            DialogoClave(0, titulo="Éxito", modo="mensaje", mensaje="Se deshizo el último movimiento.", parent=self).exec()
+            self.actualizar_vista_segun_estrategia()
         elif resultado == "VACIO":
-            QMessageBox.warning(self, "Aviso", "No hay movimientos para deshacer.")
+            DialogoClave(0, titulo="Aviso", modo="mensaje", mensaje="No hay movimientos para deshacer.", parent=self).exec()
 
     def guardar_estructura(self):
         ruta, _ = QFileDialog.getSaveFileName(self, "Guardar estructura", "plegamiento_interna.json", "Archivos JSON (*.json)")
@@ -303,9 +354,9 @@ class PlegamientoInterna(QMainWindow):
         try:
             self.controller.ruta_archivo = ruta
             self.controller.guardar()
-            QMessageBox.information(self, "Éxito", f"Estructura guardada en:\n{ruta}")
+            DialogoClave(0, titulo="Éxito", modo="mensaje", mensaje=f"Estructura guardada en:\n{ruta}", parent=self).exec()
         except Exception as e:
-            QMessageBox.critical(self, "Error", f"No se pudo guardar:\n{e}")
+            DialogoClave(0, titulo="Error", modo="mensaje", mensaje=f"No se pudo guardar:\n{e}", parent=self).exec()
 
     def cargar_estructura(self):
         ruta, _ = QFileDialog.getOpenFileName(self, "Cargar estructura", "", "Archivos JSON (*.json)")
@@ -320,27 +371,35 @@ class PlegamientoInterna(QMainWindow):
                     if not self.estrategia_actual:
                         self.estrategia_actual = "lista encadenada"
 
-                QMessageBox.information(
-                    self,
-                    "Éxito",
-                    f"Estructura cargada correctamente.\nEstrategia: {self.estrategia_actual or 'direccionamiento abierto'}"
-                )
+                DialogoClave(
+                    0,
+                    titulo="Éxito",
+                    modo="mensaje",
+                    mensaje=f"Estructura cargada correctamente.\nEstrategia: {self.estrategia_actual or 'direccionamiento abierto'}",
+                    parent=self
+                ).exec()
                 self.actualizar_vista_segun_estrategia()
             else:
-                QMessageBox.warning(self, "Error", "No se pudo cargar el archivo.")
+                DialogoClave(0, titulo="Error", modo="mensaje", mensaje="No se pudo cargar el archivo.", parent=self).exec()
 
     def eliminar_estructura(self):
-        self.estrategia_actual = None
-        resp = QMessageBox.question(
-            self, "Eliminar estructura", "¿Desea eliminar la estructura actual?",
-            QMessageBox.Yes | QMessageBox.No, QMessageBox.No
+        dialogo_confirmar = DialogoClave(
+            0,
+            titulo="Eliminar estructura",
+            modo="confirmar",
+            mensaje="¿Desea eliminar la estructura actual?",
+            parent=self
         )
-        if resp == QMessageBox.Yes:
+        if dialogo_confirmar.exec() == QDialog.Accepted:
             self.controller.estructura = {}
             self.controller.capacidad = 0
+            self.controller.digitos = 0
             self.controller.historial.clear()
+            self.estrategia_actual = None  # Resetear estrategia
+            if hasattr(self.controller, 'estructura_anidada'):
+                self.controller.estructura_anidada = []
             self.actualizar_tabla()
-            QMessageBox.information(self, "Éxito", "Estructura eliminada correctamente.")
+            DialogoClave(0, titulo="Éxito", modo="mensaje", mensaje="Estructura eliminada correctamente.", parent=self).exec()
 
     def actualizar_tabla(self):
         datos = self.controller.obtener_datos_vista()
@@ -362,17 +421,18 @@ class PlegamientoInterna(QMainWindow):
             celda.setFixedSize(60, 60)
             celda.setStyleSheet("""
                 QLabel {
-                    background-color: #EDE9FE;
-                    border: 2px solid #7C3AED;
+                    background-color: #FFDBB5;
+                    border: 2px solid #9c724a;
                     border-radius: 12px;
                     font-size: 16px;
+                    color: #2d1f15;
                 }
             """)
             self.grid.addWidget(celda, fila, col, alignment=Qt.AlignCenter)
 
             numero = QLabel(str(i + 1))
             numero.setAlignment(Qt.AlignCenter)
-            numero.setStyleSheet("font-size: 14px; color: gray; margin-top: 5px;")
+            numero.setStyleSheet("font-size: 14px; color: #6C4E31; margin-top: 5px;")
             self.grid.addWidget(numero, fila + 1, col, alignment=Qt.AlignCenter)
 
             # --- Mostrar colisiones debajo ---
@@ -386,9 +446,9 @@ class PlegamientoInterna(QMainWindow):
                 col_label = QLabel(" → ".join(colisiones))
                 col_label.setAlignment(Qt.AlignCenter)
                 col_label.setStyleSheet("""
-                    color: #5B21B6;
+                    color: #2d1f15;
                     font-size: 13px;
-                    background-color: #DDD6FE;
+                    background-color: #E8D4B8;
                     border-radius: 8px;
                     padding: 3px;
                 """)

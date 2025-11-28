@@ -43,21 +43,21 @@ class VisualizadorGrafo(QWidget):
         painter.setRenderHint(QPainter.Antialiasing)
 
         # Fondo
-        painter.fillRect(self.rect(), QColor("#F9FAFB"))
+        painter.fillRect(self.rect(), QColor("#FFF3E0"))
 
         # Título
         painter.setFont(QFont("Arial", 12, QFont.Bold))
-        painter.setPen(QColor("#7C3AED"))
+        painter.setPen(QColor("#6C4E31"))
         painter.drawText(self.rect().adjusted(0, 5, 0, 0), Qt.AlignTop | Qt.AlignHCenter, self.titulo)
 
         if self.num_vertices == 0:
             painter.setFont(QFont("Arial", 10))
-            painter.setPen(QColor("#6B7280"))
+            painter.setPen(QColor("#9c724a"))
             painter.drawText(self.rect(), Qt.AlignCenter, "Sin grafo")
             return
 
         # Dibujar aristas
-        pen = QPen(QColor("#A78BFA"), 2)
+        pen = QPen(QColor("#bf8f62"), 2)
         painter.setPen(pen)
         for origen, destino in self.aristas:
             if origen < len(self.vertices) and destino < len(self.vertices):
@@ -66,12 +66,12 @@ class VisualizadorGrafo(QWidget):
         # Dibujar vértices
         for i, pos in enumerate(self.vertices):
             # Círculo del vértice
-            painter.setBrush(QColor("#7C3AED"))
-            painter.setPen(QPen(QColor("#5B21B6"), 2))
+            painter.setBrush(QColor("#6C4E31"))
+            painter.setPen(QPen(QColor("#2d1f15"), 2))
             painter.drawEllipse(pos, 20, 20)
 
             # Número del vértice
-            painter.setPen(QColor("white"))
+            painter.setPen(QColor("#FFEAC5"))
             painter.setFont(QFont("Arial", 10, QFont.Bold))
             texto = str(i + 1)
             rect = painter.fontMetrics().boundingRect(texto)
