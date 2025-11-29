@@ -27,10 +27,19 @@ from Vista.CubetaTotal import CubetaTotal
 from Vista.CubetaParcial import CubetaParcial
 from Vista.Indices import Indices
 
-#grafos
+# Operaciones entre grafos
 from Vista.interseccion_grafos import InterseccionGrafos
 from Vista.union_grafos import UnionGrafos
 from Vista.suma_anillo_grafos import SumaAnilloGrafos
+from Vista.suma_grafos import SumaGrafos
+from Vista.fusion_vertice import FusionVertice
+from Vista.contraccion_arista import ContraccionArista
+from Vista.grafo_linea import GrafoLinea
+from Vista.grafo_complementario import GrafoComplementario
+from Vista.producto_cartesiano import ProductoCartesiano
+from Vista.producto_tensorial import ProductoTensorial
+from Vista.composicion_grafos import ComposicionGrafos
+
 
 class MainWindow(QMainWindow):
     def __init__(self, cambiar_pagina_callback):
@@ -45,10 +54,19 @@ class MainWindow(QMainWindow):
         self.inicio = Inicio(cambiar_pagina_callback)
         self.busqueda = Busqueda(cambiar_pagina_callback)
         self.grafos = Grafos(cambiar_pagina_callback)
+
         # Operaciones entre grafos
         self.interseccion_grafos = InterseccionGrafos(cambiar_pagina_callback)
         self.union_grafos = UnionGrafos(cambiar_pagina_callback)
         self.suma_anillo_grafos = SumaAnilloGrafos(cambiar_pagina_callback)
+        self.suma_grafos = SumaGrafos(cambiar_pagina_callback)
+        self.fusion_vertice = FusionVertice(cambiar_pagina_callback)
+        self.contraccion_arista = ContraccionArista(cambiar_pagina_callback)
+        self.grafo_linea = GrafoLinea(cambiar_pagina_callback)
+        self.grafo_complementario = GrafoComplementario(cambiar_pagina_callback)
+        self.producto_cartesiano = ProductoCartesiano(cambiar_pagina_callback)
+        self.producto_tensorial = ProductoTensorial(cambiar_pagina_callback)
+        self.composicion_grafos = ComposicionGrafos(cambiar_pagina_callback)
 
         # Internas
         self.lineal_interna = LinealInterna(cambiar_pagina_callback)
@@ -78,41 +96,49 @@ class MainWindow(QMainWindow):
         self.indices = Indices(cambiar_pagina_callback)
 
         # ----- Añadir al stack -----
-        self.stacked.addWidget(self.inicio)                # 0
-        self.stacked.addWidget(self.busqueda)              # 1
-        self.stacked.addWidget(self.grafos)                # 2
+        self.stacked.addWidget(self.inicio)  # 0
+        self.stacked.addWidget(self.busqueda)  # 1
+        self.stacked.addWidget(self.grafos)  # 2
 
         # Internas
-        self.stacked.addWidget(self.lineal_interna)        # 3
-        self.stacked.addWidget(self.binaria_interna)       # 4
-        self.stacked.addWidget(self.mod_interna)           # 5
-        self.stacked.addWidget(self.cuadrado_interna)      # 6
+        self.stacked.addWidget(self.lineal_interna)  # 3
+        self.stacked.addWidget(self.binaria_interna)  # 4
+        self.stacked.addWidget(self.mod_interna)  # 5
+        self.stacked.addWidget(self.cuadrado_interna)  # 6
         self.stacked.addWidget(self.truncamiento_interna)  # 7
-        self.stacked.addWidget(self.plegamiento_interna)   # 8
+        self.stacked.addWidget(self.plegamiento_interna)  # 8
 
         # Externas
-        self.stacked.addWidget(self.lineal_externa)        # 9
-        self.stacked.addWidget(self.binaria_externa)       # 10
-        self.stacked.addWidget(self.mod_externa)           # 11
-        self.stacked.addWidget(self.cuadrado_externa)      # 12
+        self.stacked.addWidget(self.lineal_externa)  # 9
+        self.stacked.addWidget(self.binaria_externa)  # 10
+        self.stacked.addWidget(self.mod_externa)  # 11
+        self.stacked.addWidget(self.cuadrado_externa)  # 12
         self.stacked.addWidget(self.truncamiento_externa)  # 13
-        self.stacked.addWidget(self.plegamiento_externa)   # 14
+        self.stacked.addWidget(self.plegamiento_externa)  # 14
 
         # Otros
-        self.stacked.addWidget(self.busqueda_residuos)     # 15
-        self.stacked.addWidget(self.arboles_digitales)     # 16
-        self.stacked.addWidget(self.tries_residuos)        # 17
-        self.stacked.addWidget(self.multiples_residuos)    # 18
-        self.stacked.addWidget(self.arboles_huffman)       # 19
+        self.stacked.addWidget(self.busqueda_residuos)  # 15
+        self.stacked.addWidget(self.arboles_digitales)  # 16
+        self.stacked.addWidget(self.tries_residuos)  # 17
+        self.stacked.addWidget(self.multiples_residuos)  # 18
+        self.stacked.addWidget(self.arboles_huffman)  # 19
         self.stacked.addWidget(self.cambio_base)  # 20
         self.stacked.addWidget(self.cubeta_total)  # 21
         self.stacked.addWidget(self.cubeta_parcial)  # 22
         self.stacked.addWidget(self.indices)  # 23
 
-        #Grafos
+        # Operaciones entre grafos
         self.stacked.addWidget(self.interseccion_grafos)  # 24
         self.stacked.addWidget(self.union_grafos)  # 25
         self.stacked.addWidget(self.suma_anillo_grafos)  # 26
+        self.stacked.addWidget(self.suma_grafos)  # 27
+        self.stacked.addWidget(self.fusion_vertice)  # 28
+        self.stacked.addWidget(self.contraccion_arista)  # 29
+        self.stacked.addWidget(self.grafo_linea)  # 30
+        self.stacked.addWidget(self.grafo_complementario)  # 31
+        self.stacked.addWidget(self.producto_cartesiano)  # 32
+        self.stacked.addWidget(self.producto_tensorial)  # 33
+        self.stacked.addWidget(self.composicion_grafos)  # 34
 
         # Página inicial
         self.stacked.setCurrentIndex(0)
@@ -151,10 +177,18 @@ class MainWindow(QMainWindow):
             "cubeta_parcial": 22,
             "indices": 23,
 
-            #grafos
+            # Operaciones entre grafos
             "interseccion_grafos": 24,
             "union_grafos": 25,
             "suma_anillo_grafos": 26,
+            "suma_grafos": 27,
+            "fusion_vertice": 28,
+            "contraccion_arista": 29,
+            "grafo_linea": 30,
+            "grafo_complementario": 31,
+            "producto_cartesiano": 32,
+            "producto_tensorial": 33,
+            "composicion_grafos": 34,
         }
 
         if nombre in paginas:

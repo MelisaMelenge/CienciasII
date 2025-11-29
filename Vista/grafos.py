@@ -80,6 +80,14 @@ class Grafos(QMainWindow):
         menu_operaciones.addAction("Intersección", lambda: self.cambiar_ventana("interseccion_grafos"))
         menu_operaciones.addAction("Unión", lambda: self.cambiar_ventana("union_grafos"))
         menu_operaciones.addAction("Suma de anillo", lambda: self.cambiar_ventana("suma_anillo_grafos"))
+        menu_operaciones.addAction("Suma", lambda: self.cambiar_ventana("suma_grafos"))
+        menu_operaciones.addAction("Fusión de vértice", lambda: self.cambiar_ventana("fusion_vertice"))
+        menu_operaciones.addAction("Contracción de arista", lambda: self.cambiar_ventana("contraccion_arista"))
+        menu_operaciones.addAction("Grafo línea", lambda: self.cambiar_ventana("grafo_linea"))
+        menu_operaciones.addAction("Grafo complementario", lambda: self.cambiar_ventana("grafo_complementario"))
+        menu_operaciones.addAction("Producto cartesiano", lambda: self.cambiar_ventana("producto_cartesiano"))
+        menu_operaciones.addAction("Producto tensorial", lambda: self.cambiar_ventana("producto_tensorial"))
+        menu_operaciones.addAction("Composición de grafos", lambda: self.cambiar_ventana("composicion_grafos"))
 
         operaciones_action = menu_bar.addAction("🧩 Operaciones entre grafos")
         operaciones_action.setMenu(menu_operaciones)
@@ -102,4 +110,13 @@ class Grafos(QMainWindow):
     def abrir_interseccion(self): self.cambiar_ventana("interseccion_grafos")
     def abrir_union(self): self.cambiar_ventana("union_grafos")
     def abrir_suma_anillo(self): self.cambiar_ventana("suma_anillo_grafos")
+    def abrir_suma(self): self.cambiar_ventana("suma_grafos")
+    def abrir_fusion_vertice(self): self.cambiar_ventana("fusion_vertice")
+    def abrir_contraccion_arista(self): self.cambiar_ventana("contraccion_arista")
+    def abrir_grafo_linea(self): self.cambiar_ventana("grafo_linea")
+    def abrir_grafo_complementario(self): self.cambiar_ventana("grafo_complementario")
+    def abrir_producto_cartesiano(self): self.cambiar_ventana("producto_cartesiano")
+    def abrir_producto_tensorial(self): self.cambiar_ventana("producto_tensorial")
+    def abrir_composicion(self): self.cambiar_ventana("composicion_grafos")
+
 
