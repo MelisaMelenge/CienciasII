@@ -264,7 +264,7 @@ class ComposicionGrafos(QMainWindow):
 
         # Instrucciones
         instrucciones = QLabel(
-            "💡 Clic izquierdo: Editar etiquetas/ponderaciones | Clic derecho + arrastrar: Mover aristas")
+            "💡 Clic izquierdo: Editar etiquetas/ponderaciones")
         instrucciones.setStyleSheet("""
             QLabel {
                 background-color: #FFDBB5;
@@ -300,7 +300,7 @@ class ComposicionGrafos(QMainWindow):
         btn_limpiar_resultado = QPushButton("Limpiar Resultado")
         btn_limpiar_resultado.setStyleSheet("""
             QPushButton {
-                background-color: #bf8f62;
+                background-color: #9c724a;
                 color: #FFEAC5;
                 padding: 8px 16px;
                 font-size: 13px;
@@ -314,7 +314,7 @@ class ComposicionGrafos(QMainWindow):
         btn_limpiar_todo = QPushButton("Limpiar Todo")
         btn_limpiar_todo.setStyleSheet("""
             QPushButton {
-                background-color: #d9534f;
+                background-color: #9c724a;
                 color: white;
                 padding: 8px 16px;
                 font-size: 13px;
