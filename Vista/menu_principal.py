@@ -15,6 +15,7 @@ from Vista.tries_residuos import TriesResiduos
 from Vista.multiples_residuos import MultiplesResiduos
 from Vista.arboles_huffman import ArbolesHuffman
 
+
 # ✅ Importa también las vistas de búsquedas externas
 from Vista.lineal_externa import LinealExterna
 from Vista.binaria_externa import BinariaExterna
@@ -39,6 +40,17 @@ from Vista.grafo_complementario import GrafoComplementario
 from Vista.producto_cartesiano import ProductoCartesiano
 from Vista.producto_tensorial import ProductoTensorial
 from Vista.composicion_grafos import ComposicionGrafos
+
+# Grafos como Árboles
+from Vista.arbol_expansion_minima import ArbolExpansionMinima
+from Vista.arbol_expansion_maxima import ArbolExpansionMaxima
+from Vista.arbol_expansion_central import ArbolExpansionCentral
+from Vista.distancia_arboles import DistanciaArboles
+
+# Algoritmos
+from Vista.bellman import Bellman
+from Vista.dijkstra import Dijkstra
+from Vista.floyd import Floyd
 
 
 class MainWindow(QMainWindow):
@@ -67,6 +79,17 @@ class MainWindow(QMainWindow):
         self.producto_cartesiano = ProductoCartesiano(cambiar_pagina_callback)
         self.producto_tensorial = ProductoTensorial(cambiar_pagina_callback)
         self.composicion_grafos = ComposicionGrafos(cambiar_pagina_callback)
+
+        # Grafos como Árboles
+        self.arbol_expansion_minima = ArbolExpansionMinima(cambiar_pagina_callback)
+        self.arbol_expansion_maxima = ArbolExpansionMaxima(cambiar_pagina_callback)
+        self.arbol_expansion_central = ArbolExpansionCentral(cambiar_pagina_callback)
+        self.distancia_arboles = DistanciaArboles(cambiar_pagina_callback)
+
+        # Algoritmos
+        self.bellman = Bellman(cambiar_pagina_callback)
+        self.dijkstra = Dijkstra(cambiar_pagina_callback)
+        self.floyd = Floyd(cambiar_pagina_callback)
 
         # Internas
         self.lineal_interna = LinealInterna(cambiar_pagina_callback)
@@ -140,6 +163,17 @@ class MainWindow(QMainWindow):
         self.stacked.addWidget(self.producto_tensorial)  # 33
         self.stacked.addWidget(self.composicion_grafos)  # 34
 
+        # Grafos como Árboles
+        self.stacked.addWidget(self.arbol_expansion_minima)  # 35
+        self.stacked.addWidget(self.arbol_expansion_maxima)  # 36
+        self.stacked.addWidget(self.arbol_expansion_central)  # 37
+        self.stacked.addWidget(self.distancia_arboles)  # 38
+
+        # Algoritmos
+        self.stacked.addWidget(self.bellman)  # 39
+        self.stacked.addWidget(self.dijkstra)  # 40
+        self.stacked.addWidget(self.floyd)  # 41
+
         # Página inicial
         self.stacked.setCurrentIndex(0)
 
@@ -189,7 +223,19 @@ class MainWindow(QMainWindow):
             "producto_cartesiano": 32,
             "producto_tensorial": 33,
             "composicion_grafos": 34,
+
+            # Grafos como Árboles
+            "arbol_expansion_minima": 35,
+            "arbol_expansion_maxima": 36,
+            "arbol_expansion_central": 37,
+            "distancia_arboles": 38,
+
+            # Algoritmos
+            "bellman": 39,
+            "dijkstra": 40,
+            "floyd": 41,
         }
 
         if nombre in paginas:
             self.stacked.setCurrentIndex(paginas[nombre])
+

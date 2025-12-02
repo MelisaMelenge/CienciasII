@@ -11,7 +11,7 @@ class VisualizadorGrafo(QWidget):
     etiqueta_cambiada = Signal(int, str)  # (indice_vertice, nueva_etiqueta)
     ponderacion_cambiada = Signal(tuple, str)  # (arista, ponderacion)
 
-    def __init__(self, titulo="Grafo", parent=None, es_editable=True):
+    def __init__(self, titulo="Grafo", parent=None, es_editable=True, ancho=350, alto=350):
         super().__init__(parent)
         self.titulo = titulo
         self.vertices = []
@@ -21,18 +21,23 @@ class VisualizadorGrafo(QWidget):
         self.ponderaciones = {}
         self.es_editable = es_editable
         self.parent_window = parent
-        self.setMinimumSize(350, 350)
-        self.setMaximumSize(350, 350)
+        self.ancho_fijo = ancho
+        self.alto_fijo = alto
+        self.setMinimumSize(ancho, alto)
+        self.setMaximumSize(ancho, alto)
 
-        # Para mover aristas
+        # Para mover aristas y ponderaciones
         self.arista_seleccionada = None
+        self.ponderacion_seleccionada = None
         self.desplazamientos_aristas = {}
+        self.desplazamientos_ponderaciones = {}
 
     def set_grafo(self, num_vertices, aristas, etiquetas=None, ponderaciones=None):
         """Configura el grafo con sus vértices, aristas, etiquetas y ponderaciones"""
         self.num_vertices = num_vertices
         self.aristas = aristas
         self.desplazamientos_aristas = {}
+        self.desplazamientos_ponderaciones = {}
 
         if etiquetas:
             self.etiquetas = etiquetas.copy()
@@ -65,9 +70,10 @@ class VisualizadorGrafo(QWidget):
         if self.num_vertices == 0:
             return
 
-        centro_x = self.width() / 2
-        centro_y = self.height() / 2
-        radio = min(centro_x, centro_y) - 40
+        # Usar tamaños fijos en lugar de width() y height() actuales
+        centro_x = self.ancho_fijo / 2
+        centro_y = self.alto_fijo / 2
+        radio = min(centro_x, centro_y) - 60  # Aumenté el margen para grafos grandes
 
         for i in range(self.num_vertices):
             angulo = 2 * math.pi * i / self.num_vertices - math.pi / 2
@@ -99,8 +105,31 @@ class VisualizadorGrafo(QWidget):
                         return
 
         elif event.button() == Qt.RightButton:
-            # Clic derecho para mover aristas (SIEMPRE habilitado)
             click_pos = event.pos()
+
+            # Primero verificar si hizo clic en una ponderación
+            for idx, arista in enumerate(self.aristas):
+                origen, destino = arista
+                if origen < len(self.vertices) and destino < len(self.vertices):
+                    # Obtener la ponderación
+                    ponderacion = ""
+                    if hasattr(self, 'ponderaciones_lista') and idx < len(self.ponderaciones_lista):
+                        ponderacion = self.ponderaciones_lista[idx]
+                    elif arista in self.ponderaciones:
+                        ponderacion = self.ponderaciones[arista]
+
+                    if ponderacion:
+                        pos_ponderacion = self.obtener_posicion_ponderacion(origen, destino, idx)
+                        if pos_ponderacion:
+                            dist = math.sqrt((click_pos.x() - pos_ponderacion.x()) ** 2 +
+                                             (click_pos.y() - pos_ponderacion.y()) ** 2)
+                            if dist <= 20:
+                                self.ponderacion_seleccionada = idx
+                                self.ultimo_pos = event.pos()
+                                self.setCursor(Qt.ClosedHandCursor)
+                                return
+
+            # Si no hizo clic en ponderación, verificar si hizo clic en arista
             for idx, arista in enumerate(self.aristas):
                 origen, destino = arista
                 if origen < len(self.vertices) and destino < len(self.vertices):
@@ -111,19 +140,143 @@ class VisualizadorGrafo(QWidget):
                         return
 
     def mouseMoveEvent(self, event):
-        """Mueve la arista seleccionada"""
-        if self.arista_seleccionada is not None:
+        """Mueve la arista o ponderación seleccionada"""
+        if self.ponderacion_seleccionada is not None:
+            # Mover ponderación
+            delta_x = event.pos().x() - self.ultimo_pos.x()
             delta_y = event.pos().y() - self.ultimo_pos.y()
-            offset_actual = self.desplazamientos_aristas.get(self.arista_seleccionada, 0)
-            self.desplazamientos_aristas[self.arista_seleccionada] = offset_actual + delta_y * 0.5
+
+            if self.ponderacion_seleccionada not in self.desplazamientos_ponderaciones:
+                self.desplazamientos_ponderaciones[self.ponderacion_seleccionada] = QPointF(0, 0)
+
+            offset_actual = self.desplazamientos_ponderaciones[self.ponderacion_seleccionada]
+            self.desplazamientos_ponderaciones[self.ponderacion_seleccionada] = QPointF(
+                offset_actual.x() + delta_x,
+                offset_actual.y() + delta_y
+            )
+
+            self.ultimo_pos = event.pos()
+            self.update()
+
+        elif self.arista_seleccionada is not None:
+            # Mover arista (código original)
+            arista = self.aristas[self.arista_seleccionada]
+            origen, destino = arista
+
+            if origen < len(self.vertices) and destino < len(self.vertices):
+                p1 = self.vertices[origen]
+                p2 = self.vertices[destino]
+
+                dx = p2.x() - p1.x()
+                dy = p2.y() - p1.y()
+                longitud = math.sqrt(dx * dx + dy * dy)
+
+                if longitud > 0:
+                    perp_x = -dy / longitud
+                    perp_y = dx / longitud
+
+                    delta_x = event.pos().x() - self.ultimo_pos.x()
+                    delta_y = event.pos().y() - self.ultimo_pos.y()
+
+                    desplazamiento_perpendicular = delta_x * perp_x + delta_y * perp_y
+
+                    offset_actual = self.desplazamientos_aristas.get(self.arista_seleccionada, 0)
+                    self.desplazamientos_aristas[
+                        self.arista_seleccionada] = offset_actual + desplazamiento_perpendicular
+
             self.ultimo_pos = event.pos()
             self.update()
 
     def mouseReleaseEvent(self, event):
-        """Suelta la arista"""
-        if event.button() == Qt.RightButton and self.arista_seleccionada is not None:
-            self.arista_seleccionada = None
-            self.setCursor(Qt.ArrowCursor)
+        """Suelta la arista o ponderación"""
+        if event.button() == Qt.RightButton:
+            if self.arista_seleccionada is not None:
+                self.arista_seleccionada = None
+                self.setCursor(Qt.ArrowCursor)
+            if self.ponderacion_seleccionada is not None:
+                self.ponderacion_seleccionada = None
+                self.setCursor(Qt.ArrowCursor)
+
+    def obtener_posicion_ponderacion(self, origen, destino, idx_arista):
+        """Obtiene la posición donde se dibuja la ponderación de una arista"""
+        if origen == destino:
+            # Bucle
+            p = self.vertices[origen]
+            radio_externo = 40
+            desplazamiento = 35
+            centro = QPointF(p.x(), p.y() - desplazamiento)
+            pos = QPointF(p.x(), centro.y() - radio_externo - 10)
+
+            # Aplicar desplazamiento si existe
+            if idx_arista in self.desplazamientos_ponderaciones:
+                offset = self.desplazamientos_ponderaciones[idx_arista]
+                pos = QPointF(pos.x() + offset.x(), pos.y() + offset.y())
+
+            return pos
+
+        p1 = self.vertices[origen]
+        p2 = self.vertices[destino]
+
+        # Verificar si hay múltiples aristas
+        par = tuple(sorted([origen, destino]))
+        conteo_pares = {}
+        for a in self.aristas:
+            o, d = a
+            par_temp = tuple(sorted([o, d]))
+            conteo_pares[par_temp] = conteo_pares.get(par_temp, 0) + 1
+
+        total_aristas = conteo_pares.get(par, 1)
+
+        if total_aristas == 1:
+            # Arista simple
+            medio_x = (p1.x() + p2.x()) / 2
+            medio_y = (p1.y() + p2.y()) / 2
+            pos = QPointF(medio_x, medio_y)
+
+            if idx_arista in self.desplazamientos_ponderaciones:
+                offset = self.desplazamientos_ponderaciones[idx_arista]
+                pos = QPointF(pos.x() + offset.x(), pos.y() + offset.y())
+
+            return pos
+        else:
+            # Arista curva
+            indices_por_par = {}
+            for i, arista in enumerate(self.aristas):
+                o, d = arista
+                par_temp = tuple(sorted([o, d]))
+                if par_temp not in indices_por_par:
+                    indices_por_par[par_temp] = []
+                indices_por_par[par_temp].append(i)
+
+            indice_actual = indices_por_par[par].index(idx_arista)
+            offset_base = 70
+            offset = offset_base * (indice_actual - (total_aristas - 1) / 2)
+            offset += self.desplazamientos_aristas.get(idx_arista, 0)
+
+            dx = p2.x() - p1.x()
+            dy = p2.y() - p1.y()
+            longitud = math.sqrt(dx * dx + dy * dy)
+
+            if longitud == 0:
+                return None
+
+            perp_x = -dy / longitud
+            perp_y = dx / longitud
+
+            medio_x = (p1.x() + p2.x()) / 2 + perp_x * offset
+            medio_y = (p1.y() + p2.y()) / 2 + perp_y * offset
+            control = QPointF(medio_x, medio_y)
+
+            t = 0.5
+            punto_curva_x = (1 - t) * (1 - t) * p1.x() + 2 * (1 - t) * t * control.x() + t * t * p2.x()
+            punto_curva_y = (1 - t) * (1 - t) * p1.y() + 2 * (1 - t) * t * control.y() + t * t * p2.y()
+            pos = QPointF(punto_curva_x, punto_curva_y)
+
+            if idx_arista in self.desplazamientos_ponderaciones:
+                offset_pond = self.desplazamientos_ponderaciones[idx_arista]
+                pos = QPointF(pos.x() + offset_pond.x(), pos.y() + offset_pond.y())
+
+            return pos
 
     def punto_cerca_de_arista(self, punto, origen, destino, idx_arista):
         """Verifica si un punto está cerca de una arista específica"""
@@ -317,7 +470,7 @@ class VisualizadorGrafo(QWidget):
                 painter.setPen(pen)
                 painter.drawLine(p1, p2)
                 if ponderacion:
-                    self.dibujar_ponderacion(painter, p1, p2, ponderacion)
+                    self.dibujar_ponderacion(painter, p1, p2, ponderacion, i)
 
         for i, pos in enumerate(self.vertices):
             painter.setBrush(QColor("#6C4E31"))
@@ -365,33 +518,50 @@ class VisualizadorGrafo(QWidget):
         painter.drawPath(path)
 
         if ponderacion:
+            ponderacion_str = str(ponderacion)
+
             t = 0.5
             punto_curva_x = (1 - t) * (1 - t) * p1.x() + 2 * (1 - t) * t * control.x() + t * t * p2.x()
             punto_curva_y = (1 - t) * (1 - t) * p1.y() + 2 * (1 - t) * t * control.y() + t * t * p2.y()
             punto_medio = QPointF(punto_curva_x, punto_curva_y)
 
-            rect_pond = painter.fontMetrics().boundingRect(ponderacion)
+            # Aplicar desplazamiento si existe
+            if idx_arista in self.desplazamientos_ponderaciones:
+                offset_pond = self.desplazamientos_ponderaciones[idx_arista]
+                punto_medio = QPointF(punto_medio.x() + offset_pond.x(),
+                                      punto_medio.y() + offset_pond.y())
+
+            rect_pond = painter.fontMetrics().boundingRect(ponderacion_str)
             rect_pond.moveCenter(punto_medio.toPoint())
             rect_pond.adjust(-3, -2, 3, 2)
 
             painter.fillRect(rect_pond, QColor("#FFF3E0"))
             painter.setPen(QColor("#d9534f"))
             painter.setFont(QFont("Arial", 9, QFont.Bold))
-            painter.drawText(rect_pond, Qt.AlignCenter, ponderacion)
+            painter.drawText(rect_pond, Qt.AlignCenter, ponderacion_str)
 
-    def dibujar_ponderacion(self, painter, p1, p2, ponderacion):
+    def dibujar_ponderacion(self, painter, p1, p2, ponderacion, idx_arista):
         """Dibuja la ponderación en el punto medio"""
         medio_x = (p1.x() + p2.x()) / 2
         medio_y = (p1.y() + p2.y()) / 2
+        punto_medio = QPointF(medio_x, medio_y)
 
-        rect_pond = painter.fontMetrics().boundingRect(ponderacion)
-        rect_pond.moveCenter(QPointF(medio_x, medio_y).toPoint())
+        # Aplicar desplazamiento si existe
+        if idx_arista in self.desplazamientos_ponderaciones:
+            offset = self.desplazamientos_ponderaciones[idx_arista]
+            punto_medio = QPointF(punto_medio.x() + offset.x(),
+                                  punto_medio.y() + offset.y())
+
+        ponderacion_str = str(ponderacion)
+
+        rect_pond = painter.fontMetrics().boundingRect(ponderacion_str)
+        rect_pond.moveCenter(punto_medio.toPoint())
         rect_pond.adjust(-3, -2, 3, 2)
 
         painter.fillRect(rect_pond, QColor("#FFF3E0"))
         painter.setPen(QColor("#d9534f"))
         painter.setFont(QFont("Arial", 9, QFont.Bold))
-        painter.drawText(rect_pond, Qt.AlignCenter, ponderacion)
+        painter.drawText(rect_pond, Qt.AlignCenter, ponderacion_str)
 
     def get_datos_grafo(self):
         """Retorna los datos del grafo"""
@@ -403,7 +573,7 @@ class VisualizadorGrafo(QWidget):
         }
 
     def dibujar_bucle(self, painter, p, ponderacion, indice):
-        """Dibuja un bucle"""
+        """Dibuja un bucle completo"""
         from PySide6.QtGui import QPainterPath
 
         radio_externo = 40
@@ -412,31 +582,31 @@ class VisualizadorGrafo(QWidget):
         centro = QPointF(p.x(), p.y() - desplazamiento)
 
         path = QPainterPath()
-        inicio = QPointF(p.x() + radio_externo, centro.y())
-        path.moveTo(inicio)
-
-        path.arcTo(
-            centro.x() - radio_externo,
-            centro.y() - radio_externo,
-            radio_externo * 2,
-            radio_externo * 2,
-            0, 300
-        )
+        # Círculo completo - cambiar de 300 a 360 grados
+        path.addEllipse(centro, radio_externo, radio_externo)
 
         pen = QPen(QColor("#bf8f62"), 2)
         painter.setPen(pen)
         painter.drawPath(path)
 
         if ponderacion:
+            ponderacion_str = str(ponderacion)
             painter.setFont(QFont("Arial", 10, QFont.Bold))
 
-            rect_pond = painter.fontMetrics().boundingRect(ponderacion)
-            rect_pond.moveCenter(QPointF(
-                p.x(),
-                centro.y() - radio_externo - 10
-            ).toPoint())
+            # Posición por defecto
+            pos_x = p.x()
+            pos_y = centro.y() - radio_externo - 10
+
+            # Aplicar desplazamiento si existe
+            if indice in self.desplazamientos_ponderaciones:
+                offset = self.desplazamientos_ponderaciones[indice]
+                pos_x += offset.x()
+                pos_y += offset.y()
+
+            rect_pond = painter.fontMetrics().boundingRect(ponderacion_str)
+            rect_pond.moveCenter(QPointF(pos_x, pos_y).toPoint())
             rect_pond.adjust(-4, -3, 4, 3)
 
             painter.fillRect(rect_pond, QColor("#FFF3E0"))
             painter.setPen(QColor("#d9534f"))
-            painter.drawText(rect_pond, Qt.AlignCenter, ponderacion)
+            painter.drawText(rect_pond, Qt.AlignCenter, ponderacion_str)

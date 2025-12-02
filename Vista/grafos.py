@@ -4,6 +4,7 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtCore import Qt
 
+
 class Grafos(QMainWindow):
     def __init__(self, cambiar_ventana):
         super().__init__()
@@ -92,6 +93,25 @@ class Grafos(QMainWindow):
         operaciones_action = menu_bar.addAction("🧩 Operaciones entre grafos")
         operaciones_action.setMenu(menu_operaciones)
 
+        # --- 🌳 Grafos como Árboles ---
+        menu_arboles = QMenu("🌳 Grafos como Árboles", self)
+        menu_arboles.addAction("Árbol expansión mínima", lambda: self.cambiar_ventana("arbol_expansion_minima"))
+        menu_arboles.addAction("Árbol expansión máxima", lambda: self.cambiar_ventana("arbol_expansion_maxima"))
+        menu_arboles.addAction("Árbol expansión central", lambda: self.cambiar_ventana("arbol_expansion_central"))
+        menu_arboles.addAction("Distancia entre dos árboles", lambda: self.cambiar_ventana("distancia_arboles"))
+
+        arboles_action = menu_bar.addAction("🌳 Grafos como Árboles")
+        arboles_action.setMenu(menu_arboles)
+
+        # --- Algoritmos ---
+        menu_algoritmos = QMenu("Algoritmos", self)
+        menu_algoritmos.addAction("Bellman", lambda: self.cambiar_ventana("bellman"))
+        menu_algoritmos.addAction("Dijkstra", lambda: self.cambiar_ventana("dijkstra"))
+        menu_algoritmos.addAction("Floyd", lambda: self.cambiar_ventana("floyd"))  # Cambiar a minúscula
+
+        algoritmos_action = menu_bar.addAction("🔢 Algoritmos")
+        algoritmos_action.setMenu(menu_algoritmos)
+        
         # --- Añadir al header ---
         header_layout.addWidget(menu_bar)
 
@@ -107,6 +127,7 @@ class Grafos(QMainWindow):
     def mostrar_opcion(self, texto):
         self.label.setText(f"Opción seleccionada: {texto}")
 
+    # Operaciones entre grafos
     def abrir_interseccion(self): self.cambiar_ventana("interseccion_grafos")
     def abrir_union(self): self.cambiar_ventana("union_grafos")
     def abrir_suma_anillo(self): self.cambiar_ventana("suma_anillo_grafos")
@@ -118,5 +139,15 @@ class Grafos(QMainWindow):
     def abrir_producto_cartesiano(self): self.cambiar_ventana("producto_cartesiano")
     def abrir_producto_tensorial(self): self.cambiar_ventana("producto_tensorial")
     def abrir_composicion(self): self.cambiar_ventana("composicion_grafos")
+
+    # Grafos como Árboles
+    def abrir_arbol_expansion_minima(self): self.cambiar_ventana("arbol_expansion_minima")
+    def abrir_arbol_expansion_maxima(self): self.cambiar_ventana("arbol_expansion_maxima")
+    def abrir_arbol_expansion_central(self): self.cambiar_ventana("arbol_expansion_central")
+    def abrir_distancia_arboles(self): self.cambiar_ventana("distancia_arboles")
+    # Algoritmos
+    def abrir_bellman(self): self.cambiar_ventana("bellman")
+    def abrir_dijkstra(self): self.cambiar_ventana("dijkstra")
+    def abrir_floyd(self): self.cambiar_ventana("floyd")
 
 
