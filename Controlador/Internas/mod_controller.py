@@ -81,10 +81,6 @@ class ModController:
                     if val and str(val).isdigit():
                         self.estructura[i] = str(val).zfill(self.digitos)
 
-                print(f"[DEBUG] Después de insertar '{clave}' en pos {pos_base}:")
-                print(f"  estructura[{pos_base + 1}] = {self.estructura.get(pos_base + 1)}")
-                print(f"  estructura_anidada[{pos_base}] = {self.estructura_anidada[pos_base]}")
-
                 self.guardar()
                 return "OK"
 
@@ -219,7 +215,11 @@ class ModController:
         if datos:
             self.capacidad = datos.get("capacidad", 0)
             self.digitos = datos.get("digitos", 0)
-            self.estructura = {int(k): v for k, v in datos.get("estructura", {}).items()}
+
+            # 🔧 CORRECCIÓN: Convertir las claves de string a int
+            estructura_cargada = datos.get("estructura", {})
+            self.estructura = {int(k): v for k, v in estructura_cargada.items()}
+
             self.estructura_anidada = datos.get("estructura_anidada", [])
             self.ultima_estrategia = datos.get("ultima_estrategia", None)
 
@@ -227,8 +227,9 @@ class ModController:
             self.colisiones_controller = ColisionesController(self.capacidad, "mod")
 
             # Copiar estructura anidada al controlador
-            self.colisiones_controller.estructura_anidada = [lst.copy() if lst else [] for lst in
-                                                             self.estructura_anidada]
+            self.colisiones_controller.estructura_anidada = [
+                lst.copy() if lst else [] for lst in self.estructura_anidada
+            ]
 
             # Reconstruir el arreglo principal
             for pos, valor in self.estructura.items():

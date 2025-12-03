@@ -1,6 +1,7 @@
 import json
 import os
 
+
 class BinariaController:
     def __init__(self):
         self.capacidad = 0
@@ -110,7 +111,11 @@ class BinariaController:
 
             self.capacidad = datos.get("capacidad", 0)
             self.digitos = datos.get("digitos", 0)
-            self.estructura = datos.get("estructura", {})
+
+            # 🔧 CORRECCIÓN: Convertir las claves de string a int
+            estructura_cargada = datos.get("estructura", {})
+            self.estructura = {int(k): v for k, v in estructura_cargada.items()}
+
             self.historial.clear()
             return "OK"
         except Exception as e:

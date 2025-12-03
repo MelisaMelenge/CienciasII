@@ -189,7 +189,7 @@ class ModInterna(QMainWindow):
         # --- Conexiones ---
         self.btn_crear.clicked.connect(self.crear_estructura)
         self.btn_agregar.clicked.connect(self.adicionar_claves)
-        self.btn_cargar.clicked.connect(self.crear_estructura)
+        self.btn_cargar.clicked.connect(self.cargar_estructura)
         self.btn_eliminar.clicked.connect(self.eliminar_estructura)
         self.btn_buscar.clicked.connect(self.buscar_clave)
         self.btn_eliminar_clave.clicked.connect(self.eliminar_clave)
@@ -623,7 +623,6 @@ class ModInterna(QMainWindow):
         # Encontrar todos los grupos ocupados
         grupos_ocupados = set()
         grupos_ocupados.add(grupo_objetivo)  # Agregar el grupo objetivo
-
         for i in range(self.capacidad):
             if self._posicion_ocupada(i):
                 grupo = (i // 10) * 10
@@ -1322,3 +1321,77 @@ class ModInterna(QMainWindow):
         widget_especial = QWidget()
         widget_especial.setLayout(grid_especial)
         self.contenedor_layout.addWidget(widget_especial, 0, Qt.AlignHCenter)
+
+    def cargar_estructura(self):
+        """Carga una estructura desde archivo JSON con explorador de archivos"""
+        # Preguntar si hay estructura actual
+        if self.controller.estructura and any(v for v in self.controller.estructura.values() if v):
+            dialogo = DialogoClave(
+                longitud=0,
+                titulo="Advertencia",
+                modo="confirmar",
+                parent=self,
+                mensaje="Se sobrescribirá la estructura actual.\n\n¿Desea continuar?"
+            )
+            if dialogo.exec() != QDialog.Accepted:
+                return
+
+        # Seleccionar archivo
+        ruta, _ = QFileDialog.getOpenFileName(
+            self,
+            "Cargar estructura",
+            "",
+            "Archivos JSON (*.json)"
+        )
+
+        if not ruta:
+            return  # Usuario canceló
+
+        try:
+            self.controller.ruta_archivo = ruta
+
+            if self.controller.cargar():
+                self.capacidad = self.controller.capacidad
+
+                # Bloquear controles
+                self.rango.setEnabled(False)
+                self.digitos.setEnabled(False)
+
+                # Actualizar vista según estrategia
+                estrategia_actual = getattr(self.controller, "ultima_estrategia", "")
+
+                if estrategia_actual == "Arreglo anidado":
+                    self.actualizar_vista_anidada()
+                elif estrategia_actual == "Lista encadenada":
+                    self.actualizar_vista_encadenada()
+                else:
+                    self._reconstruir_vista_inteligente()
+                    self._repintar()
+
+                dialogo = DialogoClave(
+                    longitud=0,
+                    titulo="Éxito",
+                    modo="mensaje",
+                    parent=self,
+                    mensaje="Estructura cargada correctamente."
+                )
+                dialogo.exec()
+            else:
+                dialogo = DialogoClave(
+                    longitud=0,
+                    titulo="Error",
+                    modo="mensaje",
+                    parent=self,
+                    mensaje="No se pudo cargar la estructura.\nVerifique que el archivo sea válido."
+                )
+                dialogo.exec()
+
+        except Exception as e:
+            dialogo = DialogoClave(
+                longitud=0,
+                titulo="Error",
+                modo="mensaje",
+                parent=self,
+                mensaje=f"Error al cargar la estructura:\n{e}"
+            )
+            dialogo.exec()
