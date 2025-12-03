@@ -10,7 +10,7 @@ class CambioBaseController:
         self.tamanio_bloque = 0
         self.historial = []
         self.zona_colisiones = ZonaColisionesController()
-        self.base = None  # ✅ ahora existe, la vista la establece
+        self.base = None
 
     # ==================== CREACIÓN ====================
     def crear_estructura(self, num_claves, base):
@@ -20,7 +20,7 @@ class CambioBaseController:
         if base < 2:
             raise ValueError("la base debe ser >= 2")
 
-        self.base = base  # ✅ guarda la base elegida
+        self.base = base
 
         self.num_claves = int(num_claves)
         b = max(1, int(math.floor(math.sqrt(self.num_claves))))
@@ -41,7 +41,7 @@ class CambioBaseController:
     # ==================== INSERCIÓN ====================
     def insertar_clave(self, clave):
         if self.base is None:
-            return False, "❌ Debes definir la base antes de insertar claves."
+            return False, "Debes definir la base antes de insertar claves."
 
         clave_s = str(clave)
         if not clave_s.isdigit():
@@ -69,7 +69,7 @@ class CambioBaseController:
                 self._guardar_historial()
                 self.bloques[bloque_idx][pos_idx] = clave_s
                 return True, (
-                    f"✅ Clave {clave_s} insertada en bloque {bloque_idx + 1}, "
+                    f"Clave {clave_s} insertada en bloque {bloque_idx + 1}, "
                     f"posición {pos_idx + 1} )."
                 )
 

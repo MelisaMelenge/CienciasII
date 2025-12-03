@@ -310,11 +310,28 @@ class PlegamientoInterna(QMainWindow):
         if not clave:
             return
 
-        encontrado = self.controller.buscar_clave(clave)
-        if encontrado != -1:
-            DialogoClave(0, titulo="Resultado", modo="mensaje", mensaje=f"Clave {clave} encontrada en posición {encontrado + 1}", parent=self).exec()
+        resultado = self.controller.buscar_clave(clave)
+
+        if resultado['encontrado']:
+            DialogoClave(
+                0,
+                titulo="Resultado",
+                modo="mensaje",
+                mensaje=resultado['mensaje'],
+                parent=self
+            ).exec()
+
+            # Resaltar la clave encontrada si es necesario
+            if resultado['tipo'] in ['arreglo_anidado', 'lista_encadenada']:
+                self.resaltar_clave(resultado['posicion'], resultado['mensaje'])
         else:
-            DialogoClave(0, titulo="Resultado", modo="mensaje", mensaje="Clave no encontrada.", parent=self).exec()
+            DialogoClave(
+                0,
+                titulo="Resultado",
+                modo="mensaje",
+                mensaje=resultado['mensaje'],
+                parent=self
+            ).exec()
 
     def eliminar_clave(self):
         dialogo = DialogoClave(
@@ -382,6 +399,18 @@ class PlegamientoInterna(QMainWindow):
             else:
                 DialogoClave(0, titulo="Error", modo="mensaje", mensaje="No se pudo cargar el archivo.", parent=self).exec()
 
+    def resaltar_clave(self, posicion, detalle):
+        """Resalta visualmente la clave encontrada"""
+        if self.estrategia_actual in ["arreglo anidado", "lista encadenada"]:
+            if self.estrategia_actual == "arreglo anidado":
+                anidado_ctrl = ArregloAnidadoController(self.controller)
+                vista_anidada = VistaArregloAnidado(self.grid, anidado_ctrl, resaltar=(posicion, detalle))
+                vista_anidada.dibujar()
+            elif self.estrategia_actual == "lista encadenada":
+                encadenada_ctrl = ListaEncadenadaController(self.controller)
+                vista_encadenada = VistaListaEncadenada(self.grid, encadenada_ctrl, resaltar=(posicion, detalle))
+                vista_encadenada.dibujar()
+
     def eliminar_estructura(self):
         dialogo_confirmar = DialogoClave(
             0,
@@ -391,15 +420,29 @@ class PlegamientoInterna(QMainWindow):
             parent=self
         )
         if dialogo_confirmar.exec() == QDialog.Accepted:
+            # Limpiar el controlador
             self.controller.estructura = {}
             self.controller.capacidad = 0
             self.controller.digitos = 0
+            self.controller.arreglo_anidado = []
+            self.controller.lista_encadenada = []
+            self.controller.estructura_anidada = []
+            self.controller.estrategia_fija = None
             self.controller.historial.clear()
-            self.estrategia_actual = None  # Resetear estrategia
-            if hasattr(self.controller, 'estructura_anidada'):
-                self.controller.estructura_anidada = []
-            self.actualizar_tabla()
-            DialogoClave(0, titulo="Éxito", modo="mensaje", mensaje="Estructura eliminada correctamente.", parent=self).exec()
+
+            # Limpiar la vista
+            self.estrategia_actual = None
+            self.capacidad = 0
+            self.labels.clear()
+
+            # Eliminar todos los widgets del grid
+            for i in reversed(range(self.grid.count())):
+                widget = self.grid.itemAt(i).widget()
+                if widget:
+                    widget.deleteLater()
+
+            DialogoClave(0, titulo="Éxito", modo="mensaje", mensaje="Estructura eliminada correctamente.",
+                         parent=self).exec()
 
     def actualizar_tabla(self):
         datos = self.controller.obtener_datos_vista()

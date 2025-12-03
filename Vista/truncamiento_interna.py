@@ -8,6 +8,11 @@ from PySide6.QtCore import Qt
 from Controlador.Internas.truncamiento_controller import TruncamientoController
 from Vista.dialogo_clave import DialogoClave
 from Vista.dialogo_posiciones import DialogoPosiciones
+from Vista.dialogo_colision import DialogoColisiones
+from Controlador.arreglo_anidado_controller import ArregloAnidadoController
+from Vista.vista_arreglo_anidado import VistaArregloAnidado
+from Controlador.lista_encadenada_controller import ListaEncadenadaController
+from Vista.vista_lista_encadenada import VistaListaEncadenada
 
 
 class TruncamientoInterna(QMainWindow):
@@ -15,6 +20,7 @@ class TruncamientoInterna(QMainWindow):
         super().__init__()
         self.cambiar_ventana = cambiar_ventana
         self.controller = TruncamientoController()
+        self.estrategia_actual = None  # Para recordar la estrategia seleccionada
         self.setWindowTitle("Ciencias de la Computación II - Función Hash (Truncamiento)")
 
         # --- Layout principal ---
@@ -202,6 +208,7 @@ class TruncamientoInterna(QMainWindow):
             if w:
                 w.setParent(None)
         self.labels.clear()
+        self.estrategia_actual = None  # Resetear estrategia
 
         n = int(self.rango.currentText().split("^")[1])
         self.capacidad = 10 ** n
@@ -211,7 +218,8 @@ class TruncamientoInterna(QMainWindow):
         try:
             digitos_req = self.controller._digitos_necesarios()
         except AttributeError:
-            DialogoClave(0, titulo="Error", modo="mensaje", mensaje="El controlador no tiene el método '_digitos_necesarios'.", parent=self).exec()
+            DialogoClave(0, titulo="Error", modo="mensaje",
+                         mensaje="El controlador no tiene el método '_digitos_necesarios'.", parent=self).exec()
             return
 
         dlg = DialogoPosiciones(dig, digitos_req, parent=self)
@@ -219,11 +227,14 @@ class TruncamientoInterna(QMainWindow):
             posiciones = dlg.get_posiciones(digitos_req)
             if posiciones and len(posiciones) == digitos_req:
                 self.controller.posiciones = posiciones
-                DialogoClave(0, titulo="OK", modo="mensaje", mensaje=f"Posiciones seleccionadas: {posiciones}", parent=self).exec()
+                DialogoClave(0, titulo="OK", modo="mensaje", mensaje=f"Posiciones seleccionadas: {posiciones}",
+                             parent=self).exec()
             else:
-                DialogoClave(0, titulo="Error", modo="mensaje", mensaje="Número incorrecto de posiciones.", parent=self).exec()
+                DialogoClave(0, titulo="Error", modo="mensaje", mensaje="Número incorrecto de posiciones.",
+                             parent=self).exec()
         else:
-            DialogoClave(0, titulo="Cancelado", modo="mensaje", mensaje="Debes seleccionar posiciones.", parent=self).exec()
+            DialogoClave(0, titulo="Cancelado", modo="mensaje", mensaje="Debes seleccionar posiciones.",
+                         parent=self).exec()
 
         # Dibujar estructura visual
         for i in range(min(self.capacidad, 100)):
@@ -259,7 +270,8 @@ class TruncamientoInterna(QMainWindow):
             return
 
         if not self.controller.posiciones:
-            DialogoClave(0, titulo="Error", modo="mensaje", mensaje="Seleccione las posiciones primero.", parent=self).exec()
+            DialogoClave(0, titulo="Error", modo="mensaje", mensaje="Seleccione las posiciones primero.",
+                         parent=self).exec()
             return
 
         dialogo = DialogoClave(
@@ -272,13 +284,78 @@ class TruncamientoInterna(QMainWindow):
             return
 
         clave = dialogo.get_clave()
+
+        # Si ya hay una estrategia definida, usarla directamente
+        if self.estrategia_actual:
+            resultado = self.controller.agregar_clave(clave, self.estrategia_actual)
+
+            if resultado == "OK":
+                DialogoClave(0, titulo="Éxito", modo="mensaje", mensaje=f"Clave {clave} insertada correctamente.",
+                             parent=self).exec()
+                self.actualizar_vista_segun_estrategia()
+            elif resultado == "LONGITUD":
+                DialogoClave(0, titulo="Error", modo="mensaje", mensaje="Longitud de clave incorrecta.",
+                             parent=self).exec()
+            elif resultado == "REPETIDA":
+                DialogoClave(0, titulo="Error", modo="mensaje", mensaje="La clave ya existe.", parent=self).exec()
+            elif resultado == "TABLA_LLENA":
+                DialogoClave(0, titulo="Error", modo="mensaje", mensaje="La tabla hash está completamente llena.",
+                             parent=self).exec()
+            else:
+                DialogoClave(0, titulo="Error", modo="mensaje", mensaje=f"Resultado: {resultado}", parent=self).exec()
+            return
+
+        # Primera inserción o sin estrategia definida
         resultado = self.controller.agregar_clave(clave)
 
-        if resultado == "OK":
-            DialogoClave(0, titulo="Éxito", modo="mensaje", mensaje=f"Clave {clave} insertada correctamente.", parent=self).exec()
+        if resultado == "COLISION":
+            dlg_col = DialogoColisiones(self)
+            if dlg_col.exec() == QDialog.Accepted:
+                estrategia = dlg_col.get_estrategia()
+                self.estrategia_actual = estrategia.lower()
+
+                resultado = self.controller.agregar_clave(clave, self.estrategia_actual)
+
+                if resultado == "OK":
+                    DialogoClave(0, titulo="Éxito", modo="mensaje",
+                                 mensaje=f"Clave {clave} insertada con estrategia: {estrategia}", parent=self).exec()
+                    self.actualizar_vista_segun_estrategia()
+                elif resultado == "LONGITUD":
+                    DialogoClave(0, titulo="Error", modo="mensaje", mensaje="Longitud de clave incorrecta.",
+                                 parent=self).exec()
+                elif resultado == "REPETIDA":
+                    DialogoClave(0, titulo="Error", modo="mensaje", mensaje="La clave ya existe.", parent=self).exec()
+                elif resultado == "TABLA_LLENA":
+                    DialogoClave(0, titulo="Error", modo="mensaje", mensaje="La tabla hash está completamente llena.",
+                                 parent=self).exec()
+            else:
+                DialogoClave(0, titulo="Cancelado", modo="mensaje", mensaje="Inserción cancelada.", parent=self).exec()
+                return
+
+        elif resultado == "OK":
+            DialogoClave(0, titulo="Éxito", modo="mensaje", mensaje=f"Clave {clave} insertada correctamente.",
+                         parent=self).exec()
             self.actualizar_tabla()
+        elif resultado == "LONGITUD":
+            DialogoClave(0, titulo="Error", modo="mensaje", mensaje="Longitud de clave incorrecta.", parent=self).exec()
+        elif resultado == "REPETIDA":
+            DialogoClave(0, titulo="Error", modo="mensaje", mensaje="La clave ya existe.", parent=self).exec()
         else:
             DialogoClave(0, titulo="Error", modo="mensaje", mensaje=f"Resultado: {resultado}", parent=self).exec()
+
+    def actualizar_vista_segun_estrategia(self):
+        """Actualiza la vista según la estrategia de colisión seleccionada"""
+        if self.estrategia_actual == "arreglo anidado":
+            anidado_ctrl = ArregloAnidadoController(self.controller)
+            vista_anidada = VistaArregloAnidado(self.grid, anidado_ctrl)
+            vista_anidada.dibujar()
+        elif self.estrategia_actual == "lista encadenada":
+            encadenada_ctrl = ListaEncadenadaController(self.controller)
+            vista_encadenada = VistaListaEncadenada(self.grid, encadenada_ctrl)
+            vista_encadenada.dibujar()
+        else:
+            # Estrategias de direccionamiento abierto
+            self.actualizar_tabla()
 
     def eliminar_clave(self):
         dialogo = DialogoClave(
@@ -291,12 +368,18 @@ class TruncamientoInterna(QMainWindow):
             return
 
         clave = dialogo.get_clave()
-        if not clave:
+        if not clave.strip():
             return
 
-        resultado = self.controller.eliminar_clave(clave)
-        DialogoClave(0, titulo="Resultado", modo="mensaje", mensaje=resultado, parent=self).exec()
-        self.actualizar_tabla()
+        resultado = self.controller.eliminar_clave(clave.strip())
+        if resultado == "OK":
+            DialogoClave(0, titulo="Éxito", modo="mensaje", mensaje=f"Clave {clave} eliminada.", parent=self).exec()
+            self.actualizar_vista_segun_estrategia()
+        elif resultado == "NO_EXISTE":
+            DialogoClave(0, titulo="Error", modo="mensaje", mensaje=f"La clave {clave} no existe.", parent=self).exec()
+        else:
+            DialogoClave(0, titulo="Error", modo="mensaje", mensaje=f"Ocurrió un problema: {resultado}",
+                         parent=self).exec()
 
     def buscar_clave(self):
         dialogo = DialogoClave(
@@ -312,21 +395,60 @@ class TruncamientoInterna(QMainWindow):
         if not clave:
             return
 
+        datos = self.controller.obtener_datos_vista()
         encontrado = None
-        for pos, valor in self.controller.estructura.items():
+        posicion_detallada = None
+
+        # Buscar en estructura principal
+        for pos, valor in datos["estructura"].items():
             if str(valor) == clave:
                 encontrado = pos
+                posicion_detallada = f"posición {pos} (arreglo principal)"
                 break
 
+        # Si no se encontró y hay estructura anidada, buscar ahí también
+        if not encontrado and datos.get("estructura_anidada"):
+            for idx, sublista in enumerate(datos["estructura_anidada"]):
+                if sublista and isinstance(sublista, list):
+                    for sub_idx, item in enumerate(sublista):
+                        if str(item) == clave:
+                            encontrado = idx + 1
+                            posicion_detallada = f"posición {idx + 1} (índice {sub_idx + 1} en lista)"
+                            break
+                    if encontrado:
+                        break
+
         if encontrado:
-            DialogoClave(0, titulo="Resultado", modo="mensaje", mensaje=f"Clave {clave} encontrada en posición {encontrado}", parent=self).exec()
+            DialogoClave(0, titulo="Resultado", modo="mensaje",
+                         mensaje=f"Clave {clave} encontrada en {posicion_detallada}", parent=self).exec()
+            self.resaltar_clave(encontrado, posicion_detallada)
         else:
-            DialogoClave(0, titulo="Resultado", modo="mensaje", mensaje="Clave no encontrada.", parent=self).exec()
+            DialogoClave(0, titulo="Resultado", modo="mensaje", mensaje=f"Clave {clave} no encontrada",
+                         parent=self).exec()
+
+    def resaltar_clave(self, posicion, detalle):
+        """Resalta visualmente la clave encontrada"""
+        if self.estrategia_actual in ["arreglo anidado", "lista encadenada"]:
+            if self.estrategia_actual == "arreglo anidado":
+                anidado_ctrl = ArregloAnidadoController(self.controller)
+                vista_anidada = VistaArregloAnidado(self.grid, anidado_ctrl, resaltar=(posicion, detalle))
+                vista_anidada.dibujar()
+            elif self.estrategia_actual == "lista encadenada":
+                encadenada_ctrl = ListaEncadenadaController(self.controller)
+                vista_encadenada = VistaListaEncadenada(self.grid, encadenada_ctrl, resaltar=(posicion, detalle))
+                vista_encadenada.dibujar()
 
     def deshacer(self):
-        res = self.controller.deshacer()
-        DialogoClave(0, titulo="Deshacer", modo="mensaje", mensaje=res, parent=self).exec()
-        self.actualizar_tabla()
+        resultado = self.controller.deshacer()
+        if resultado == "OK":
+            DialogoClave(0, titulo="Éxito", modo="mensaje", mensaje="Se deshizo el último movimiento.",
+                         parent=self).exec()
+            self.actualizar_vista_segun_estrategia()
+        elif resultado == "VACIO":
+            DialogoClave(0, titulo="Aviso", modo="mensaje", mensaje="No hay movimientos para deshacer.",
+                         parent=self).exec()
+        else:
+            DialogoClave(0, titulo="Resultado", modo="mensaje", mensaje=resultado, parent=self).exec()
 
     def eliminar_estructura(self):
         dialogo_confirmar = DialogoClave(
@@ -337,29 +459,70 @@ class TruncamientoInterna(QMainWindow):
             parent=self
         )
         if dialogo_confirmar.exec() == QDialog.Accepted:
+            # Limpiar el controlador
             self.controller.estructura = {}
             self.controller.posiciones = []
-            self.actualizar_tabla()
-            DialogoClave(0, titulo="Éxito", modo="mensaje", mensaje="Estructura eliminada correctamente.", parent=self).exec()
+            self.controller.estructura_anidada = []
+            self.controller.estrategia_fija = None
+            self.controller.capacidad = 0
+            self.controller.digitos = 0
+            self.controller.historial.clear()
+
+            # Sincronizar alias si existen
+            if hasattr(self.controller, 'arreglo_anidado'):
+                self.controller.arreglo_anidado = []
+            if hasattr(self.controller, 'lista_encadenada'):
+                self.controller.lista_encadenada = []
+
+            # Limpiar la vista completamente
+            self.estrategia_actual = None
+            self.capacidad = 0
+            self.labels.clear()
+
+            # Eliminar todos los widgets del grid
+            for i in reversed(range(self.grid.count())):
+                widget = self.grid.itemAt(i).widget()
+                if widget:
+                    widget.deleteLater()
+
+            DialogoClave(0, titulo="Éxito", modo="mensaje", mensaje="Estructura eliminada correctamente.",
+                         parent=self).exec()
 
     def guardar_estructura(self):
-        ruta, _ = QFileDialog.getSaveFileName(self, "Guardar estructura", "truncamiento_interna.json", "Archivos JSON (*.json)")
+        ruta, _ = QFileDialog.getSaveFileName(self, "Guardar estructura", "truncamiento_interna.json",
+                                              "Archivos JSON (*.json)")
         if ruta:
             self.controller.ruta_archivo = ruta
             self.controller.guardar()
-            DialogoClave(0, titulo="Éxito", modo="mensaje", mensaje=f"Estructura guardada en:\n{ruta}", parent=self).exec()
+            DialogoClave(0, titulo="Éxito", modo="mensaje", mensaje=f"Estructura guardada en:\n{ruta}",
+                         parent=self).exec()
 
     def cargar_estructura(self):
         ruta, _ = QFileDialog.getOpenFileName(self, "Cargar estructura", "", "Archivos JSON (*.json)")
         if ruta:
             self.controller.ruta_archivo = ruta
             if self.controller.cargar():
-                DialogoClave(0, titulo="Éxito", modo="mensaje", mensaje="Estructura cargada correctamente.", parent=self).exec()
-                self.actualizar_tabla()
+                self.capacidad = self.controller.capacidad
+
+                # Detectar estrategia del archivo cargado
+                if hasattr(self.controller, 'estrategia_fija') and self.controller.estrategia_fija:
+                    self.estrategia_actual = self.controller.estrategia_fija.lower()
+
+                # Si tiene estructura_anidada, es arreglo anidado o lista encadenada
+                if hasattr(self.controller, 'estructura_anidada') and self.controller.estructura_anidada:
+                    if not self.estrategia_actual:
+                        self.estrategia_actual = "lista encadenada"
+
+                DialogoClave(0, titulo="Éxito", modo="mensaje",
+                             mensaje=f"Estructura cargada correctamente.\nEstrategia: {self.estrategia_actual or 'direccionamiento abierto'}",
+                             parent=self).exec()
+                self.actualizar_vista_segun_estrategia()
             else:
-                DialogoClave(0, titulo="Error", modo="mensaje", mensaje="No se pudo cargar el archivo.", parent=self).exec()
+                DialogoClave(0, titulo="Error", modo="mensaje", mensaje="No se pudo cargar el archivo.",
+                             parent=self).exec()
 
     def actualizar_tabla(self):
+        """Actualiza la vista para estrategias de direccionamiento abierto"""
         for i, lbl in enumerate(self.labels, start=1):
             valor = self.controller.estructura.get(i, "")
             lbl.setText(str(valor) if valor else "")

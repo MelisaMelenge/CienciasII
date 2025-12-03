@@ -50,33 +50,22 @@ class CuadradoExternaController:
         if self.buscar_clave(clave_s) is not None or clave_s in self.zona_colisiones.zona:
             return False, "La clave ya existe en la estructura."
 
-        # ==============================================
-        # MÉTODO DEL CUADRADO → dígitos centrales + 1
-        # ==============================================
-        # ==============================================
-        # MÉTODO DEL CUADRADO → posición global directa
-        # ==============================================
+
         cuadrado = str(k ** 2)
         n = len(cuadrado)
         centro = cuadrado[n // 2 - 1: n // 2 + 1]  # 2 dígitos centrales
         hash_valor = int(centro) + 1
 
-        # 🔹 Posición absoluta dentro de toda la estructura
         total_posiciones = self.num_claves
         pos_global = (hash_valor % total_posiciones)
 
-        # ⚙️ Ajuste porque trabajamos desde 1 (no desde 0)
-        # Si el módulo da 0, significa que debería ir en la última posición
+
         if pos_global == 0:
             pos_global = total_posiciones
-        # Ahora pos_global va de 1 a total_posiciones
-        # ==============================================
 
-        # 🔹 Convertir a bloque y posición interna (también desde 1)
-        bloque_idx = (pos_global - 1) // self.tamanio_bloque  # índice del bloque (0–n)
-        pos_idx = (pos_global - 1) % self.tamanio_bloque  # índice dentro del bloque (0–n)
 
-        # Insertar directamente sin desplazamiento
+        bloque_idx = (pos_global - 1) // self.tamanio_bloque
+        pos_idx = (pos_global - 1) % self.tamanio_bloque
         bloque = self.bloques[bloque_idx]
         if bloque[pos_idx] is None:
             self._guardar_historial()

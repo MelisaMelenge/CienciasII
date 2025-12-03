@@ -262,7 +262,7 @@ class CuadradoExterna(QMainWindow):
                 self.actualizar_visualizacion()
                 self._resaltar(bloque_idx, offset)
                 DialogoClave(0, "Buscar", "mensaje", self,
-                             f"✅ Clave encontrada en el bloque {bloque_idx + 1}, posición {offset + 1}.").exec()
+                             f"Clave encontrada en el bloque {bloque_idx + 1}, posición {offset + 1}.").exec()
 
             elif tipo == "colision":
                 _, idx = res
@@ -270,7 +270,7 @@ class CuadradoExterna(QMainWindow):
                 if hasattr(self, "_resaltar_colision"):
                     self._resaltar_colision(idx)
                 DialogoClave(0, "Buscar", "mensaje", self,
-                             f"⚠️ Clave encontrada en la zona de colisiones, posición {idx + 1}.").exec()
+                             f"Clave encontrada en la zona de colisiones, posición {idx + 1}.").exec()
 
     def eliminar_clave(self):
         dlg = DialogoClave(self.digitos.value(), "Eliminar clave", "eliminar", self)

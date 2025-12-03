@@ -213,6 +213,28 @@ class PlegamientoExterna(QMainWindow):
                          f"Error al crear estructura: {str(e)}").exec()
 
     def insertar_clave(self):
+        # Verificar si la estructura está llena antes de insertar
+        if self.controller.bloques:
+            # Contar espacios ocupados en la estructura principal
+            espacios_ocupados = sum(
+                1 for bloque in self.controller.bloques
+                for celda in bloque
+                if celda is not None
+            )
+
+            # Verificar si la estructura está completamente llena
+            if espacios_ocupados >= self.num_claves:
+                DialogoClave(
+                    0,
+                    "Estructura Llena",
+                    "mensaje",
+                    self,
+                    f"La estructura ya está llena ({self.num_claves} claves).\n\n"
+                    "No se pueden insertar más claves.\n"
+                    "Utilice 'Eliminar estructura' para crear una nueva."
+                ).exec()
+                return
+
         dlg = DialogoClave(self.digitos.value(), "Insertar clave", "insertar", self)
         if not dlg.exec():
             return

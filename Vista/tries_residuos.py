@@ -1,12 +1,13 @@
 from PySide6.QtWidgets import (
     QMainWindow, QWidget, QVBoxLayout, QLabel, QFrame,
-    QPushButton, QLineEdit, QMessageBox,
+    QPushButton, QLineEdit,
     QGraphicsScene, QGraphicsView, QGraphicsEllipseItem, QGraphicsTextItem,
-    QHBoxLayout
+    QHBoxLayout, QDialog
 )
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QPen, QBrush, QColor
 from Controlador.Internas.TriesController import TriesController
+from Vista.dialogo_clave import DialogoClave
 
 
 class TriesResiduos(QMainWindow):
@@ -46,13 +47,9 @@ class TriesResiduos(QMainWindow):
         titulo.setAlignment(Qt.AlignCenter)
         titulo.setStyleSheet("font-size: 22px; font-weight: bold;")
 
-        subtitulo = QLabel("Operaciones")
-        subtitulo.setAlignment(Qt.AlignCenter)
-        subtitulo.setStyleSheet("font-size: 14px; font-weight: bold;")
-
         nav_layout = QHBoxLayout()
         btn_inicio = QPushButton("Inicio")
-        btn_volver = QPushButton("Volver")
+        btn_volver = QPushButton("Menú Búsqueda")
         for btn in (btn_inicio, btn_volver):
             btn.setStyleSheet("""
                 QPushButton {
@@ -77,7 +74,6 @@ class TriesResiduos(QMainWindow):
         nav_layout.addStretch()
 
         header_layout.addWidget(titulo)
-        header_layout.addWidget(subtitulo)
         header_layout.addLayout(nav_layout)
 
         main_layout.addWidget(header_frame)
@@ -209,68 +205,188 @@ class TriesResiduos(QMainWindow):
         main_layout.addLayout(body_layout)
 
         self.setCentralWidget(central)
+
+        # Inicializar vista con árbol vacío
+        self.dibujar_trie()
+
     # ================= MÉTODOS =================
     def insertar_palabra(self):
         palabra = self.input_insertar.text().strip()
-        if palabra:
-            try:
-                self.controller.insertar(palabra)
-                self.input_insertar.clear()
-                self.nodo_resaltado = None
-                self.dibujar_trie()
-                QMessageBox.information(self, "Éxito", f"Palabra '{palabra}' insertada correctamente.")
-            except ValueError as e:
-                QMessageBox.warning(self, "Error", str(e))
-        else:
-            QMessageBox.warning(self, "Error", "Debe ingresar una palabra para insertar.")
+        if not palabra:
+            DialogoClave(
+                0,
+                titulo="Error",
+                modo="mensaje",
+                mensaje="Debe ingresar una palabra para insertar.",
+                parent=self
+            ).exec()
+            return
+
+        try:
+            self.controller.insertar(palabra)
+            self.input_insertar.clear()
+            self.nodo_resaltado = None
+            self.dibujar_trie()
+            DialogoClave(
+                0,
+                titulo="Éxito",
+                modo="mensaje",
+                mensaje=f"Palabra '{palabra}' insertada correctamente.",
+                parent=self
+            ).exec()
+        except ValueError as e:
+            DialogoClave(
+                0,
+                titulo="Error",
+                modo="mensaje",
+                mensaje=str(e),
+                parent=self
+            ).exec()
 
     def buscar_letra(self):
         letra = self.input_buscar.text().strip().upper()
-        if letra:
-            try:
-                encontrada, posicion, nodo = self.controller.buscar(letra)
-                if encontrada:
-                    self.nodo_resaltado = letra
-                    self.dibujar_trie()
-                    QMessageBox.information(
-                        self,
-                        "Búsqueda",
-                        f"✓ La letra '{letra}' SÍ está en el Trie.\n\n"
-                        f"Posición (secuencia de bits): {posicion}\n"
-                        f"Código binario completo: {self.controller.codigos[letra]}"
-                    )
-                else:
-                    self.nodo_resaltado = None
-                    self.dibujar_trie()
-                    QMessageBox.information(self, "Búsqueda", f"✗ La letra '{letra}' NO está en el Trie.")
-                self.input_buscar.clear()
-            except Exception as e:
-                QMessageBox.warning(self, "Error", str(e))
-        else:
-            QMessageBox.warning(self, "Error", "Debe ingresar una letra para buscar.")
-    def eliminar_letra(self):
-        letra = self.input_eliminar.text().strip().upper()
-        if letra:
-            try:
-                self.controller.eliminar(letra)
-                self.input_eliminar.clear()
+        if not letra:
+            DialogoClave(
+                0,
+                titulo="Error",
+                modo="mensaje",
+                mensaje="Debe ingresar una letra para buscar.",
+                parent=self
+            ).exec()
+            return
+
+        try:
+            encontrada, posicion, nodo = self.controller.buscar(letra)
+            if encontrada:
+                self.nodo_resaltado = letra
+                self.dibujar_trie()
+                DialogoClave(
+                    0,
+                    titulo="Búsqueda",
+                    modo="mensaje",
+                    mensaje=f"✓ La letra '{letra}' SÍ está en el Trie.\n\n"
+                            f"Posición (secuencia de bits): {posicion}\n"
+                            f"Código binario completo: {self.controller.codigos[letra]}",
+                    parent=self
+                ).exec()
+            else:
                 self.nodo_resaltado = None
                 self.dibujar_trie()
-                QMessageBox.information(self, "Éxito", f"Letra '{letra}' eliminada. Árbol reconstruido.")
-            except ValueError as e:
-                QMessageBox.warning(self, "Error", str(e))
-        else:
-            QMessageBox.warning(self, "Error", "Debe ingresar una letra para eliminar.")
+                DialogoClave(
+                    0,
+                    titulo="Búsqueda",
+                    modo="mensaje",
+                    mensaje=f"✗ La letra '{letra}' NO está en el Trie.",
+                    parent=self
+                ).exec()
+            self.input_buscar.clear()
+        except Exception as e:
+            DialogoClave(
+                0,
+                titulo="Error",
+                modo="mensaje",
+                mensaje=str(e),
+                parent=self
+            ).exec()
+
+    def eliminar_letra(self):
+        letra = self.input_eliminar.text().strip().upper()
+        if not letra:
+            DialogoClave(
+                0,
+                titulo="Error",
+                modo="mensaje",
+                mensaje="Debe ingresar una letra para eliminar.",
+                parent=self
+            ).exec()
+            return
+
+        try:
+            self.controller.eliminar(letra)
+            self.input_eliminar.clear()
+            self.nodo_resaltado = None
+            self.dibujar_trie()
+            DialogoClave(
+                0,
+                titulo="Éxito",
+                modo="mensaje",
+                mensaje=f"Letra '{letra}' eliminada. Árbol reconstruido.",
+                parent=self
+            ).exec()
+        except ValueError as e:
+            DialogoClave(
+                0,
+                titulo="Error",
+                modo="mensaje",
+                mensaje=str(e),
+                parent=self
+            ).exec()
 
     def limpiar_trie(self):
-        """Reinicia el trie"""
-        self.controller = TriesController()
-        self.scene.clear()
-        self.dibujar_trie()
+        """Reinicia el trie completamente"""
+        dialogo_confirmar = DialogoClave(
+            0,
+            titulo="Confirmar limpieza",
+            modo="confirmar",
+            mensaje="¿Seguro que deseas limpiar todo el Trie?\nEsta acción no se puede deshacer.",
+            parent=self
+        )
+
+        if dialogo_confirmar.exec() != QDialog.Accepted:
+            return
+
+        try:
+            # Limpiar el controlador completamente
+            self.controller.limpiar()
+
+            # Resetear nodo resaltado
+            self.nodo_resaltado = None
+
+            # Limpiar campos de entrada
+            self.input_insertar.clear()
+            self.input_buscar.clear()
+            self.input_eliminar.clear()
+
+            # Limpiar la escena completamente
+            self.scene.clear()
+
+            # Redibujar el árbol vacío
+            self.dibujar_trie()
+
+            # Actualizar la vista
+            self.scene.update()
+            self.view.viewport().update()
+
+            DialogoClave(
+                0,
+                titulo="Trie limpiado",
+                modo="mensaje",
+                mensaje="El Trie ha sido limpiado completamente.",
+                parent=self
+            ).exec()
+        except Exception as e:
+            DialogoClave(
+                0,
+                titulo="Error",
+                modo="mensaje",
+                mensaje=f"Ocurrió un problema al limpiar el Trie: {str(e)}",
+                parent=self
+            ).exec()
 
     def dibujar_trie(self):
+        """Dibuja el árbol Trie en la escena"""
         self.scene.clear()
         root = self.controller.root
+
+        # Si el árbol está vacío, mostrar mensaje
+        if not root or not root.children:
+            text_item = QGraphicsTextItem("Trie vacío")
+            text_item.setDefaultTextColor(QColor("#6C4E31"))
+            text_item.setScale(1.5)
+            text_item.setPos(-60, -20)
+            self.scene.addItem(text_item)
+            self.view.setSceneRect(self.scene.itemsBoundingRect())
+            return
 
         level_gap = 110
         start_offset = 380
@@ -316,43 +432,42 @@ class TriesResiduos(QMainWindow):
             text_item.setPos(x - radio / 1.7, y - 10)
             self.scene.addItem(text_item)
 
-            # hijos: iterar TODOS los children (no agrupar por pares)
+            # hijos: iterar TODOS los children
             children = sorted(node.children.items(), key=sort_key)
             for key, child in children:
-                # dirección según primer carácter real ('0' izquierda, '1' derecha, otros centrado)
+                # dirección según primer carácter real
                 first = key[0] if key else ''
                 if first == '0':
                     child_x = x - offset
                 elif first == '1':
                     child_x = x + offset
                 else:
-                    child_x = x  # hoja: colgar centrada bajo el último '*'
+                    child_x = x  # hoja: colgar centrada
+
                 child_y = y + level_gap
 
                 # línea padre-hijo
                 self.scene.addLine(x, y + radio, child_x, child_y - radio, pen_line)
 
-                # etiqueta para arista: solo mostrar bits (0/1). hojas no muestran etiqueta.
+                # etiqueta para arista
                 label_text = key if key in ('0', '1') else ""
                 if label_text:
                     mid_x = (x + child_x) / 2
                     mid_y = (y + child_y) / 2 - 10
                     bit_label = QGraphicsTextItem(label_text)
                     bit_label.setDefaultTextColor(edge_color)
-                    # pequeño ajuste centrar
                     bit_label.setPos(mid_x - 6, mid_y - 6)
                     self.scene.addItem(bit_label)
 
-                # recursión (offset reducido)
+                # recursión
                 draw(child, child_x, child_y, max(40, offset / 2), depth + 1)
 
         draw(root, 0, 0, start_offset, 1)
 
-        # ajustar vista y aplicar un ligero zoom para que no quede muy pequeño
+        # ajustar vista
         brect = self.scene.itemsBoundingRect()
-        if brect.isNull():
-            return
-        self.view.setSceneRect(brect)
-        self.view.resetTransform()
-        self.view.fitInView(brect, Qt.KeepAspectRatio)
-        self.view.scale(1.25, 1.25)
+        if not brect.isNull():
+            self.view.setSceneRect(brect)
+            self.view.resetTransform()
+            self.view.fitInView(brect, Qt.KeepAspectRatio)
+            self.view.scale(1.25, 1.25)

@@ -34,12 +34,11 @@ class PlegamientoController:
         """Inserta una clave aplicando el método de plegamiento con búsqueda lineal."""
         clave_s = str(clave)
         if not clave_s.isdigit():
-            return False, "❌ La clave debe ser numérica."
+            return False, "La clave debe ser numérica."
 
         if self.num_claves == 0 or self.tamanio_bloque == 0:
-            return False, "❌ No hay estructura creada. Crea una antes de insertar."
+            return False, "No hay estructura creada. Crea una antes de insertar."
 
-        # --- Calcular S (hash por plegamiento absoluto) ---
         L = len(clave_s)
         mid = (L + 1) // 2
         primera = int(clave_s[:mid]) if clave_s[:mid] else 0
@@ -60,17 +59,17 @@ class PlegamientoController:
             if self.bloques[bloque][pos] is None:
                 self._guardar_historial()
                 self.bloques[bloque][pos] = clave_s
-                return True, f"✅ Clave {clave_s} insertada en bloque {bloque + 1}, posición {pos + 1}."
+                return True, f"Clave {clave_s} insertada en bloque {bloque + 1}, posición {pos + 1}."
 
             # Si ya existe la misma clave
             if self.bloques[bloque][pos] == clave_s:
-                return False, f"⚠️ La clave {clave_s} ya existe en bloque {bloque + 1}, posición {pos + 1}."
+                return False, f"La clave {clave_s} ya existe en bloque {bloque + 1}, posición {pos + 1}."
 
         # --- Si está llena o no se pudo insertar ---
         return None, "collision_zone", {
             "clave": clave_s,
             "hash": S,
-            "mensaje": "⚠️ No hay espacio libre en la estructura. Insertar en zona de colisiones."
+            "mensaje": "No hay espacio libre en la estructura. Insertar en zona de colisiones."
         }
 
 

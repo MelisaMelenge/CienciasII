@@ -86,7 +86,7 @@ class ModInterna(QMainWindow):
         lbl_rango = QLabel("Rango (10^n):")
         lbl_rango.setStyleSheet("font-weight: bold; font-size: 14px; color: #2d1f15;")
         self.rango = QComboBox()
-        self.rango.addItems([f"10^{i}" for i in range(1, 6)])
+        self.rango.addItems([str(i) for i in range(1, 7)])  # Solo números 1-6
         self.rango.setFixedWidth(100)
         self.rango.setStyleSheet("""
             QComboBox {
@@ -173,10 +173,14 @@ class ModInterna(QMainWindow):
         self.scroll = QScrollArea()
         self.scroll.setWidgetResizable(True)
         self.scroll.setStyleSheet("QScrollArea { background-color: transparent; border: none; }")
+
         self.contenedor = QWidget()
         self.contenedor.setStyleSheet("background-color: transparent;")
-        self.grid = QGridLayout(self.contenedor)
-        self.grid.setAlignment(Qt.AlignCenter)
+        self.contenedor_layout = QVBoxLayout(self.contenedor)
+        self.contenedor_layout.setSpacing(10)
+        self.contenedor_layout.setContentsMargins(20, 20, 20, 20)
+        self.contenedor_layout.setAlignment(Qt.AlignHCenter | Qt.AlignTop)
+
         self.scroll.setWidget(self.contenedor)
         layout.addWidget(self.scroll)
 
@@ -185,7 +189,7 @@ class ModInterna(QMainWindow):
         # --- Conexiones ---
         self.btn_crear.clicked.connect(self.crear_estructura)
         self.btn_agregar.clicked.connect(self.adicionar_claves)
-        self.btn_cargar.clicked.connect(self.cargar_estructura)
+        self.btn_cargar.clicked.connect(self.crear_estructura)
         self.btn_eliminar.clicked.connect(self.eliminar_estructura)
         self.btn_buscar.clicked.connect(self.buscar_clave)
         self.btn_eliminar_clave.clicked.connect(self.eliminar_clave)
@@ -194,84 +198,245 @@ class ModInterna(QMainWindow):
 
         # Estado
         self.labels = []
+        self.indices_labels = []
+        self.indices_reales = []
         self.capacidad = 0
+        self.filas_info = []
 
-    # --- Métodos básicos ---
     def crear_estructura(self):
-        # Limpia
-        for i in reversed(range(self.grid.count())):
-            widget = self.grid.itemAt(i).widget()
-            if widget:
-                widget.setParent(None)
-        self.labels.clear()
+        """Crea la estructura con vista dinámica similar a LinealInterna"""
+        self._limpiar_vista()
 
-        # Capacidad depende del rango
-        n = int(self.rango.currentText().split("^")[1])
+        # Calcular capacidad desde el exponente
+        n = int(self.rango.currentText())
         self.capacidad = 10 ** n
 
         # Crear estructura en el controlador
         self.controller.crear_estructura(self.capacidad, self.digitos.value())
 
-        # 🔒 BLOQUEAR controles de rango y dígitos después de crear la estructura
+        # Bloquear controles
         self.rango.setEnabled(False)
         self.digitos.setEnabled(False)
 
-        if self.capacidad > 1000:
-            dialogo = DialogoClave(
-                longitud=0,
-                titulo="Vista representativa",
-                modo="mensaje",
-                parent=self,
-                mensaje=f"La capacidad real es {self.capacidad}, pero solo se muestra parcialmente."
-            )
-            dialogo.exec()
-
-            mostrar = 50
-            for i in range(mostrar):
-                self._agregar_cuadro(i + 1, i + 1)
-
-            puntos = QLabel("...")
-            puntos.setStyleSheet("font-size: 18px; color: #6C4E31;")
-            self.grid.addWidget(
-                puntos, (mostrar // 10) * 2, mostrar % 10, 2, 1, alignment=Qt.AlignCenter
-            )
-
-            for i in range(mostrar):
-                idx_real = self.capacidad - mostrar + i + 1
-                self._agregar_cuadro(mostrar + i + 1, idx_real)
-        else:
-            for i in range(self.capacidad):
-                self._agregar_cuadro(i + 1, i + 1)
+        # Reconstruir vista dinámica
+        self._reconstruir_vista()
 
         self.controller.ultima_estrategia = None
 
-    def _agregar_cuadro(self, idx_visual, idx_real):
-        fila = ((idx_visual - 1) // 10) * 2
-        col = (idx_visual - 1) % 10
+    def _limpiar_vista(self):
+        """Limpia completamente la vista"""
+        while self.contenedor_layout.count():
+            item = self.contenedor_layout.takeAt(0)
+            if item.widget():
+                item.widget().deleteLater()
+        self.filas_info.clear()
+        self.labels.clear()
+        self.indices_labels.clear()
+        self.indices_reales.clear()
+
+    def _reconstruir_vista(self):
+        """Reconstruye la vista dinámicamente según las posiciones ocupadas"""
+        self._limpiar_vista()
+
+        if self.capacidad <= 10:
+            self._crear_fila(0, self.capacidad, completa=True)
+            return
+
+        # Contar posiciones ocupadas (principales y anidadas)
+        total_ocupadas = self._contar_ocupadas()
+
+        if total_ocupadas <= 8:
+            self._crear_fila(0, 8, completa=False)
+        else:
+            self._crear_fila(0, 10, completa=True)
+
+            if total_ocupadas <= 18:
+                self._crear_fila(10, 8, completa=False)
+            else:
+                self._crear_fila(10, 10, completa=True)
+
+                if total_ocupadas <= 28:
+                    self._crear_fila(20, 8, completa=False)
+                else:
+                    fila_actual = 20
+                    while fila_actual < self.capacidad:
+                        ocupadas_hasta_aqui = sum(
+                            1 for i in range(fila_actual + 10)
+                            if self._posicion_ocupada(i)
+                        )
+                        if ocupadas_hasta_aqui <= fila_actual + 8:
+                            self._crear_fila(fila_actual, 8, completa=False)
+                            break
+                        else:
+                            self._crear_fila(fila_actual, 10, completa=True)
+                            fila_actual += 10
+
+    def _contar_ocupadas(self):
+        """Cuenta todas las posiciones ocupadas (principales + anidadas)"""
+        count = 0
+        estructura = self.controller.estructura
+        anidados = getattr(self.controller, "estructura_anidada", [])
+
+        for i in range(self.capacidad):
+            if self._posicion_ocupada(i):
+                count += 1
+
+        return count
+
+    def _posicion_ocupada(self, idx):
+        """Verifica si una posición tiene datos (principal o anidados)"""
+        estructura = self.controller.estructura
+        anidados = getattr(self.controller, "estructura_anidada", [])
+
+        # Verificar posición principal (idx+1 porque estructura usa base 1)
+        if estructura.get(idx + 1, "") != "":
+            return True
+
+        # Verificar si tiene elementos anidados
+        if isinstance(anidados, list) and idx < len(anidados):
+            sublista = anidados[idx]
+            if sublista and len(sublista) > 0:
+                return True
+
+        return False
+
+    def _crear_fila(self, inicio, cantidad, completa):
+        """Crea una fila de bloques visuales"""
+        fila_container = QWidget()
+        fila_container.setStyleSheet("background: transparent;")
+        fila_layout = QHBoxLayout(fila_container)
+        fila_layout.setSpacing(0)
+        fila_layout.setContentsMargins(0, 0, 0, 0)
+        fila_layout.setAlignment(Qt.AlignHCenter)
+
+        if completa:
+            for i in range(cantidad):
+                idx_real = inicio + i
+                if idx_real < self.capacidad:
+                    self._agregar_bloque(fila_layout, idx_real)
+        else:
+            for i in range(cantidad):
+                idx_real = inicio + i
+                if idx_real < self.capacidad:
+                    self._agregar_bloque(fila_layout, idx_real)
+
+            self._agregar_bloque_especial(fila_layout, "...", "...")
+            self._agregar_bloque(fila_layout, self.capacidad - 1)
+
+        fila_layout.addStretch()
+
+        self.contenedor_layout.addWidget(fila_container, 0, Qt.AlignHCenter)
+        self.filas_info.append({
+            'widget': fila_container,
+            'inicio': inicio,
+            'cantidad': cantidad,
+            'completa': completa
+        })
+
+    def _agregar_bloque(self, layout, idx_real):
+        """Agrega un bloque individual a la vista"""
+        contenedor = QWidget()
+        contenedor.setFixedWidth(80)
+        layout_vert = QVBoxLayout(contenedor)
+        layout_vert.setSpacing(2)
+        layout_vert.setContentsMargins(0, 0, 0, 0)
 
         cuadro = QLabel("")
         cuadro.setAlignment(Qt.AlignCenter)
-        cuadro.setFixedSize(60, 60)
+        cuadro.setFixedSize(80, 80)
         cuadro.setStyleSheet("""
             QLabel {
                 background-color: #FFDBB5;
                 border: 2px solid #9c724a;
-                border-radius: 12px;
                 font-size: 16px;
                 color: #2d1f15;
             }
         """)
-        self.grid.addWidget(cuadro, fila, col, alignment=Qt.AlignCenter)
 
-        # debajo se muestra el índice real
-        numero = QLabel(str(idx_real))
+        numero = QLabel(str(idx_real + 1))
         numero.setAlignment(Qt.AlignCenter)
-        numero.setStyleSheet("font-size: 14px; color: #6C4E31; margin-top: 5px;")
-        self.grid.addWidget(numero, fila + 1, col, alignment=Qt.AlignCenter)
+        numero.setFixedHeight(20)
+        numero.setStyleSheet("font-size: 12px; color: #6C4E31; background: transparent;")
 
+        layout_vert.addWidget(cuadro)
+        layout_vert.addWidget(numero)
+
+        layout.addWidget(contenedor)
         self.labels.append(cuadro)
+        self.indices_labels.append(numero)
+        self.indices_reales.append(idx_real)
+
+    def _agregar_bloque_especial(self, layout, texto_valor, texto_indice):
+        """Agrega un bloque especial (puntos suspensivos)"""
+        contenedor = QWidget()
+        contenedor.setFixedWidth(80)
+        layout_vert = QVBoxLayout(contenedor)
+        layout_vert.setSpacing(2)
+        layout_vert.setContentsMargins(0, 0, 0, 0)
+
+        cuadro = QLabel(texto_valor)
+        cuadro.setAlignment(Qt.AlignCenter)
+        cuadro.setFixedSize(80, 80)
+        cuadro.setStyleSheet("""
+            QLabel {
+                background-color: #FFEAC5;
+                border: 2px solid #bf8f62;
+                font-size: 24px;
+                color: #6C4E31;
+            }
+        """)
+
+        numero = QLabel(texto_indice)
+        numero.setAlignment(Qt.AlignCenter)
+        numero.setFixedHeight(20)
+        numero.setStyleSheet("font-size: 12px; color: #6C4E31; background: transparent;")
+
+        layout_vert.addWidget(cuadro)
+        layout_vert.addWidget(numero)
+
+        layout.addWidget(contenedor)
+        self.labels.append(cuadro)
+        self.indices_labels.append(numero)
+        self.indices_reales.append(-1)
+
+    def _repintar(self):
+        """Repinta los bloques según el estado actual"""
+        for i, idx_real in enumerate(self.indices_reales):
+            if idx_real == -1:
+                continue
+
+            lbl = self.labels[i]
+            idx_lbl = self.indices_labels[i]
+
+            # Obtener valor (recordar que estructura usa base 1)
+            val = str(self.controller.estructura.get(idx_real + 1, ""))
+
+            if val and val != "":
+                lbl.setText(val)
+                lbl.setStyleSheet("""
+                    QLabel {
+                        background-color: #bf8f62;
+                        border: 2px solid #6C4E31;
+                        font-size: 16px;
+                        font-weight: bold;
+                        color: #2d1f15;
+                    }
+                """)
+            else:
+                lbl.setText("")
+                lbl.setStyleSheet("""
+                    QLabel {
+                        background-color: #FFDBB5;
+                        border: 2px solid #9c724a;
+                        font-size: 16px;
+                        color: #2d1f15;
+                    }
+                """)
+
+            idx_lbl.setText(str(idx_real + 1))
 
     def adicionar_claves(self):
+        """Adiciona claves con manejo dinámico de la vista"""
         # Obtener cantidad total actual de claves (principales + anidadas)
         total_actual = len([v for v in self.controller.estructura.values() if v])
         anidados = getattr(self.controller, "estructura_anidada", [])
@@ -290,7 +455,6 @@ class ModInterna(QMainWindow):
             dialogo.exec()
             return
 
-        """Adiciona una clave y maneja correctamente las colisiones y la vista."""
         if self.capacidad == 0 or self.controller is None:
             dialogo = DialogoClave(
                 longitud=0,
@@ -314,21 +478,19 @@ class ModInterna(QMainWindow):
 
         clave = dialogo.get_clave()
 
-        # Intentar insertar (sin estrategia inicial)
+        # Intentar insertar
         resultado = self.controller.adicionar_clave(clave)
 
         # Si hubo colisión
         if resultado == "COLISION":
-            # Si ya hay una estrategia global definida, usarla directamente
             if getattr(self.controller, "ultima_estrategia", None):
                 estrategia = self.controller.ultima_estrategia
                 resultado = self.controller.adicionar_clave(clave, estrategia)
             else:
-                # Si aún no hay estrategia, mostrar el diálogo por primera vez
                 dlg_col = DialogoColisiones(self)
                 if dlg_col.exec() == QDialog.Accepted:
                     estrategia = dlg_col.get_estrategia()
-                    self.controller.ultima_estrategia = estrategia  # Guardar globalmente
+                    self.controller.ultima_estrategia = estrategia
                     resultado = self.controller.adicionar_clave(clave, estrategia)
                 else:
                     dialogo = DialogoClave(
@@ -343,6 +505,18 @@ class ModInterna(QMainWindow):
 
         # Manejar resultados
         if resultado == "OK":
+            # Actualizar vista según estrategia
+            estrategia_actual = getattr(self.controller, "ultima_estrategia", "")
+
+            if estrategia_actual == "Arreglo anidado":
+                self.actualizar_vista_anidada()
+            elif estrategia_actual == "Lista encadenada":
+                self.actualizar_vista_encadenada()
+            else:
+                # Vista dinámica normal - reconstruir para mostrar la nueva posición
+                self._reconstruir_vista_inteligente()
+                self._repintar()
+
             dialogo = DialogoClave(
                 longitud=0,
                 titulo="Éxito",
@@ -351,16 +525,6 @@ class ModInterna(QMainWindow):
                 mensaje=f"Clave {clave} insertada correctamente."
             )
             dialogo.exec()
-
-            # --- Actualizar vista según estrategia ---
-            estrategia_actual = getattr(self.controller, "ultima_estrategia", "")
-
-            if estrategia_actual == "Arreglo anidado":
-                self.actualizar_vista_anidada()
-            elif estrategia_actual == "Lista encadenada":
-                self.actualizar_vista_encadenada()
-            else:
-                self.actualizar_tabla()
 
         elif resultado == "LONGITUD":
             dialogo = DialogoClave(
@@ -402,24 +566,99 @@ class ModInterna(QMainWindow):
             )
             dialogo.exec()
 
-    def cargar_estructura(self):
-        # ⚠️ Advertencia si ya hay datos en memoria
-        if self.controller.capacidad > 0 and any(self.controller.estructura.values()):
-            dialogo = DialogoClave(
-                longitud=0,
-                titulo="Advertencia",
-                modo="confirmar",
-                parent=self,
-                mensaje="La estructura actual será sobreescrita. ¿Desea continuar?"
-            )
-            if dialogo.exec() != QDialog.Accepted:
-                return
+    def _reconstruir_vista_inteligente(self):
+        """Reconstruye la vista mostrando grupos de 10 según posiciones ocupadas"""
+        self._limpiar_vista()
+
+        if self.capacidad <= 10:
+            self._crear_fila(0, self.capacidad, completa=True)
+            return
+
+        # Encontrar todos los grupos de 10 que tienen al menos una posición ocupada
+        grupos_ocupados = set()
+        for i in range(self.capacidad):
+            if self._posicion_ocupada(i):
+                grupo = (i // 10) * 10
+                grupos_ocupados.add(grupo)
+
+        # Convertir a lista ordenada
+        grupos_ocupados = sorted(grupos_ocupados)
+
+        if not grupos_ocupados:
+            # Si no hay nada ocupado, mostrar solo las primeras 8 posiciones
+            self._crear_fila(0, 8, completa=False)
+            return
+
+        # Mostrar cada grupo ocupado
+        for i, grupo in enumerate(grupos_ocupados):
+            self._crear_fila(grupo, 10, completa=True)
+
+            # Si hay más grupos después, agregar puntos suspensivos
+            if i < len(grupos_ocupados) - 1:
+                # Verificar si el siguiente grupo NO es consecutivo
+                if grupos_ocupados[i + 1] != grupo + 10:
+                    fila_container = QWidget()
+                    fila_container.setStyleSheet("background: transparent;")
+                    fila_layout = QHBoxLayout(fila_container)
+                    fila_layout.setSpacing(0)
+                    fila_layout.setContentsMargins(0, 0, 0, 0)
+                    fila_layout.setAlignment(Qt.AlignHCenter)
+
+                    self._agregar_bloque_especial(fila_layout, "...", "...")
+                    fila_layout.addStretch()
+
+                    self.contenedor_layout.addWidget(fila_container, 0, Qt.AlignHCenter)
+
+    def _reconstruir_vista_con_posicion(self, posicion_objetivo):
+        """Reconstruye la vista asegurándose de incluir una posición específica (en grupos de 10)"""
+        self._limpiar_vista()
+
+        if self.capacidad <= 10:
+            self._crear_fila(0, self.capacidad, completa=True)
+            return
+
+        # Calcular en qué grupo de 10 está la posición objetivo
+        grupo_objetivo = (posicion_objetivo // 10) * 10
+
+        # Encontrar todos los grupos ocupados
+        grupos_ocupados = set()
+        grupos_ocupados.add(grupo_objetivo)  # Agregar el grupo objetivo
+
+        for i in range(self.capacidad):
+            if self._posicion_ocupada(i):
+                grupo = (i // 10) * 10
+                grupos_ocupados.add(grupo)
+
+        # Convertir a lista ordenada
+        grupos_ocupados = sorted(grupos_ocupados)
+
+        # Mostrar cada grupo
+        for i, grupo in enumerate(grupos_ocupados):
+            self._crear_fila(grupo, 10, completa=True)
+
+            # Si hay más grupos después y no son consecutivos, agregar puntos
+            if i < len(grupos_ocupados) - 1:
+                if grupos_ocupados[i + 1] != grupo + 10:
+                    fila_container = QWidget()
+                    fila_container.setStyleSheet("background: transparent;")
+                    fila_layout = QHBoxLayout(fila_container)
+                    fila_layout.setSpacing(0)
+                    fila_layout.setContentsMargins(0, 0, 0, 0)
+                    fila_layout.setAlignment(Qt.AlignHCenter)
+
+                    self._agregar_bloque_especial(fila_layout, "...", "...")
+                    fila_layout.addStretch()
+
+                    self.contenedor_layout.addWidget(fila_container, 0, Qt.AlignHCenter)
+
 
         # Seleccionar archivo
         ruta, _ = QFileDialog.getOpenFileName(self, "Cargar estructura", "", "Archivos JSON (*.json)")
         if ruta:
             self.controller.ruta_archivo = ruta
             if self.controller.cargar():
+                self.capacidad = self.controller.capacidad
+
                 dialogo = DialogoClave(
                     longitud=0,
                     titulo="Éxito",
@@ -429,7 +668,7 @@ class ModInterna(QMainWindow):
                 )
                 dialogo.exec()
 
-                # 🔹 Mostrar según la última estrategia usada
+                # Mostrar según la última estrategia usada
                 estrategia_actual = getattr(self.controller, "ultima_estrategia", "")
 
                 if estrategia_actual == "Arreglo anidado":
@@ -437,7 +676,8 @@ class ModInterna(QMainWindow):
                 elif estrategia_actual == "Lista encadenada":
                     self.actualizar_vista_encadenada()
                 else:
-                    self.actualizar_tabla()
+                    self._reconstruir_vista_inteligente()
+                    self._repintar()
 
             else:
                 dialogo = DialogoClave(
@@ -460,27 +700,12 @@ class ModInterna(QMainWindow):
         if dialogo.exec() != QDialog.Accepted:
             return
 
-        # --- 🔹 Limpieza visual total (todos los widgets y layouts anidados) ---
-        def limpiar_layout(layout):
-            """Elimina recursivamente todos los widgets y sublayouts."""
-            if layout is not None:
-                while layout.count():
-                    item = layout.takeAt(0)
-                    widget = item.widget()
-                    if widget is not None:
-                        widget.setParent(None)
-                    elif item.layout():
-                        limpiar_layout(item.layout())
-
-        limpiar_layout(self.grid)  # limpia todo el grid visual
-
-        # --- 🔹 Reiniciar estructuras del controlador ---
+        # Limpiar datos
         self.controller.estructura = {}
         self.controller.capacidad = 0
         self.controller.digitos = 0
         self.controller.historial.clear()
 
-        # 🔹 También reiniciar estructuras anidadas si existen
         if hasattr(self.controller, "estructura_anidada"):
             self.controller.estructura_anidada = []
 
@@ -491,24 +716,15 @@ class ModInterna(QMainWindow):
             cc.ultima_estrategia = None
             cc.estrategia_fijada = False
 
-        # 🔹 Limpiar estrategia
         self.controller.ultima_estrategia = None
 
-        # 🔹 Limpiar estrategia visual si existe
-        if hasattr(self, "estrategia_label"):
-            self.estrategia_label.setText("Sin estrategia seleccionada")
-
-        # 🔹 Reiniciar variables internas
-        self.labels.clear()
+        # Limpiar vista
+        self._limpiar_vista()
         self.capacidad = 0
 
-        # 🔓 DESBLOQUEAR controles de rango y dígitos para permitir crear nueva estructura
+        # Desbloquear controles
         self.rango.setEnabled(True)
         self.digitos.setEnabled(True)
-
-        # 🔹 Actualizar vista vacía
-        self.grid.update()
-        self.scroll.update()
 
         dialogo = DialogoClave(
             longitud=0,
@@ -520,7 +736,7 @@ class ModInterna(QMainWindow):
         dialogo.exec()
 
     def buscar_clave(self):
-        """Busca una clave en la estructura (principal y anidada)."""
+        """Busca una clave en la estructura (principal y anidada) y la muestra visualmente."""
         dialogo = DialogoClave(
             longitud=self.digitos.value(),
             titulo="Buscar clave",
@@ -536,28 +752,29 @@ class ModInterna(QMainWindow):
 
         encontrado = None
         detalle = ""
+        posicion_real = None
 
-        # 🔹 Buscar en el arreglo principal
+        # Buscar en el arreglo principal
         for pos, valor in estructura.items():
             if str(valor).strip() == clave:
                 encontrado = pos
+                posicion_real = pos - 1  # Índice base 0
                 detalle = f"en el arreglo principal (posición {pos})"
                 break
 
-        # 🔹 Buscar en los arreglos/listas anidadas si no está en el principal
+        # Buscar en los arreglos/listas anidadas
         if not encontrado and isinstance(anidados, list):
             for i, sublista in enumerate(anidados):
                 if not sublista:
                     continue
 
-                # Convertir todos los elementos a str para comparar
                 sublista_str = [str(x).strip() for x in sublista if x is not None]
 
                 if clave in sublista_str:
-                    encontrado = i + 1  # posición principal (1-based)
+                    encontrado = i + 1
+                    posicion_real = i  # Índice base 0
                     indice_anidado = sublista_str.index(clave)
 
-                    # Diferenciar el mensaje según la estrategia
                     estrategia_actual = getattr(self.controller, "ultima_estrategia", "")
                     if estrategia_actual == "Lista encadenada":
                         detalle = f"en la lista encadenada de la posición {i + 1}, nodo #{indice_anidado + 1}"
@@ -565,8 +782,30 @@ class ModInterna(QMainWindow):
                         detalle = f"en el arreglo anidado de la posición {i + 1}, índice interno {indice_anidado + 1}"
                     break
 
-        # 🔹 Resultado final
+        # Resultado final
         if encontrado:
+            # Verificar si la posición está visible en la vista actual
+            if posicion_real not in self.indices_reales:
+                # Si no está visible, reconstruir la vista para mostrarla
+                dialogo_aviso = DialogoClave(
+                    longitud=0,
+                    titulo="Clave encontrada",
+                    modo="mensaje",
+                    parent=self,
+                    mensaje=f"Clave {clave} encontrada {detalle}.\n\nLa vista se actualizará para mostrar esta posición."
+                )
+                dialogo_aviso.exec()
+
+                # Forzar la reconstrucción incluyendo esta posición
+                self._reconstruir_vista_con_posicion(posicion_real)
+                self._repintar()
+
+                # Resaltar la posición encontrada
+                self._resaltar_posicion(posicion_real)
+            else:
+                # Si está visible, solo resaltarla
+                self._resaltar_posicion(posicion_real)
+
             dialogo_resultado = DialogoClave(
                 longitud=0,
                 titulo="Resultado",
@@ -585,8 +824,94 @@ class ModInterna(QMainWindow):
             )
             dialogo_resultado.exec()
 
+    def _reconstruir_vista_con_posicion(self, posicion_objetivo):
+        """Reconstruye la vista asegurándose de incluir una posición específica"""
+        self._limpiar_vista()
+
+        if self.capacidad <= 10:
+            self._crear_fila(0, self.capacidad, completa=True)
+            return
+
+        # Calcular en qué grupo de 10 está la posición objetivo
+        grupo_objetivo = (posicion_objetivo // 10) * 10
+
+        # Siempre mostrar las primeras 10 posiciones
+        self._crear_fila(0, 10, completa=True)
+
+        if grupo_objetivo > 0 and grupo_objetivo < self.capacidad - 10:
+            # Mostrar el grupo donde está la posición buscada
+            self._crear_fila(grupo_objetivo, 10, completa=True)
+
+            # Puntos suspensivos si hay más datos después
+            if grupo_objetivo + 10 < self.capacidad - 1:
+                # Crear una fila especial con solo puntos
+                fila_container = QWidget()
+                fila_layout = QHBoxLayout(fila_container)
+                fila_layout.setAlignment(Qt.AlignHCenter)
+                self._agregar_bloque_especial(fila_layout, "...", "...")
+                self.contenedor_layout.addWidget(fila_container, 0, Qt.AlignHCenter)
+
+        # Siempre mostrar la última posición si no está ya visible
+        if self.capacidad - 1 > grupo_objetivo + 9:
+            fila_container = QWidget()
+            fila_layout = QHBoxLayout(fila_container)
+            fila_layout.setAlignment(Qt.AlignHCenter)
+            self._agregar_bloque(fila_layout, self.capacidad - 1)
+            self.contenedor_layout.addWidget(fila_container, 0, Qt.AlignHCenter)
+
+    def _resaltar_posicion(self, posicion):
+        """Resalta visualmente una posición específica"""
+        try:
+            pos_label = self.indices_reales.index(posicion)
+
+            # Resetear estilos de todos los labels primero
+            self._reset_label_styles()
+
+            # Resaltar la posición encontrada
+            self.labels[pos_label].setStyleSheet("""
+                QLabel {
+                    background-color: #9c724a;
+                    border: 3px solid #603F26;
+                    font-size: 18px;
+                    font-weight: bold;
+                    color: #FFEAC5;
+                }
+            """)
+        except ValueError:
+            # Si no se encuentra en la lista visible, no hay nada que resaltar
+            pass
+
+    def _reset_label_styles(self):
+        """Resetea los estilos de todos los labels a su estado normal"""
+        for i, lbl in enumerate(self.labels):
+            if self.indices_reales[i] == -1:
+                continue
+
+            idx_real = self.indices_reales[i]
+            val = str(self.controller.estructura.get(idx_real + 1, ""))
+
+            if val and val != "":
+                lbl.setStyleSheet("""
+                    QLabel {
+                        background-color: #bf8f62;
+                        border: 2px solid #6C4E31;
+                        font-size: 16px;
+                        font-weight: bold;
+                        color: #2d1f15;
+                    }
+                """)
+            else:
+                lbl.setStyleSheet("""
+                    QLabel {
+                        background-color: #FFDBB5;
+                        border: 2px solid #9c724a;
+                        font-size: 16px;
+                        color: #2d1f15;
+                    }
+                """)
+
     def eliminar_clave(self):
-        """Elimina una clave de la estructura (principal o anidada)."""
+        """Elimina una clave de la estructura con actualización dinámica."""
         dialogo = DialogoClave(
             longitud=self.digitos.value(),
             titulo="Eliminar clave",
@@ -602,52 +927,45 @@ class ModInterna(QMainWindow):
         # Guardar estado antes de eliminar
         self.controller._guardar_estado()
 
-        # --- Intentar eliminar del arreglo principal ---
+        # Intentar eliminar del arreglo principal
         estructura = self.controller.estructura
         posiciones_a_borrar = [pos for pos, val in estructura.items() if str(val).strip() == clave]
 
         if posiciones_a_borrar:
             for pos in posiciones_a_borrar:
-                estructura[pos] = ""  # limpiar
+                estructura[pos] = ""
 
-                # También limpiar en el controlador de colisiones si existe
                 if self.controller.colisiones_controller:
                     idx = pos - 1
                     self.controller.colisiones_controller.estructura[idx] = None
 
             eliminada = True
 
-        # --- Intentar eliminar de los arreglos/listas anidadas ---
+        # Intentar eliminar de los arreglos/listas anidadas
         anidados = self.controller.estructura_anidada
         if isinstance(anidados, list):
             for i, sublista in enumerate(anidados):
                 if not sublista:
                     continue
 
-                # Convertir a strings para comparar
                 sublista_str = [str(x).strip() for x in sublista if x is not None]
 
                 if clave in sublista_str:
-                    # Encontrar el índice del elemento original (no el string)
                     for j, elem in enumerate(sublista):
                         if elem is not None and str(elem).strip() == clave:
                             del sublista[j]
                             eliminada = True
 
-                            # Sincronizar con el controlador de colisiones
                             if self.controller.colisiones_controller:
                                 self.controller.colisiones_controller.estructura_anidada[i] = sublista.copy()
 
                             break
                     break
 
-        # --- Resultado final ---
+        # Resultado final
         if eliminada:
-            # Actualizar controlador
             self.controller.estructura = estructura
             self.controller.estructura_anidada = anidados
-
-            # Guardar cambios
             self.controller.guardar()
 
             # Actualizar vista según estrategia
@@ -658,7 +976,8 @@ class ModInterna(QMainWindow):
             elif estrategia_actual == "Lista encadenada":
                 self.actualizar_vista_encadenada()
             else:
-                self.actualizar_tabla()
+                self._reconstruir_vista_inteligente()
+                self._repintar()
 
             dialogo = DialogoClave(
                 longitud=0,
@@ -683,18 +1002,17 @@ class ModInterna(QMainWindow):
             dialogo.exec()
 
     def deshacer(self):
-        """Deshace el último movimiento (compatible con todas las estrategias)."""
+        """Deshace el último movimiento con actualización dinámica."""
         resultado = self.controller.deshacer()
 
         if isinstance(resultado, dict):
-            # 🧩 Caso extendido: el controlador devolvió un estado completo
+            # Caso extendido: el controlador devolvió un estado completo
             self.controller.estructura = resultado.get("estructura", self.controller.estructura)
             self.controller.estructura_anidada = resultado.get("estructura_anidada",
                                                                getattr(self.controller, "estructura_anidada", []))
 
             # Restaurar en el controlador de colisiones también
             if self.controller.colisiones_controller:
-                # Reconstruir estructura principal del controlador
                 self.controller.colisiones_controller.estructura = [None] * self.controller.capacidad
                 for pos, valor in self.controller.estructura.items():
                     if valor and valor != "":
@@ -704,12 +1022,11 @@ class ModInterna(QMainWindow):
                         except ValueError:
                             self.controller.colisiones_controller.estructura[idx] = valor
 
-                # Restaurar estructura anidada del controlador
                 self.controller.colisiones_controller.estructura_anidada = [
                     lst.copy() if lst else [] for lst in self.controller.estructura_anidada
                 ]
 
-            # 🔁 Refrescar la vista según la estrategia activa
+            # Refrescar la vista según la estrategia activa
             estrategia_actual = getattr(self.controller, "ultima_estrategia", "")
 
             if estrategia_actual == "Arreglo anidado":
@@ -717,7 +1034,8 @@ class ModInterna(QMainWindow):
             elif estrategia_actual == "Lista encadenada":
                 self.actualizar_vista_encadenada()
             else:
-                self.actualizar_tabla()
+                self._reconstruir_vista_inteligente()
+                self._repintar()
 
             dialogo = DialogoClave(
                 longitud=0,
@@ -729,7 +1047,7 @@ class ModInterna(QMainWindow):
             dialogo.exec()
 
         elif resultado == "OK":
-            # 🔹 Versión simple (antiguo comportamiento)
+            # Versión simple (antiguo comportamiento)
             estrategia_actual = getattr(self.controller, "ultima_estrategia", "")
 
             if estrategia_actual == "Arreglo anidado":
@@ -737,7 +1055,8 @@ class ModInterna(QMainWindow):
             elif estrategia_actual == "Lista encadenada":
                 self.actualizar_vista_encadenada()
             else:
-                self.actualizar_tabla()
+                self._reconstruir_vista_inteligente()
+                self._repintar()
 
             dialogo = DialogoClave(
                 longitud=0,
@@ -770,7 +1089,7 @@ class ModInterna(QMainWindow):
 
     def guardar_estructura(self):
         # sugerimos nombre por defecto
-        nombre_defecto = "interna_binaria.json"
+        nombre_defecto = "interna_mod.json"
         ruta, _ = QFileDialog.getSaveFileName(
             self,
             "Guardar estructura",
@@ -794,15 +1113,6 @@ class ModInterna(QMainWindow):
         except Exception as e:
             dialogo = DialogoClave(
                 longitud=0,
-                titulo="Éxito",
-                modo="mensaje",
-                parent=self,
-                mensaje=f"Estructura guardada en:\n{ruta}"
-            )
-            dialogo.exec()
-        except Exception as e:
-            dialogo = DialogoClave(
-                longitud=0,
                 titulo="Error",
                 modo="mensaje",
                 parent=self,
@@ -812,18 +1122,16 @@ class ModInterna(QMainWindow):
 
     def actualizar_vista_anidada(self, modo="vertical"):
         """Dibuja el arreglo principal con sus arreglos anidados pegados visualmente."""
-        # Limpiar grid
-        for i in reversed(range(self.grid.count())):
-            widget = self.grid.itemAt(i).widget()
-            if widget:
-                widget.setParent(None)
+        # Limpiar grid (mantenemos compatibilidad con el método original)
+        self._limpiar_vista()
 
-        # --- Ajustes del grid principal ---
-        self.grid.setHorizontalSpacing(0)
-        self.grid.setVerticalSpacing(5)
-        self.grid.setContentsMargins(0, 0, 0, 0)
+        # Crear un nuevo grid para esta vista especial
+        grid_especial = QGridLayout()
+        grid_especial.setHorizontalSpacing(0)
+        grid_especial.setVerticalSpacing(5)
+        grid_especial.setContentsMargins(0, 0, 0, 0)
 
-        # --- Datos ---
+        # Datos
         estructura = self.controller.estructura or {}
         anidados = getattr(self.controller, "estructura_anidada", [])
         if not isinstance(anidados, list):
@@ -832,59 +1140,59 @@ class ModInterna(QMainWindow):
         if len(anidados) != self.controller.capacidad:
             anidados = (anidados + [[]] * self.controller.capacidad)[:self.controller.capacidad]
 
-        # --- Calcular el máximo global de colisiones (para dibujar estructura completa) ---
+        # Calcular el máximo global de colisiones
         max_colisiones_global = max((len(sublista) for sublista in anidados), default=0)
 
-        # --- Título ---
+        # Título
         titulo = QLabel("Arreglo principal  |  Arreglos anidados (colisiones)")
         titulo.setAlignment(Qt.AlignCenter)
         titulo.setStyleSheet("font-size: 18px; font-weight: bold; color: #6C4E31; margin-bottom: 15px;")
-        self.grid.addWidget(titulo, 0, 0, alignment=Qt.AlignCenter)
+        grid_especial.addWidget(titulo, 0, 0, alignment=Qt.AlignCenter)
 
-        # --- Construcción visual fila por fila ---
+        # Construcción visual fila por fila
         fila_actual = 1
         for fila in range(1, self.controller.capacidad + 1):
             fila_layout = QHBoxLayout()
             fila_layout.setSpacing(0)
             fila_layout.setContentsMargins(0, 0, 0, 0)
 
-            # ---------------- Celda principal ----------------
+            # Celda principal
             val = estructura.get(fila, "")
             texto = str(val).zfill(self.controller.digitos) if val else ""
             celda = QLabel(texto)
             celda.setFixedSize(70, 70)
             celda.setAlignment(Qt.AlignCenter)
             celda.setStyleSheet("""
-                background-color: #FFDBB5;
-                border: 2px solid #9c724a;
-                border-radius: 10px;
-                font-size: 16px;
-                color: #2d1f15;
-            """)
+                        background-color: #FFDBB5;
+                        border: 2px solid #9c724a;
+                        border-radius: 10px;
+                        font-size: 16px;
+                        color: #2d1f15;
+                    """)
             fila_layout.addWidget(celda)
 
-            # ---------------- Arreglos anidados ----------------
+            # Arreglos anidados
             sublista = anidados[fila - 1] if fila - 1 < len(anidados) else []
 
             for j in range(max_colisiones_global):
                 if j < len(sublista):
                     texto = str(sublista[j]).zfill(self.controller.digitos)
                     estilo = """
-                        background-color: #EDCCAA;
-                        border: 2px solid #9c724a;
-                        border-left: none;
-                        border-radius: 10px;
-                        font-size: 16px;
-                        color: #2d1f15;
-                    """
+                                background-color: #EDCCAA;
+                                border: 2px solid #9c724a;
+                                border-left: none;
+                                border-radius: 10px;
+                                font-size: 16px;
+                                color: #2d1f15;
+                            """
                 else:
                     texto = ""
                     estilo = """
-                        border: 2px dashed #bf8f62;
-                        border-left: none;
-                        background-color: #FFF5EB;
-                        border-radius: 10px;
-                    """
+                                border: 2px dashed #bf8f62;
+                                border-left: none;
+                                background-color: #FFF5EB;
+                                border-radius: 10px;
+                            """
 
                 lbl = QLabel(texto)
                 lbl.setFixedSize(70, 70)
@@ -892,152 +1200,63 @@ class ModInterna(QMainWindow):
                 lbl.setStyleSheet(estilo)
                 fila_layout.addWidget(lbl)
 
-            # ---------------- Índice a la izquierda ----------------
+            # Índice a la izquierda
             fila_layout_con_indice = QHBoxLayout()
             fila_layout_con_indice.setSpacing(10)
             fila_layout_con_indice.setContentsMargins(0, 0, 0, 0)
 
-            # Etiqueta de índice al lado izquierdo
             idx = QLabel(str(fila))
             idx.setAlignment(Qt.AlignCenter)
             idx.setFixedWidth(30)
             idx.setStyleSheet("""
-                color: #9c724a;
-                font-size: 13px;
-                font-weight: bold;
-            """)
+                        color: #9c724a;
+                        font-size: 13px;
+                        font-weight: bold;
+                    """)
             fila_layout_con_indice.addWidget(idx)
-
-            # Agregar el layout original de la fila (principal + anidados)
             fila_layout_con_indice.addLayout(fila_layout)
 
             # Contenedor final de toda la fila
             fila_contenedor = QWidget()
             fila_contenedor.setLayout(fila_layout_con_indice)
-            self.grid.addWidget(fila_contenedor, fila_actual, 0, alignment=Qt.AlignLeft)
+            grid_especial.addWidget(fila_contenedor, fila_actual, 0, alignment=Qt.AlignLeft)
 
             fila_actual += 1
 
-    def actualizar_tabla(self):
-        """Actualiza la vista para arreglos anidados (colisiones)."""
-        # limpiar grid principal
-        for i in reversed(range(self.grid.count())):
-            widget = self.grid.itemAt(i).widget()
-            if widget:
-                widget.setParent(None)
-
-        self.labels = []
-        estructura = self.controller.estructura
-
-        # caso: arreglo anidado (colisiones)
-        if isinstance(estructura, dict) and all(isinstance(v, list) for v in estructura.values()):
-            titulo = QLabel("Arreglo principal     Arreglo anidado (colisiones)")
-            titulo.setStyleSheet("font-weight: bold; font-size: 16px; color: #6C4E31;")
-            self.grid.addWidget(titulo, 0, 0, 1, 10, alignment=Qt.AlignCenter)
-
-            # columnas separadas para el principal y cada subarreglo
-            col_principal = 0
-            col_sub = 1
-            tam_sub = 5  # cantidad de cuadros por subarreglo
-
-            for idx in range(1, self.capacidad + 1):
-                # cuadro del arreglo principal
-                cuadro = QLabel()
-                cuadro.setAlignment(Qt.AlignCenter)
-                cuadro.setFixedSize(70, 70)
-                cuadro.setStyleSheet("""
-                    background-color: #FFDBB5;
-                    border: 2px solid #9c724a;
-                    border-radius: 10px;
-                    color: #2d1f15;
-                """)
-                val = ""
-                if isinstance(estructura.get(idx, None), list) and estructura[idx]:
-                    val = estructura[idx][0] if estructura[idx] else ""
-                elif isinstance(estructura.get(idx, None), str):
-                    val = estructura[idx]
-                cuadro.setText(val)
-                self.grid.addWidget(cuadro, idx, col_principal, alignment=Qt.AlignCenter)
-
-                # etiqueta con número de posición debajo
-                etiqueta = QLabel(str(idx))
-                etiqueta.setStyleSheet("color: #9c724a; font-size: 12px;")
-                self.grid.addWidget(etiqueta, idx + 1, col_principal, alignment=Qt.AlignCenter)
-
-                # ahora el subarreglo completo
-                sublista = estructura.get(idx, [])
-                for j in range(tam_sub):
-                    valor = sublista[j] if j < len(sublista) else ""
-                    sub_label = QLabel(valor)
-                    sub_label.setAlignment(Qt.AlignCenter)
-                    sub_label.setFixedSize(70, 70)
-
-                    if valor:
-                        sub_label.setStyleSheet("""
-                            background-color: #EDCCAA;
-                            border: 2px solid #9c724a;
-                            border-radius: 10px;
-                            color: #2d1f15;
-                        """)
-                    else:
-                        sub_label.setStyleSheet("""
-                            border: 2px dashed #bf8f62;
-                            background-color: #FFF5EB;
-                            border-radius: 10px;
-                        """)
-
-                    # dibujar el subarreglo en la misma fila del principal, pero más a la derecha
-                    self.grid.addWidget(sub_label, j, col_sub, alignment=Qt.AlignCenter)
-
-            return
-
-        # ---- CASO NORMAL (sin colisiones anidadas) ----
-        if self.capacidad > 1000:
-            mostrar = 50
-            for i in range(mostrar):
-                self._agregar_cuadro(i + 1, i + 1)
-            puntos = QLabel("...")
-            puntos.setStyleSheet("font-size: 18px; color: #6C4E31;")
-            self.grid.addWidget(puntos, (mostrar // 10) * 2, mostrar % 10, 2, 1, alignment=Qt.AlignCenter)
-            for i in range(mostrar):
-                idx_real = self.capacidad - mostrar + i + 1
-                self._agregar_cuadro(mostrar + i + 1, idx_real)
-        else:
-            for i in range(self.capacidad):
-                self._agregar_cuadro(i + 1, i + 1)
-
-        # rellenar valores normales
-        for idx, cuadro in enumerate(self.labels):
-            pos = idx + 1
-            val = estructura.get(pos, "")
-            cuadro.setText(val if val else "")
+        # Agregar el grid especial al contenedor principal
+        widget_especial = QWidget()
+        widget_especial.setLayout(grid_especial)
+        self.contenedor_layout.addWidget(widget_especial, 0, Qt.AlignHCenter)
 
     def actualizar_vista_encadenada(self):
         """Dibuja visualmente la estructura con listas encadenadas."""
-        # Limpiar grid
-        for i in reversed(range(self.grid.count())):
-            widget = self.grid.itemAt(i).widget()
-            if widget:
-                widget.setParent(None)
+        # Limpiar vista
+        self._limpiar_vista()
 
-        # --- Título ---
+        # Crear un nuevo grid para esta vista especial
+        grid_especial = QGridLayout()
+        grid_especial.setHorizontalSpacing(10)
+        grid_especial.setVerticalSpacing(5)
+        grid_especial.setContentsMargins(0, 0, 0, 0)
+
+        # Título
         titulo = QLabel("Visualización: Lista Encadenada (colisiones con punteros)")
         titulo.setAlignment(Qt.AlignCenter)
         titulo.setStyleSheet("""
-            font-size: 18px;
-            font-weight: bold;
-            color: #6C4E31;
-            margin-bottom: 15px;
-        """)
-        self.grid.addWidget(titulo, 0, 0, alignment=Qt.AlignCenter)
+                    font-size: 18px;
+                    font-weight: bold;
+                    color: #6C4E31;
+                    margin-bottom: 15px;
+                """)
+        grid_especial.addWidget(titulo, 0, 0, alignment=Qt.AlignCenter)
 
         fila_actual = 1
 
         for fila in range(1, self.controller.capacidad + 1):
-            # Obtener valor principal (indexado desde 1)
+            # Obtener valor principal
             val = self.controller.estructura.get(fila, "")
 
-            # Obtener sublista (indexada desde 0)
+            # Obtener sublista
             sublista = self.controller.estructura_anidada[fila - 1] if fila - 1 < len(
                 self.controller.estructura_anidada) else []
 
@@ -1056,12 +1275,12 @@ class ModInterna(QMainWindow):
             nodo.setFixedSize(70, 70)
             nodo.setAlignment(Qt.AlignCenter)
             nodo.setStyleSheet("""
-                background-color: #FFDBB5;
-                border: 2px solid #9c724a;
-                border-radius: 10px;
-                font-size: 16px;
-                color: #2d1f15;
-            """)
+                        background-color: #FFDBB5;
+                        border: 2px solid #9c724a;
+                        border-radius: 10px;
+                        font-size: 16px;
+                        color: #2d1f15;
+                    """)
             fila_layout.addWidget(nodo)
 
             # Dibujar flechas y nodos encadenados
@@ -1075,12 +1294,12 @@ class ModInterna(QMainWindow):
                 nodo_col.setFixedSize(70, 70)
                 nodo_col.setAlignment(Qt.AlignCenter)
                 nodo_col.setStyleSheet("""
-                    background-color: #EDCCAA;
-                    border: 2px solid #9c724a;
-                    border-radius: 10px;
-                    font-size: 16px;
-                    color: #2d1f15;
-                """)
+                            background-color: #EDCCAA;
+                            border: 2px solid #9c724a;
+                            border-radius: 10px;
+                            font-size: 16px;
+                            color: #2d1f15;
+                        """)
                 fila_layout.addWidget(nodo_col)
 
             # Índice a la izquierda
@@ -1095,6 +1314,11 @@ class ModInterna(QMainWindow):
 
             contenedor_fila = QWidget()
             contenedor_fila.setLayout(fila_layout_final)
-            self.grid.addWidget(contenedor_fila, fila_actual, 0, alignment=Qt.AlignLeft)
+            grid_especial.addWidget(contenedor_fila, fila_actual, 0, alignment=Qt.AlignLeft)
 
             fila_actual += 1
+
+        # Agregar el grid especial al contenedor principal
+        widget_especial = QWidget()
+        widget_especial.setLayout(grid_especial)
+        self.contenedor_layout.addWidget(widget_especial, 0, Qt.AlignHCenter)

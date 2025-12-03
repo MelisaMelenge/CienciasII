@@ -1,12 +1,13 @@
 from PySide6.QtWidgets import (
     QMainWindow, QWidget, QVBoxLayout, QLabel, QFrame,
-    QPushButton, QLineEdit, QMessageBox,
+    QPushButton, QLineEdit,
     QGraphicsScene, QGraphicsView, QGraphicsEllipseItem, QGraphicsTextItem,
-    QHBoxLayout, QSpacerItem, QSizePolicy
+    QHBoxLayout, QDialog
 )
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QPen, QBrush, QColor
 from Controlador.Internas.ArbolesDigitalesController import ArbolesDigitalesController
+from Vista.dialogo_clave import DialogoClave
 
 
 class ArbolesDigitales(QMainWindow):
@@ -47,11 +48,6 @@ class ArbolesDigitales(QMainWindow):
         titulo.setAlignment(Qt.AlignCenter)
         titulo.setStyleSheet("font-size: 22px; font-weight: bold;")
 
-        # Subtítulo más pequeño (opcional)
-        subtitulo = QLabel("Operaciones")
-        subtitulo.setAlignment(Qt.AlignCenter)
-        subtitulo.setStyleSheet("font-size: 14px; font-weight: bold;")
-
         # Menú de navegación centrado abajo
         nav_layout = QHBoxLayout()
         btn_inicio = QPushButton("Inicio")
@@ -80,7 +76,6 @@ class ArbolesDigitales(QMainWindow):
 
         # Armado del encabezado
         header_layout.addWidget(titulo)
-        header_layout.addWidget(subtitulo)
         header_layout.addLayout(nav_layout)
 
         main_layout.addWidget(header_frame)
@@ -274,40 +269,80 @@ class ArbolesDigitales(QMainWindow):
     # --- Lógica ---
     def insertar_palabra(self):
         palabra = self.input_insertar.text().strip()
-        if palabra:
-            estado = self.controller.insertar(palabra)
-            if estado == "OK":
-                self.input_insertar.setReadOnly(True)  # 🔒 Bloquea el campo
-                self.input_insertar.setStyleSheet("background-color: #FFDBB5; color: #2d1f15; font-weight: bold; border: 2px solid #bf8f62; border-radius: 5px; padding: 5px;")
-                self.dibujar_arbol()
-            else:
-                QMessageBox.warning(self, "Error", f"No se pudo insertar: {estado}")
+        if not palabra:
+            DialogoClave(
+                0,
+                titulo="Error",
+                modo="mensaje",
+                mensaje="Debe ingresar una palabra para insertar.",
+                parent=self
+            ).exec()
+            return
+
+        estado = self.controller.insertar(palabra)
+        if estado == "OK":
+            self.input_insertar.setReadOnly(True)  # 🔒 Bloquea el campo
+            self.input_insertar.setStyleSheet(
+                "background-color: #FFDBB5; color: #2d1f15; font-weight: bold; "
+                "border: 2px solid #bf8f62; border-radius: 5px; padding: 5px;"
+            )
+            self.dibujar_arbol()
+            DialogoClave(
+                0,
+                titulo="Éxito",
+                modo="mensaje",
+                mensaje=f"Palabra '{palabra}' insertada correctamente.",
+                parent=self
+            ).exec()
         else:
-            QMessageBox.warning(self, "Error", "Debe ingresar una palabra para insertar.")
+            DialogoClave(
+                0,
+                titulo="Error",
+                modo="mensaje",
+                mensaje=f"No se pudo insertar: {estado}",
+                parent=self
+            ).exec()
 
     def buscar_palabra(self):
         clave = self.input_buscar.text().strip().lower()
-        if clave and len(clave) == 1 and clave.isalpha():
-            posicion = self.controller.buscar_clave(clave)
-            if posicion is not None:
-                QMessageBox.information(
-                    self,
-                    "Resultado",
-                    f"La letra '{clave}' se encuentra en la posición binaria {posicion}."
-                )
-            else:
-                QMessageBox.warning(
-                    self,
-                    "Resultado",
-                    f"La letra '{clave}' NO se encuentra en el árbol."
-                )
 
+        if not clave:
+            DialogoClave(
+                0,
+                titulo="Error",
+                modo="mensaje",
+                mensaje="Debe ingresar una letra para buscar.",
+                parent=self
+            ).exec()
+            return
+
+        if len(clave) != 1 or not clave.isalpha():
+            DialogoClave(
+                0,
+                titulo="Error",
+                modo="mensaje",
+                mensaje="Debe ingresar una sola letra para buscar.",
+                parent=self
+            ).exec()
+            return
+
+        posicion = self.controller.buscar_clave(clave)
+        if posicion is not None:
+            DialogoClave(
+                0,
+                titulo="Resultado",
+                modo="mensaje",
+                mensaje=f"La letra '{clave.upper()}' se encuentra en la posición binaria {posicion}.",
+                parent=self
+            ).exec()
         else:
-            QMessageBox.warning(
-                self,
-                "Error",
-                "Debe ingresar una sola letra para buscar."
-            )
+            DialogoClave(
+                0,
+                titulo="Resultado",
+                modo="mensaje",
+                mensaje=f"La letra '{clave.upper()}' NO se encuentra en el árbol.",
+                parent=self
+            ).exec()
 
     def dibujar_arbol(self):
         """Dibuja el árbol binario en la escena."""
@@ -375,56 +410,71 @@ class ArbolesDigitales(QMainWindow):
 
     def eliminar_palabra(self):
         palabra = self.input_eliminar.text().strip()
-        if palabra:
-            resultado = self.controller.eliminar_clave(palabra)
+        if not palabra:
+            DialogoClave(
+                0,
+                titulo="Error",
+                modo="mensaje",
+                mensaje="Debe ingresar una palabra para eliminar.",
+                parent=self
+            ).exec()
+            return
 
-            # 🔧 Corregimos cómo se maneja la tupla (estado, root)
-            if isinstance(resultado, tuple):
-                estado, nuevo_root = resultado
-            else:
-                estado, nuevo_root = resultado, None
+        resultado = self.controller.eliminar_clave(palabra)
 
-            if estado == "OK":
-                # 🔁 Actualizar el árbol del controlador y redibujar correctamente
-                if nuevo_root:
-                    self.controller.root = nuevo_root
-
-                self.input_eliminar.clear()
-
-                QMessageBox.information(
-                    self,
-                    "Eliminación",
-                    f"La clave '{palabra}' fue eliminada correctamente."
-                )
-
-                # 🔄 Redibujar el árbol actualizado
-                self.scene.clear()
-                self.dibujar_arbol()
-                self.scene.update()
-                self.view.viewport().update()
-
-            else:
-                QMessageBox.warning(self, "Error", f"No se pudo eliminar la clave: {estado}")
+        # Corregimos cómo se maneja la tupla (estado, root)
+        if isinstance(resultado, tuple):
+            estado, nuevo_root = resultado
         else:
-            QMessageBox.warning(self, "Error", "Debe ingresar una palabra para eliminar.")
+            estado, nuevo_root = resultado, None
+
+        if estado == "OK":
+            # Actualizar el árbol del controlador y redibujar correctamente
+            if nuevo_root:
+                self.controller.root = nuevo_root
+
+            self.input_eliminar.clear()
+
+            DialogoClave(
+                0,
+                titulo="Éxito",
+                modo="mensaje",
+                mensaje=f"La clave '{palabra}' fue eliminada correctamente.",
+                parent=self
+            ).exec()
+
+            # Redibujar el árbol actualizado
+            self.scene.clear()
+            self.dibujar_arbol()
+            self.scene.update()
+            self.view.viewport().update()
+        else:
+            DialogoClave(
+                0,
+                titulo="Error",
+                modo="mensaje",
+                mensaje=f"No se pudo eliminar la clave: {estado}",
+                parent=self
+            ).exec()
 
     def eliminar_arbol(self):
         """Elimina completamente el árbol y reinicia los campos."""
-        confirm = QMessageBox.question(
-            self,
-            "Confirmar eliminación",
-            "¿Seguro que deseas eliminar todo el árbol?\nEsta acción no se puede deshacer.",
-            QMessageBox.Yes | QMessageBox.No
+        dialogo_confirmar = DialogoClave(
+            0,
+            titulo="Confirmar eliminación",
+            modo="confirmar",
+            mensaje="¿Seguro que deseas eliminar todo el árbol?\nEsta acción no se puede deshacer.",
+            parent=self
         )
 
-        if confirm == QMessageBox.No:
+        if dialogo_confirmar.exec() != QDialog.Accepted:
             return
 
         try:
-            # 🔁 Reiniciar estructura del árbol
-            self.controller.eliminar_arbol()  # ✅ Llama al método del controlador para limpiar todo
+            # Reiniciar estructura del árbol
+            self.controller.eliminar_arbol()
 
-            # 🧹 Limpiar campo y desbloquearlo
+            # Limpiar campo y desbloquearlo
             self.input_insertar.clear()
             self.input_insertar.setReadOnly(False)
             self.input_insertar.setStyleSheet("""
@@ -437,14 +487,14 @@ class ArbolesDigitales(QMainWindow):
                 }
             """)
 
-            # 🧽 Limpiar también los campos de búsqueda y eliminación
+            # Limpiar también los campos de búsqueda y eliminación
             self.input_buscar.clear()
             self.input_eliminar.clear()
 
-            # 🌳 Limpiar escena del árbol
+            # Limpiar escena del árbol
             self.scene.clear()
 
-            # 📝 Mostrar mensaje visual
+            # Mostrar mensaje visual
             text_item = QGraphicsTextItem("Árbol vacío")
             text_item.setDefaultTextColor(QColor("#6C4E31"))
             text_item.setScale(1.5)
@@ -453,8 +503,19 @@ class ArbolesDigitales(QMainWindow):
             self.view.setScene(self.scene)
             self.view.setSceneRect(self.scene.itemsBoundingRect())
 
-            QMessageBox.information(self, "Árbol eliminado",
-                                    "Se ha eliminado el árbol y puedes insertar una nueva palabra.")
+            DialogoClave(
+                0,
+                titulo="Árbol eliminado",
+                modo="mensaje",
+                mensaje="Se ha eliminado el árbol y puedes insertar una nueva palabra.",
+                parent=self
+            ).exec()
 
         except Exception as e:
-            QMessageBox.critical(self, "Error", f"Ocurrió un problema al eliminar el árbol: {str(e)}")
+            DialogoClave(
+                0,
+                titulo="Error",
+                modo="mensaje",
+                mensaje=f"Ocurrió un problema al eliminar el árbol: {str(e)}",
+                parent=self
+            ).exec()

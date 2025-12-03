@@ -8,9 +8,11 @@ class PlegamientoController:
         self.estructura = {}
         self.arreglo_anidado = []
         self.lista_encadenada = []
+        self.estructura_anidada = []  # Alias para compatibilidad
         self.capacidad = 0
         self.digitos = 0
         self.historial = []
+        self.estrategia_fija = None
 
         os.makedirs(os.path.dirname(self.ruta_archivo), exist_ok=True)
 
@@ -33,6 +35,8 @@ class PlegamientoController:
         self.estructura = {i: "" for i in range(1, capacidad + 1)}
         self.arreglo_anidado = [[] for _ in range(capacidad)]
         self.lista_encadenada = [[] for _ in range(capacidad)]
+        self.estructura_anidada = []
+        self.estrategia_fija = None
         self.historial.clear()
         self.guardar()
 
@@ -74,7 +78,7 @@ class PlegamientoController:
         total = sum(1 for v in self.estructura.values() if v != "")
         total += sum(len(sub) for sub in self.arreglo_anidado)
         total += sum(len(sub) for sub in self.lista_encadenada)
-        if total >= self.capacidad:
+        if total >= self.capacidad * 10:  # Permitir más elementos con colisiones
             return "LLENO"
 
         try:
@@ -89,14 +93,19 @@ class PlegamientoController:
                 return "OK"
 
             # --- Colisión ---
-            if not estrategia:
+            if not estrategia and not self.estrategia_fija:
                 return "COLISION"
 
+            # Usar estrategia fija si existe
+            estrategia_usar = estrategia or self.estrategia_fija
+            if not self.estrategia_fija and estrategia:
+                self.estrategia_fija = estrategia
+
             self._guardar_estado()
-            estrategia = estrategia.lower()
+            estrategia_usar = estrategia_usar.lower()
 
             # Sondeo lineal
-            if estrategia in ["lineal", "sondeo lineal"]:
+            if estrategia_usar in ["lineal", "sondeo lineal"]:
                 for i in range(1, self.capacidad + 1):
                     nueva_pos = ((pos - 1 + i) % self.capacidad) + 1
                     if self.estructura[nueva_pos] == "":
@@ -107,27 +116,78 @@ class PlegamientoController:
                 return "LLENO"
 
             # Arreglo anidado
-            elif estrategia == "arreglo anidado":
+            elif estrategia_usar == "arreglo anidado":
                 idx = pos - 1
                 self.arreglo_anidado[idx].append(clave)
+                self.estructura_anidada = self.arreglo_anidado  # Sincronizar
                 self.guardar()
                 return "OK"
 
             # Lista encadenada
-            elif estrategia == "lista encadenada":
+            elif estrategia_usar == "lista encadenada":
                 idx = pos - 1
                 self.lista_encadenada[idx].append(clave)
+                self.estructura_anidada = self.lista_encadenada  # Sincronizar
                 self.guardar()
                 return "OK"
 
             else:
                 self.historial.pop()
-                return f"ERROR: Estrategia desconocida '{estrategia}'"
+                return f"ERROR: Estrategia desconocida '{estrategia_usar}'"
 
         except ValueError:
             return "ERROR: La clave debe ser numérica"
         except Exception as e:
             return f"ERROR: {e}"
+
+    # -------------------------------
+    # BUSCAR CLAVE
+    # -------------------------------
+    def buscar_clave(self, clave: str) -> dict:
+        """
+        Busca una clave en toda la estructura.
+        Retorna un diccionario con información de la búsqueda.
+        """
+        clave = str(clave)
+
+        # Buscar en estructura principal
+        for pos, valor in self.estructura.items():
+            if valor == clave:
+                return {
+                    'encontrado': True,
+                    'posicion': pos,
+                    'tipo': 'principal',
+                    'mensaje': f"Clave {clave} encontrada en posición {pos}"
+                }
+
+        # Buscar en arreglo anidado
+        for idx, sub in enumerate(self.arreglo_anidado):
+            if clave in sub:
+                sub_idx = sub.index(clave)
+                return {
+                    'encontrado': True,
+                    'posicion': idx + 1,
+                    'sub_posicion': sub_idx,
+                    'tipo': 'arreglo_anidado',
+                    'mensaje': f"Clave {clave} encontrada en posición {idx + 1}, índice {sub_idx + 1} del arreglo anidado"
+                }
+
+        # Buscar en lista encadenada
+        for idx, sub in enumerate(self.lista_encadenada):
+            if clave in sub:
+                sub_idx = sub.index(clave)
+                return {
+                    'encontrado': True,
+                    'posicion': idx + 1,
+                    'sub_posicion': sub_idx,
+                    'tipo': 'lista_encadenada',
+                    'mensaje': f"Clave {clave} encontrada en posición {idx + 1}, nodo {sub_idx + 1} de la lista encadenada"
+                }
+
+        return {
+            'encontrado': False,
+            'mensaje': f"Clave {clave} no encontrada"
+        }
 
     # -------------------------------
     # ELIMINAR CLAVE
@@ -183,7 +243,8 @@ class PlegamientoController:
             "digitos": self.digitos,
             "estructura": self.estructura,
             "arreglo_anidado": self.arreglo_anidado,
-            "lista_encadenada": self.lista_encadenada
+            "lista_encadenada": self.lista_encadenada,
+            "estrategia_fija": self.estrategia_fija
         }
         ManejadorArchivos.guardar_json(self.ruta_archivo, datos)
 
@@ -195,6 +256,14 @@ class PlegamientoController:
             self.estructura = {int(k): v for k, v in datos.get("estructura", {}).items()}
             self.arreglo_anidado = datos.get("arreglo_anidado", [[] for _ in range(self.capacidad)])
             self.lista_encadenada = datos.get("lista_encadenada", [[] for _ in range(self.capacidad)])
+            self.estrategia_fija = datos.get("estrategia_fija")
+
+            # Sincronizar estructura_anidada
+            if self.arreglo_anidado and any(self.arreglo_anidado):
+                self.estructura_anidada = self.arreglo_anidado
+            elif self.lista_encadenada and any(self.lista_encadenada):
+                self.estructura_anidada = self.lista_encadenada
+
             return True
         return False
 
@@ -207,7 +276,9 @@ class PlegamientoController:
             "digitos": self.digitos,
             "estructura": self.estructura,
             "arreglo_anidado": self.arreglo_anidado,
-            "lista_encadenada": self.lista_encadenada
+            "lista_encadenada": self.lista_encadenada,
+            "estructura_anidada": self.estructura_anidada,
+            "estrategia_fija": self.estrategia_fija
         }
 
     def get_claves(self):

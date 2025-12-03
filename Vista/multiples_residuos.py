@@ -7,6 +7,7 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QPen, QBrush, QColor
 from Controlador.Internas.MultiplesResiduosController import MultiplesResiduosController
+from Vista.dialogo_clave import DialogoClave
 
 
 class MultiplesResiduos(QMainWindow):
@@ -46,13 +47,9 @@ class MultiplesResiduos(QMainWindow):
         titulo.setAlignment(Qt.AlignCenter)
         titulo.setStyleSheet("font-size: 22px; font-weight: bold;")
 
-        subtitulo = QLabel("Operaciones - Asociación de 2 bits")
-        subtitulo.setAlignment(Qt.AlignCenter)
-        subtitulo.setStyleSheet("font-size: 14px; font-weight: bold;")
-
         nav_layout = QHBoxLayout()
         btn_inicio = QPushButton("Inicio")
-        btn_volver = QPushButton("Volver")
+        btn_volver = QPushButton("Menú Búsqueda")
         for btn in (btn_inicio, btn_volver):
             btn.setStyleSheet("""
                 QPushButton {
@@ -77,7 +74,6 @@ class MultiplesResiduos(QMainWindow):
         nav_layout.addStretch()
 
         header_layout.addWidget(titulo)
-        header_layout.addWidget(subtitulo)
         header_layout.addLayout(nav_layout)
 
         main_layout.addWidget(header_frame)
@@ -179,7 +175,7 @@ class MultiplesResiduos(QMainWindow):
                     font-size: 14px;
                     font-weight: bold;
                     border-radius: 8px;
-                    padding: 8px 14px;
+                    padding: 10px 14px;
                 }
                 QPushButton:hover {
                     background-color: #9c724a;
@@ -219,11 +215,34 @@ class MultiplesResiduos(QMainWindow):
                 self.input_insertar.clear()
                 self.nodo_resaltado = None
                 self.dibujar_trie()
-                QMessageBox.information(self, "Éxito", f"Palabra '{palabra}' insertada correctamente.")
+
+                # Mostrar mensaje de éxito con DialogoClave
+                msg_dialogo = DialogoClave(
+                    longitud=0,
+                    titulo="Éxito",
+                    modo="mensaje",
+                    mensaje=f"Palabra '{palabra}' insertada correctamente.",
+                    parent=self
+                )
+                msg_dialogo.exec()
             except ValueError as e:
-                QMessageBox.warning(self, "Error", str(e))
+                msg_dialogo = DialogoClave(
+                    longitud=0,
+                    titulo="Error",
+                    modo="mensaje",
+                    mensaje=str(e),
+                    parent=self
+                )
+                msg_dialogo.exec()
         else:
-            QMessageBox.warning(self, "Error", "Debe ingresar una palabra para insertar.")
+            msg_dialogo = DialogoClave(
+                longitud=0,
+                titulo="Error",
+                modo="mensaje",
+                mensaje="Debe ingresar una palabra para insertar.",
+                parent=self
+            )
+            msg_dialogo.exec()
 
     def buscar_letra(self):
         letra = self.input_buscar.text().strip().upper()
@@ -233,9 +252,7 @@ class MultiplesResiduos(QMainWindow):
                 if encontrada:
                     self.nodo_resaltado = letra
                     self.dibujar_trie()
-                    QMessageBox.information(
-                        self,
-                        "Búsqueda",
+                    mensaje = (
                         f"✓ La letra '{letra}' SÍ está en el Trie.\n\n"
                         f"Posición (secuencia de bits): {posicion}\n"
                         f"Código binario completo: {self.controller.codigos[letra]}"
@@ -243,12 +260,35 @@ class MultiplesResiduos(QMainWindow):
                 else:
                     self.nodo_resaltado = None
                     self.dibujar_trie()
-                    QMessageBox.information(self, "Búsqueda", f"✗ La letra '{letra}' NO está en el Trie.")
+                    mensaje = f"✗ La letra '{letra}' NO está en el Trie."
+
                 self.input_buscar.clear()
+                msg_dialogo = DialogoClave(
+                    longitud=0,
+                    titulo="Resultado de Búsqueda",
+                    modo="mensaje",
+                    mensaje=mensaje,
+                    parent=self
+                )
+                msg_dialogo.exec()
             except Exception as e:
-                QMessageBox.warning(self, "Error", str(e))
+                msg_dialogo = DialogoClave(
+                    longitud=0,
+                    titulo="Error",
+                    modo="mensaje",
+                    mensaje=str(e),
+                    parent=self
+                )
+                msg_dialogo.exec()
         else:
-            QMessageBox.warning(self, "Error", "Debe ingresar una letra para buscar.")
+            msg_dialogo = DialogoClave(
+                longitud=0,
+                titulo="Error",
+                modo="mensaje",
+                mensaje="Debe ingresar una letra para buscar.",
+                parent=self
+            )
+            msg_dialogo.exec()
 
     def eliminar_letra(self):
         letra = self.input_eliminar.text().strip().upper()
@@ -258,17 +298,86 @@ class MultiplesResiduos(QMainWindow):
                 self.input_eliminar.clear()
                 self.nodo_resaltado = None
                 self.dibujar_trie()
-                QMessageBox.information(self, "Éxito", f"Letra '{letra}' eliminada. Árbol reconstruido.")
+
+                msg_dialogo = DialogoClave(
+                    longitud=0,
+                    titulo="Éxito",
+                    modo="mensaje",
+                    mensaje=f"Letra '{letra}' eliminada. Árbol reconstruido.",
+                    parent=self
+                )
+                msg_dialogo.exec()
             except ValueError as e:
-                QMessageBox.warning(self, "Error", str(e))
+                msg_dialogo = DialogoClave(
+                    longitud=0,
+                    titulo="Error",
+                    modo="mensaje",
+                    mensaje=str(e),
+                    parent=self
+                )
+                msg_dialogo.exec()
         else:
-            QMessageBox.warning(self, "Error", "Debe ingresar una letra para eliminar.")
+            msg_dialogo = DialogoClave(
+                longitud=0,
+                titulo="Error",
+                modo="mensaje",
+                mensaje="Debe ingresar una letra para eliminar.",
+                parent=self
+            )
+            msg_dialogo.exec()
 
     def limpiar_trie(self):
         """Reinicia el trie"""
-        self.controller = MultiplesResiduosController()
-        self.scene.clear()
-        self.dibujar_trie()
+        # Usar diálogo de confirmación
+        dialogo = DialogoClave(
+            longitud=0,
+            titulo="Confirmar",
+            modo="confirmar",
+            mensaje="¿Está seguro de que desea limpiar el Trie completo?",
+            parent=self
+        )
+
+        if dialogo.exec():
+            self.controller = MultiplesResiduosController()
+            self.nodo_resaltado = None
+            self.scene.clear()
+
+            # Resetear completamente la vista
+            self.view.resetTransform()
+            self.view.scale(1.5, 1.5)
+
+            # Dibujar solo el nodo raíz vacío
+            node_radius = 26
+            brush_root = QBrush(QColor("#9c724a"))
+            pen_node = QPen(QColor("#2d1f15"), 2)
+
+            circle = QGraphicsEllipseItem(-node_radius, -node_radius, 2 * node_radius, 2 * node_radius)
+            circle.setBrush(brush_root)
+            circle.setPen(pen_node)
+            self.scene.addItem(circle)
+
+            text_item = QGraphicsTextItem("root")
+            text_item.setDefaultTextColor(QColor("#FFEAC5"))
+            text_item.setScale(1.1)
+            text_rect = text_item.boundingRect()
+            text_item.setPos(-text_rect.width() / 2, -text_rect.height() / 2)
+            self.scene.addItem(text_item)
+
+            # Ajustar vista
+            brect = self.scene.itemsBoundingRect()
+            margin = 80
+            brect.adjust(-margin, -margin, margin, margin)
+            self.view.setSceneRect(brect)
+            self.view.centerOn(0, 0)
+
+            msg_dialogo = DialogoClave(
+                longitud=0,
+                titulo="Éxito",
+                modo="mensaje",
+                mensaje="Trie limpiado correctamente.",
+                parent=self
+            )
+            msg_dialogo.exec()
 
     def dibujar_trie(self):
         self.scene.clear()

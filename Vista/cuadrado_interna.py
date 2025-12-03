@@ -1,7 +1,7 @@
 from PySide6.QtWidgets import (
     QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton,
-    QComboBox, QSpinBox, QGridLayout, QMessageBox, QScrollArea,
-    QFileDialog, QInputDialog, QFrame, QDialog
+    QComboBox, QSpinBox, QGridLayout, QScrollArea,
+    QFileDialog, QFrame, QDialog
 )
 from PySide6.QtCore import Qt
 from Controlador.Internas.cuadrado_controller import CuadradoController
@@ -237,7 +237,14 @@ class CuadradoInterna(QMainWindow):
 
     def adicionar_claves(self):
         if self.capacidad == 0:
-            QMessageBox.warning(self, "Error", "Primero cree la estructura.")
+            dialogo = DialogoClave(
+                longitud=0,
+                titulo="Error",
+                modo="mensaje",
+                parent=self,
+                mensaje="Primero cree la estructura."
+            )
+            dialogo.exec()
             return
 
         dialogo = DialogoClave(
@@ -256,14 +263,42 @@ class CuadradoInterna(QMainWindow):
             resultado = self.controller.adicionar_clave(clave, self.estrategia_actual)
 
             if resultado == "OK":
-                QMessageBox.information(self, "Éxito", f"Clave {clave} insertada correctamente.")
+                dialogo = DialogoClave(
+                    longitud=0,
+                    titulo="Éxito",
+                    modo="mensaje",
+                    parent=self,
+                    mensaje=f"Clave {clave} insertada correctamente."
+                )
+                dialogo.exec()
                 self.actualizar_vista_segun_estrategia()
             elif resultado == "LONGITUD":
-                QMessageBox.warning(self, "Error", "Longitud de clave incorrecta.")
+                dialogo = DialogoClave(
+                    longitud=0,
+                    titulo="Error",
+                    modo="mensaje",
+                    parent=self,
+                    mensaje="Longitud de clave incorrecta."
+                )
+                dialogo.exec()
             elif resultado == "REPETIDA":
-                QMessageBox.warning(self, "Error", "La clave ya existe.")
+                dialogo = DialogoClave(
+                    longitud=0,
+                    titulo="Error",
+                    modo="mensaje",
+                    parent=self,
+                    mensaje="La clave ya existe."
+                )
+                dialogo.exec()
             else:
-                QMessageBox.warning(self, "Error", f"Resultado inesperado: {resultado}")
+                dialogo = DialogoClave(
+                    longitud=0,
+                    titulo="Error",
+                    modo="mensaje",
+                    parent=self,
+                    mensaje=f"Resultado inesperado: {resultado}"
+                )
+                dialogo.exec()
             return
 
         # Primera inserción o sin estrategia definida
@@ -273,31 +308,86 @@ class CuadradoInterna(QMainWindow):
             dlg_col = DialogoColisiones(self)
             if dlg_col.exec() == QDialog.Accepted:
                 estrategia = dlg_col.get_estrategia()
-                # NORMALIZAR AQUÍ cuando guardas
-                self.estrategia_actual = estrategia.lower()  # ← CAMBIO IMPORTANTE
+                self.estrategia_actual = estrategia.lower()
 
                 resultado = self.controller.adicionar_clave(clave, self.estrategia_actual)
 
                 if resultado == "OK":
-                    QMessageBox.information(self, "Éxito", f"Clave {clave} insertada con estrategia: {estrategia}")
+                    dialogo = DialogoClave(
+                        longitud=0,
+                        titulo="Éxito",
+                        modo="mensaje",
+                        parent=self,
+                        mensaje=f"Clave {clave} insertada con estrategia: {estrategia}"
+                    )
+                    dialogo.exec()
                     self.actualizar_vista_segun_estrategia()
                 elif resultado == "LONGITUD":
-                    QMessageBox.warning(self, "Error", "Longitud de clave incorrecta.")
+                    dialogo = DialogoClave(
+                        longitud=0,
+                        titulo="Error",
+                        modo="mensaje",
+                        parent=self,
+                        mensaje="Longitud de clave incorrecta."
+                    )
+                    dialogo.exec()
                 elif resultado == "REPETIDA":
-                    QMessageBox.warning(self, "Error", "La clave ya existe.")
+                    dialogo = DialogoClave(
+                        longitud=0,
+                        titulo="Error",
+                        modo="mensaje",
+                        parent=self,
+                        mensaje="La clave ya existe."
+                    )
+                    dialogo.exec()
             else:
-                QMessageBox.information(self, "Cancelado", "Inserción cancelada.")
+                dialogo = DialogoClave(
+                    longitud=0,
+                    titulo="Cancelado",
+                    modo="mensaje",
+                    parent=self,
+                    mensaje="Inserción cancelada."
+                )
+                dialogo.exec()
                 return
 
         elif resultado == "OK":
-            QMessageBox.information(self, "Éxito", f"Clave {clave} insertada correctamente.")
+            dialogo = DialogoClave(
+                longitud=0,
+                titulo="Éxito",
+                modo="mensaje",
+                parent=self,
+                mensaje=f"Clave {clave} insertada correctamente."
+            )
+            dialogo.exec()
             self.actualizar_tabla()
         elif resultado == "LONGITUD":
-            QMessageBox.warning(self, "Error", "Longitud de clave incorrecta.")
+            dialogo = DialogoClave(
+                longitud=0,
+                titulo="Error",
+                modo="mensaje",
+                parent=self,
+                mensaje="Longitud de clave incorrecta."
+            )
+            dialogo.exec()
         elif resultado == "REPETIDA":
-            QMessageBox.warning(self, "Error", "La clave ya existe.")
+            dialogo = DialogoClave(
+                longitud=0,
+                titulo="Error",
+                modo="mensaje",
+                parent=self,
+                mensaje="La clave ya existe."
+            )
+            dialogo.exec()
         else:
-            QMessageBox.warning(self, "Error", f"Resultado inesperado: {resultado}")
+            dialogo = DialogoClave(
+                longitud=0,
+                titulo="Error",
+                modo="mensaje",
+                parent=self,
+                mensaje=f"Resultado inesperado: {resultado}"
+            )
+            dialogo.exec()
 
     def actualizar_vista_segun_estrategia(self):
         """Actualiza la vista según la estrategia de colisión seleccionada"""
@@ -318,7 +408,6 @@ class CuadradoInterna(QMainWindow):
         if ruta:
             self.controller.ruta_archivo = ruta
             if self.controller.cargar():
-                # Actualizar capacidad y dígitos desde el controlador
                 self.capacidad = self.controller.capacidad
 
                 # Detectar estrategia del archivo cargado
@@ -327,32 +416,56 @@ class CuadradoInterna(QMainWindow):
 
                 # Si tiene estructura_anidada, es arreglo anidado o lista encadenada
                 if hasattr(self.controller, 'estructura_anidada') and self.controller.estructura_anidada:
-                    # Intentar detectar por el formato si no hay estrategia_fija
                     if not self.estrategia_actual:
-                        # Si alguna sublista tiene más de 0 elementos, usar lista encadenada por defecto
                         self.estrategia_actual = "lista encadenada"
 
-                QMessageBox.information(self, "Éxito",
-                                        f"Estructura cargada correctamente.\nEstrategia: {self.estrategia_actual or 'direccionamiento abierto'}")
+                dialogo = DialogoClave(
+                    longitud=0,
+                    titulo="Éxito",
+                    modo="mensaje",
+                    parent=self,
+                    mensaje=f"Estructura cargada correctamente.\nEstrategia: {self.estrategia_actual or 'direccionamiento abierto'}"
+                )
+                dialogo.exec()
                 self.actualizar_vista_segun_estrategia()
             else:
-                QMessageBox.warning(self, "Error", "No se pudo cargar el archivo.")
+                dialogo = DialogoClave(
+                    longitud=0,
+                    titulo="Error",
+                    modo="mensaje",
+                    parent=self,
+                    mensaje="No se pudo cargar el archivo."
+                )
+                dialogo.exec()
 
     def eliminar_estructura(self):
-        resp = QMessageBox.question(
-            self, "Eliminar estructura", "¿Desea eliminar la estructura actual?",
-            QMessageBox.Yes | QMessageBox.No, QMessageBox.No
+        dialogo = DialogoClave(
+            longitud=0,
+            titulo="Eliminar estructura",
+            modo="confirmar",
+            parent=self,
+            mensaje="¿Desea eliminar la estructura actual?"
         )
-        if resp == QMessageBox.Yes:
-            self.controller.estructura = {}
-            self.controller.capacidad = 0
-            self.controller.digitos = 0
-            self.controller.historial.clear()
-            self.estrategia_actual = None  # Resetear estrategia
-            if hasattr(self.controller, 'estructura_anidada'):
-                self.controller.estructura_anidada = []
-            self.actualizar_tabla()
-            QMessageBox.information(self, "Éxito", "Estructura eliminada correctamente.")
+        if dialogo.exec() != QDialog.Accepted:
+            return
+
+        self.controller.estructura = {}
+        self.controller.capacidad = 0
+        self.controller.digitos = 0
+        self.controller.historial.clear()
+        self.estrategia_actual = None
+        if hasattr(self.controller, 'estructura_anidada'):
+            self.controller.estructura_anidada = []
+        self.actualizar_tabla()
+
+        dialogo = DialogoClave(
+            longitud=0,
+            titulo="Éxito",
+            modo="mensaje",
+            parent=self,
+            mensaje="Estructura eliminada correctamente."
+        )
+        dialogo.exec()
 
     def buscar_clave(self):
         dialogo = DialogoClave(
@@ -384,25 +497,34 @@ class CuadradoInterna(QMainWindow):
                         for sub_idx, item in enumerate(sublista):
                             if str(item) == clave:
                                 encontrado = idx + 1
-                                # Formato correcto para que el regex lo detecte
                                 posicion_detallada = f"posición {idx + 1} (lista encadenada {sub_idx + 1})"
                                 break
                         if encontrado:
                             break
 
             if encontrado:
-                QMessageBox.information(self, "Resultado", f"Clave {clave} encontrada en {posicion_detallada}")
-
-                # Resaltar visualmente la clave encontrada
+                dialogo = DialogoClave(
+                    longitud=0,
+                    titulo="Resultado",
+                    modo="mensaje",
+                    parent=self,
+                    mensaje=f"Clave {clave} encontrada en {posicion_detallada}"
+                )
+                dialogo.exec()
                 self.resaltar_clave(encontrado, posicion_detallada)
             else:
-                QMessageBox.warning(self, "Resultado", f"Clave {clave} no encontrada")
+                dialogo = DialogoClave(
+                    longitud=0,
+                    titulo="Resultado",
+                    modo="mensaje",
+                    parent=self,
+                    mensaje=f"Clave {clave} no encontrada"
+                )
+                dialogo.exec()
 
     def resaltar_clave(self, posicion, detalle):
         """Resalta visualmente la clave encontrada"""
-        # Solo funciona si estamos usando vista de arreglo anidado o lista encadenada
         if self.estrategia_actual in ["arreglo anidado", "lista encadenada"]:
-            # Redibujar con el resaltado
             if self.estrategia_actual == "arreglo anidado":
                 anidado_ctrl = ArregloAnidadoController(self.controller)
                 vista_anidada = VistaArregloAnidado(self.grid, anidado_ctrl, resaltar=(posicion, detalle))
@@ -428,20 +550,55 @@ class CuadradoInterna(QMainWindow):
 
         resultado = self.controller.eliminar_clave(clave.strip())
         if resultado == "OK":
-            QMessageBox.information(self, "Éxito", f"Clave {clave} eliminada.")
+            dialogo = DialogoClave(
+                longitud=0,
+                titulo="Éxito",
+                modo="mensaje",
+                parent=self,
+                mensaje=f"Clave {clave} eliminada."
+            )
+            dialogo.exec()
             self.actualizar_vista_segun_estrategia()
         elif resultado == "NO_EXISTE":
-            QMessageBox.warning(self, "Error", f"La clave {clave} no existe.")
+            dialogo = DialogoClave(
+                longitud=0,
+                titulo="Error",
+                modo="mensaje",
+                parent=self,
+                mensaje=f"La clave {clave} no existe."
+            )
+            dialogo.exec()
         else:
-            QMessageBox.critical(self, "Error", f"Ocurrió un problema: {resultado}")
+            dialogo = DialogoClave(
+                longitud=0,
+                titulo="Error",
+                modo="mensaje",
+                parent=self,
+                mensaje=f"Ocurrió un problema: {resultado}"
+            )
+            dialogo.exec()
 
     def deshacer(self):
         resultado = self.controller.deshacer()
         if resultado == "OK":
-            QMessageBox.information(self, "Éxito", "Se deshizo el último movimiento.")
+            dialogo = DialogoClave(
+                longitud=0,
+                titulo="Éxito",
+                modo="mensaje",
+                parent=self,
+                mensaje="Se deshizo el último movimiento."
+            )
+            dialogo.exec()
             self.actualizar_vista_segun_estrategia()
         elif resultado == "VACIO":
-            QMessageBox.warning(self, "Aviso", "No hay movimientos para deshacer.")
+            dialogo = DialogoClave(
+                longitud=0,
+                titulo="Aviso",
+                modo="mensaje",
+                parent=self,
+                mensaje="No hay movimientos para deshacer."
+            )
+            dialogo.exec()
 
     def guardar_estructura(self):
         ruta, _ = QFileDialog.getSaveFileName(
@@ -452,9 +609,23 @@ class CuadradoInterna(QMainWindow):
         try:
             self.controller.ruta_archivo = ruta
             self.controller.guardar()
-            QMessageBox.information(self, "Éxito", f"Estructura guardada en:\n{ruta}")
+            dialogo = DialogoClave(
+                longitud=0,
+                titulo="Éxito",
+                modo="mensaje",
+                parent=self,
+                mensaje=f"Estructura guardada en:\n{ruta}"
+            )
+            dialogo.exec()
         except Exception as e:
-            QMessageBox.critical(self, "Error", f"No se pudo guardar:\n{e}")
+            dialogo = DialogoClave(
+                longitud=0,
+                titulo="Error",
+                modo="mensaje",
+                parent=self,
+                mensaje=f"No se pudo guardar:\n{e}"
+            )
+            dialogo.exec()
 
     def actualizar_tabla(self):
         """Actualiza la vista para estrategias de direccionamiento abierto"""
